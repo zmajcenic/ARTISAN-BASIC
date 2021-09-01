@@ -1,0 +1,26 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "dezog",
+            "request": "launch",
+            "name": "Debug OpenMSX",
+            "remoteType": "openmsx",
+            "listFiles": [
+                {
+                    "path": "bin/hello.lst",
+                    "useFiles": true,
+                    "asm": "sjasmplus",
+                    "mainFile": "hello.asm"
+                }
+            ],
+            "startAutomatically": false,
+            "commandsAfterLaunch": [
+                "-e openmsx_info version"
+            ],
+            "resetOnLaunch": false,
+            "rootFolder": "${workspaceFolder}",
+            "tmpDir": ".tmp"
+        }
+    ]
+}
