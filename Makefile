@@ -14,6 +14,7 @@ sound:
 	rasm -sp -ob sound/AKG.bin -os sound/AKG.sym sound/AKG.asm
 
 bin:
+	sjasmplus --fullpath asm\\main.asm --raw=$(BIN_DIR)\\main.bin --sym=$(SYM_DIR)\\main.sym -I.
 	sjasmplus --fullpath asm\\MBGE.asm --raw=$(BIN_DIR)\\MBGE.bin --sym=$(SYM_DIR)\\MBGE.sym -I.
 	cp bin/MBGE.bin dsk/
 

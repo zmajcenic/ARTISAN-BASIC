@@ -16,6 +16,10 @@ RAMAD3	equ	0F344h	; Main-RAM Slot (0C000h~0FFFFh)
 
 LoaderBegin:
 
+ INCBIN "bin/main.bin"
+
+DATA_END:
+
 ; ****************************************************************************************************
 ; function gets slot and subslot data for specific page
 ; input A=page (0, 1 or 2)
@@ -198,13 +202,6 @@ L0390:
 
 LoaderStart:
     DI
-    XOR A
-    CALL GET_PAGE_INFO
-    PUSH BC
-    PUSH DE
-    LD A, (RAMAD0)
-    LD H, 0
-    CALL LOCAL_ENASLT
 
     LD A, 1
     CALL GET_PAGE_INFO
@@ -214,9 +211,31 @@ LoaderStart:
     LD H, 040H
     CALL LOCAL_ENASLT
 
-    POP DE
-    POP BC
-    CALL RESTORE_PAGE_INFO
+    LD HL, LoaderBegin
+    LD DE, 04000H
+    LD BC, DATA_END-LoaderBegin
+    LDIR
+
+    ; mark slot where RAM is as BASIC extension
+    LD A, (RAMAD1)
+ 	AND A
+	JP M, .SKIP   ; SlotID has SubSlot information
+	AND 3
+.SKIP
+	AND 15
+	LD E, A
+	RLCA
+	RLCA
+	RLCA
+	RLCA
+	OR E
+	AND 60
+	LD D, 0
+	LD E, A
+	LD HL, SLTATR+1
+	ADD HL, DE
+	SET 5, (HL)     ; Set bit 5 to enable CALL handler
+
     POP DE
     POP BC
     CALL RESTORE_PAGE_INFO
