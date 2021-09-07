@@ -1,7 +1,7 @@
  ORG 04000h
 
 ; INCLUDE "system_variables.inc"
- INCLUDE "system_hooks.inc"
+; INCLUDE "system_hooks.inc"
 ; INCLUDE "bios_calls.inc"
 
 CHPUT   EQU     #A2
@@ -37,29 +37,66 @@ EXPTBL	EQU #FCC1
 
 ; this location #400A stores last location used by basic extension
 ; free memory after that point
- DW EXTEND 
+ DW EXT_END 
 
-; List of available instructions (as ASCIIZ) and execute address (as word)
+; List of pointers to available instructions (as ASCIIZ) and execute address (as word)
+; per starting letter, if no commands with this letter, NULL value
 CMDS:
+    DW 0 ; A
+    DW 0 ; B
+    DW 0 ; C
+    DW 0 ; D
+    DW 0 ; E
+    DW CMDS_F; F
+    DW CMDS_G; G
+    DW 0 ; H
+    DW 0 ; I
+    DW 0 ; J
+    DW 0 ; K
+    DW CMDS_L ; L
+    DW CMDS_M ; M
+    DW 0 ; N
+    DW 0 ; O
+    DW 0 ; P
+    DW 0 ; Q
+    DW 0 ; R
+    DW 0 ; S
+    DW 0 ; T
+    DW CMDS_U ; U
+    DW CMDS_V ; V
+    DW 0 ; W
+    DW 0 ; X
+    DW 0 ; Y
+    DW 0 ; Z
+
+CMDS_U:
 	DEFB	"UPRINT",0      ; Print upper case string
 	DEFW	UPRINT
- 
+    DB 0
+CMDS_L:
 	DEFB	"LPRINT",0      ; Print lower case string
 	DEFW	LPRINT
-
+    DB 0
+CMDS_M:
+    DB "MEMVRM", 0
+    DW MEMVRM
 	DB "MEMCPY", 0
-	DW	MEMCPY
-
+	DW MEMCPY
+    DB 0
+CMDS_F:
     DB "FILVRM", 0
     DW FILVRM
-
     DB "FILRAM", 0
     DW FILRAM
-
+    DB 0
+CMDS_G:
     DB "GENCAL", 0
     DW GENCAL
- 
-	DEFB	0               ; No more instructions
+	DB	0
+CMDS_V:
+	DB "VRMMEM", 0
+	DW VRMMEM
+	DB 0
 
 ; ****************************************************************************************************
 ; function gets slot and subslot data for specific page
@@ -245,10 +282,23 @@ L0390:
 ; General BASIC CALL-instruction handler
  
 CALLHAND:
-	PUSH    HL
-	LD	HL,CMDS	        ; Table with "_" instructions
+	PUSH HL
+	LD	HL, CMDS ; pointer table based on starting letter
+    LD A, (PROCNM)
+    SUB 'A'
+    ADD A, A
+    LD D, 0
+    LD E, A
+    ADD HL, DE
+    LD E, (HL)
+    INC HL
+    LD D, (HL)
+    LD A, D
+    OR E
+    JR Z, .CMDNOTRECOGNIZED
+    EX DE, HL
 .CHKCMD:
-	LD	DE,PROCNM
+	LD	DE, PROCNM
 .LOOP:	LD	A,(DE)
 	CP	(HL)
 	JR	NZ,.TONEXTCMD	; Not equal
@@ -274,6 +324,7 @@ CALLHAND:
 	CP	(HL)
 	JR	NZ,.CHKCMD	; Not end of table, go checking
 	POP	HL
+.CMDNOTRECOGNIZED:
     SCF
 	RET
  
@@ -722,4 +773,233 @@ GENCAL:
     RET
 ; *******************************************************************************************************
 
-EXTEND:
+; *******************************************************************************************************
+; function to handle CALL MEMVRM basic extension
+; copies from RAM to VRAM
+; _MEMVRM ( INT source, 
+;			INT destination, 
+;			INT count, 
+;			BYTE enable_ram, >0 = true
+;			BYTE wait_vsync) >0 = treu
+; enable_ram will put ram in page 0 also, page 1 is already there
+; wait_vsync will issue HALT before copying
+MEMVRM:
+	; opening (
+	CALL CHKCHAR
+	DB '('
+	; get source address
+	LD IX, FRMQNT
+	CALL CALBAS
+	PUSH DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get destination address
+	LD IX, FRMQNT
+	CALL CALBAS
+	PUSH DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get length
+	LD IX, FRMQNT
+	CALL CALBAS
+	PUSH DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get ROM/RAM
+	LD IX, GETBYT
+	CALL CALBAS
+	PUSH AF
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get vsync wait
+	LD IX, GETBYT
+	CALL CALBAS
+	PUSH AF
+	; ending )
+	CALL CHKCHAR
+	DB ')'
+
+    ; save position in BASIC text
+	PUSH HL
+	POP IX
+
+	; syntax ok
+	; wait for vsync if needed
+	POP AF
+	OR A
+	JR Z, .L1
+    EI
+	HALT
+    DI ; since interrupt can modify vram address
+
+.L1:
+	; enable RAM in page 0 if needed
+	POP AF
+	OR A
+	; pop LDIR parameters and store away for later
+	POP BC
+	POP DE
+	POP HL
+	JR Z, .L2
+	EXX
+    XOR A
+    CALL GET_PAGE_INFO
+    PUSH BC
+    PUSH DE
+    LD A, (RAMAD0)
+    LD H, 0
+    CALL LOCAL_ENASLT
+	EXX
+	CALL .LDIRVM
+    POP DE
+    POP BC
+    CALL RESTORE_PAGE_INFO
+	JR .L3
+
+.L2:
+	CALL .LDIRVM
+
+.L3:
+	PUSH IX
+	POP HL
+	RET
+
+.LDIRVM:
+	LD	A, E
+	OUT	(099H), A
+	LD	A, D
+	AND	03FH
+	OR	040H
+	OUT	(099H), A
+    
+.L4:
+    LD A, (HL)
+    OUT (#98), A
+    INC HL
+    DEC BC
+    LD A, C
+    OR B
+    JP NZ, .L4
+    RET
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function to handle CALL VRMMEM basic extension
+; copies from RAM to VRAM
+; _VRMMEM ( INT source, 
+;			INT destination, 
+;			INT count, 
+;			BYTE enable_ram, >0 = true
+;			BYTE wait_vsync) >0 = true
+; enable_ram will put ram in page 0 also, page 1 is already there
+; wait_vsync will issue HALT before copying
+VRMMEM:
+	; opening (
+	CALL CHKCHAR
+	DB '('
+	; get source address
+	LD IX, FRMQNT
+	CALL CALBAS
+	PUSH DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get destination address
+	LD IX, FRMQNT
+	CALL CALBAS
+	PUSH DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get length
+	LD IX, FRMQNT
+	CALL CALBAS
+	PUSH DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get ROM/RAM
+	LD IX, GETBYT
+	CALL CALBAS
+	PUSH AF
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get vsync wait
+	LD IX, GETBYT
+	CALL CALBAS
+	PUSH AF
+	; ending )
+	CALL CHKCHAR
+	DB ')'
+
+    ; save position in BASIC text
+	PUSH HL
+	POP IX
+
+	; syntax ok
+	; wait for vsync if needed
+	POP AF
+	OR A
+	JR Z, .L1
+    EI
+	HALT
+    DI ; since interrupt can modify vram address
+
+.L1:
+	; enable RAM in page 0 if needed
+	POP AF
+	OR A
+	; pop LDIR parameters and store away for later
+	POP BC
+	POP DE
+	POP HL
+	JR Z, .L2
+	EXX
+    XOR A
+    CALL GET_PAGE_INFO
+    PUSH BC
+    PUSH DE
+    LD A, (RAMAD0)
+    LD H, 0
+    CALL LOCAL_ENASLT
+	EXX
+	CALL .LDIRMV
+    POP DE
+    POP BC
+    CALL RESTORE_PAGE_INFO
+	JR .L3
+
+.L2:
+	CALL .LDIRMV
+
+.L3:
+	PUSH IX
+	POP HL
+	RET
+
+.LDIRMV:
+	LD	A, L
+	OUT	(099H), A
+	LD	A, H
+	AND	03FH
+	OR	040H
+	OUT	(099H), A
+    
+.L4:
+    IN A, (#98)
+	LD (DE), A
+    INC DE
+    DEC BC
+    LD A, C
+    OR B
+    JP NZ, .L4
+    RET
+; *******************************************************************************************************
+
+
+EXT_END:

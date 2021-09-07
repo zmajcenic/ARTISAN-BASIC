@@ -1,0 +1,2045 @@
+# file opened: asm\MBGE.asm
+   1  0000               ORG 08800H
+   2  8800
+   3  8800               INCLUDE "system_variables.inc"
+# file opened: ./system_variables.inc
+   1+ 8800              ;+------------------------------------------------------------------+
+   2+ 8800              ;|                         MSX System Variables                     |
+   3+ 8800              ;+------------------------------------------------------------------+
+   4+ 8800              ;|                                                                  |
+   5+ 8800              ;|  Taken from MSX RED BOOK  (c) 1985 by Avalon Software            |
+   6+ 8800              ;|                           (c) 1988 by McGraw Hill                |
+   7+ 8800              ;|                                                                  |
+   8+ 8800              ;|  Formatted as Z80 Assembly include by Daniel Jose Viana, 2014    |
+   9+ 8800              ;|                                                                  |
+  10+ 8800              ;+------------------------------------------------------------------+
+  11+ 8800              ;
+  12+ 8800              ;    The section of the Workspace Area from F380H to FD99H holds
+  13+ 8800              ;the BIOS/Interpreter variables. These are listed on the
+  14+ 8800              ;following pages in standard assembly language form:
+  15+ 8800              ;
+  16+ 8800
+  17+ 8800               IFNDEF SYSTEM_VARIABLES
+  18+ 8800               DEFINE SYSTEM_VARIABLES
+  19+ 8800
+  20+ 8800              RDPRIM: equ  0F380H  ;      OUT (0A8H),A ; Set new Primary Slot
+  21+ 8800              ;            0F382H         LD E,(HL)    ; Read memory
+  22+ 8800              ;            0F383H         JR WRPRM1    ; Restore old Primary Slot
+  23+ 8800              ;
+  24+ 8800              ;    This routine is used by the RDSLT standard routine to switch
+  25+ 8800              ;Primary Slots and read a byte from memory. The new Primary Slot
+  26+ 8800              ;Register setting is supplied in register A, the old setting in
+  27+ 8800              ;register D and the byte read returned in register E.
+  28+ 8800              ;
+  29+ 8800              WRPRIM: equ 0F385H ;       OUT (0A8H),A ; Set new Primary Slot
+  30+ 8800              ;           0F387H         LD (HL),E    ; Write to memory
+  31+ 8800              ;           0F388H WRPRM1: LD A,D       ; Get old setting
+  32+ 8800              ;           0F389H         OUT (0A8H),A ; Restore old Primary Slot
+  33+ 8800              ;           0F38BH         RET
+  34+ 8800              ;
+  35+ 8800              ;    This routine is used by the WRSLT standard routine to switch
+  36+ 8800              ;Primary Slots and write a byte to memory. The new Primary Slot
+  37+ 8800              ;Register setting is supplied in register A, the old setting in
+  38+ 8800              ;register D and the byte to write in register E.
+  39+ 8800              ;
+  40+ 8800              CLPRIM: equ 0F38CH ;       OUT (0A8H),A ; Set new Primary Slot
+  41+ 8800              ;           0F38EH         EX AF,AF'    ; Swap to AF for call
+  42+ 8800              ;           0F38FH         CALL CLPRM1  ; Do it
+  43+ 8800              ;           0F392H         EX AF,AF'    ; Swap to AF
+  44+ 8800              ;           0F393H         POP AF       ; Get old setting
+  45+ 8800              ;           0F394H         OUT (0A8H),A ; Restore old Primary Slot
+  46+ 8800              ;           0F396H         EX AF,AF'    ; Swap to AF
+  47+ 8800              ;           0F397H         RET
+  48+ 8800              ;           0F398H CLPRM1: JP (IX)
+  49+ 8800              ;
+  50+ 8800              ;    This routine is used by the CALSLT standard routine to switch
+  51+ 8800              ;Primary Slots and call an address. The new Primary Slot
+  52+ 8800              ;Register setting is supplied in register A, the old setting on
+  53+ 8800              ;the Z80 stack and the address to call in register pair IX.
+  54+ 8800              ;
+  55+ 8800              USRTAB: equ 0F39AH ;       DEFW 475AH   ; USR 0
+  56+ 8800              ;           0F39CH         DEFW 475AH   ; USR 1
+  57+ 8800              ;           0F39EH         DEFW 475AH   ; USR 2
+  58+ 8800              ;           0F3A0H         DEFW 475AH   ; USR 3
+  59+ 8800              ;           0F3A2H         DEFW 475AH   ; USR 4
+  60+ 8800              ;           0F3A4H         DEFW 475AH   ; USR 5
+  61+ 8800              ;           0F3A6H         DEFW 475AH   ; USR 6
+  62+ 8800              ;           0F3A8H         DEFW 475AH   ; USR 7
+  63+ 8800              ;           0F3AAH         DEFW 475AH   ; USR 8
+  64+ 8800              ;           0F3ACH         DEFW 475AH   ; USR 9
+  65+ 8800              ;
+  66+ 8800              ;    These ten variables contain the "USR" function addresses. Their
+  67+ 8800              ;values are set to the Interpreter "Illegal function call" error
+  68+ 8800              ;generator at power-up and thereafter only altered by the
+  69+ 8800              ;"DEFUSR" statement.
+  70+ 8800              ;
+  71+ 8800              LINL40: equ 0F3AEH ; DEFB 37
+  72+ 8800              ;
+  73+ 8800              ;    This variable contains the 40x24 Text Mode screen width. Its
+  74+ 8800              ;value is set at power-up and thereafter only altered by the
+  75+ 8800              ;"WIDTH" statement.
+  76+ 8800              ;
+  77+ 8800              LINL32: equ 0F3AFH ; DEFB 29
+  78+ 8800              ;
+  79+ 8800              ;    This variable contains the 32x24 Text Mode screen width. Its
+  80+ 8800              ;value is set at power-up and thereafter only altered by the
+  81+ 8800              ;"WIDTH" statement.
+  82+ 8800              ;
+  83+ 8800              LINLEN: equ 0F3B0H ;  DEFB 37
+  84+ 8800              ;
+  85+ 8800              ;    This variable contains the current text mode screen width. Its
+  86+ 8800              ;value is set from LINL40 or LINL32 whenever the VDP is
+  87+ 8800              ;initialized to a text mode via the INITXT or INIT32 standard
+  88+ 8800              ;routines.
+  89+ 8800              ;
+  90+ 8800              CRTCNT: equ 0F3B1H ;  DEFB 24
+  91+ 8800              ;
+  92+ 8800              ;    This variable contains the number of rows on the screen. Its
+  93+ 8800              ;value is set at power-up and thereafter unaltered.
+  94+ 8800              ;
+  95+ 8800              CLMLST: equ 0F3B2H  ; DEFB 14
+  96+ 8800              ;
+  97+ 8800              ;    This variable contains the minimum number of columns that must
+  98+ 8800              ;still be available on a line for a data item to be "PRINT"ed,
+  99+ 8800              ;if less space is available a CR,LF is issued first. Its value
+ 100+ 8800              ;is set at power-up and thereafter only altered by the "WIDTH"
+ 101+ 8800              ;and "SCREEN" statements.
+ 102+ 8800              ;
+ 103+ 8800              TXTNAM: equ 0F3B3H  ; DEFW 0000H   ; Name Table Base
+ 104+ 8800              TXTCOL: equ 0F3B5H  ; DEFW 0000H   ; Colour Table Base
+ 105+ 8800              TXTCGP: equ 0F3B7H  ; DEFW 0800H   ; Character Pattern Base
+ 106+ 8800              TXTATR: equ 0F3B9H  ; DEFW 0000H   ; Sprite Attribute Base
+ 107+ 8800              TXTPAT: equ 0F3BBH  ; DEFW 0000H   ; Sprite Pattern Base
+ 108+ 8800              ;
+ 109+ 8800              ;    These five variables contain the 40x24 Text Mode VDP base
+ 110+ 8800              ;addresses. Their values are set at power-up and thereafter only
+ 111+ 8800              ;altered by the "BASE" statement.
+ 112+ 8800              ;
+ 113+ 8800              T32NAM: equ 0F3BDH  ; DEFW 1800H   ; Name Table Base
+ 114+ 8800              T32COL: equ 0F3BFH  ; DEFW 2000H   ; Colour Table Base
+ 115+ 8800              T32CGP: equ 0F3C1H  ; DEFW 0000H   ; Character Pattern Base
+ 116+ 8800              T32ATR: equ 0F3C3H  ; DEFW 1B00H   ; Sprite Attribute Base
+ 117+ 8800              T32PAT: equ 0F3C5H  ; DEFW 3800H   ; Sprite Pattern Base
+ 118+ 8800              ;
+ 119+ 8800              ;    These five variables contain the 32x24 Text Mode VDP base
+ 120+ 8800              ;addresses. Their values are set at power-up and thereafter only
+ 121+ 8800              ;altered by the "BASE" statement.
+ 122+ 8800              ;
+ 123+ 8800              GRPNAM: equ 0F3C7H  ; DEFW 1800H   ; Name Table Base
+ 124+ 8800              GRPCOL: equ 0F3C9H  ; DEFW 2000H   ; Colour Table Base
+ 125+ 8800              GRPCGP: equ 0F3CBH  ; DEFW 0000H   ; Character Pattern Base
+ 126+ 8800              GRPATR: equ 0F3CDH  ; DEFW 1B00H   ; Sprite Attribute Base
+ 127+ 8800              GRPPAT: equ 0F3CFH  ; DEFW 3800H   ; Sprite Pattern Base
+ 128+ 8800              ;
+ 129+ 8800              ;    These five variables contain the Graphics Mode VDP base
+ 130+ 8800              ;addresses. Their values are set at power-up and thereafter only
+ 131+ 8800              ;altered by the "BASE" statement.
+ 132+ 8800              ;
+ 133+ 8800              MLTNAM: equ 0F3D1H  ; DEFW 0800H   ; Name Table Base
+ 134+ 8800              MLTCOL: equ 0F3D3H  ; DEFW 0000H   ; Colour Table Base
+ 135+ 8800              MLTCGP: equ 0F3D5H  ; DEFW 0000H   ; Character Pattern Base
+ 136+ 8800              MLTATR: equ 0F3D7H  ; DEFW 1B00H   ; Sprite Attribute Base
+ 137+ 8800              MLTPAT: equ 0F3D9H  ; DEFW 3800H   ; Sprite Pattern Base
+ 138+ 8800              ;
+ 139+ 8800              ;    These five variables contain the Multicolour Mode VDP base
+ 140+ 8800              ;addresses. Their values are set at power-up and thereafter only
+ 141+ 8800              ;altered by the "BASE" statement.
+ 142+ 8800              ;
+ 143+ 8800              CLIKSW: equ 0F3DBH  ; DEFB 01H
+ 144+ 8800              ;
+ 145+ 8800              ;    This variable controls the interrupt handler key click:
+ 146+ 8800              ;00H=Off, NZ=On. Its value is set at power-up and thereafter
+ 147+ 8800              ;only altered by the "SCREEN" statement.
+ 148+ 8800              ;
+ 149+ 8800              CSRY: equ 0F3DCH  ; DEFB 01H
+ 150+ 8800              ;
+ 151+ 8800              ;    This variable contains the row coordinate (from 1 to CTRCNT) of
+ 152+ 8800              ;the text mode cursor.
+ 153+ 8800              ;
+ 154+ 8800              CSRX: equ 0F3DDH  ; DEFB 01H
+ 155+ 8800              ;
+ 156+ 8800              ;    This variable contains the column coordinate (from 1 to LINLEN)
+ 157+ 8800              ;of the text mode cursor. Note that the BIOS cursor coordinates
+ 158+ 8800              ;for the home position are 1,1 whatever the screen width.
+ 159+ 8800              ;
+ 160+ 8800              CNSDFG: equ 0F3DEH  ; DEFB FFH
+ 161+ 8800              ;
+ 162+ 8800              ;    This variable contains the current state of the function key
+ 163+ 8800              ;display: 00H=Off, NZ=On.
+ 164+ 8800              ;
+ 165+ 8800              RG0SAV: equ 0F3DFH  ; DEFB 00H
+ 166+ 8800              RG1SAV: equ 0F3E0H  ; DEFB F0H
+ 167+ 8800              RG2SAV: equ 0F3E1H  ; DEFB 00H
+ 168+ 8800              RG3SAV: equ 0F3E2H  ; DEFB 00H
+ 169+ 8800              RG4SAV: equ 0F3E3H  ; DEFB 01H
+ 170+ 8800              RG5SAV: equ 0F3E4H  ; DEFB 00H
+ 171+ 8800              RG6SAV: equ 0F3E5H  ; DEFB 00H
+ 172+ 8800              RG7SAV: equ 0F3E6H  ; DEFB F4H
+ 173+ 8800              ;
+ 174+ 8800              ;    These eight variables mimic the state of the eight write-only
+ 175+ 8800              ;VDP Mode Registers. The values shown are for 40x24 Text Mode.
+ 176+ 8800              ;
+ 177+ 8800              STATFL: equ 0F3E7H  ; DEFB CAH
+ 178+ 8800              ;
+ 179+ 8800              ;    This variable is continuously updated by the interrupt handler
+ 180+ 8800              ;with the contents of the VDP Status Register.
+ 181+ 8800              ;
+ 182+ 8800              TRGFLG: equ 0F3E8H  ; DEFB F1H
+ 183+ 8800              ;
+ 184+ 8800              ;    This variable is continuously updated by the interrupt handler
+ 185+ 8800              ;with the state of the four joystick trigger inputs and the
+ 186+ 8800              ;space key.
+ 187+ 8800              ;
+ 188+ 8800              FORCLR: equ 0F3E9H  ; DEFB 0FH     ; White
+ 189+ 8800              ;
+ 190+ 8800              ;    This variable contains the current foreground colour. Its value
+ 191+ 8800              ;is set at power-up and thereafter only altered by the "COLOR"
+ 192+ 8800              ;statement. The foreground colour is used by the CLRSPR standard
+ 193+ 8800              ;routine to set the sprite colour and by the CHGCLR standard
+ 194+ 8800              ;routine to set the 1 pixel colour in the text modes. It also
+ 195+ 8800              ;functions as the graphics ink colour as it is copied to ATRBYT
+ 196+ 8800              ;by the GRPPRT standard routine and used throughout the
+ 197+ 8800              ;Interpreter as the default value for any optional colour
+ 198+ 8800              ;operand.
+ 199+ 8800              ;
+ 200+ 8800              BAKCLR: equ 0F3EAH  ; DEFB 04H     ; Dark blue
+ 201+ 8800              ;
+ 202+ 8800              ;    This variable contains the current background colour. Its value
+ 203+ 8800              ;is set at power-up and thereafter only altered by the "COLOR"
+ 204+ 8800              ;statement. The background colour is used by the CLS standard
+ 205+ 8800              ;routine to clear the screen in the graphics modes and by the
+ 206+ 8800              ;CHGCLR standard routine to set the 0 pixel colour in the text
+ 207+ 8800              ;modes.
+ 208+ 8800              ;
+ 209+ 8800              BDRCLR: equ 0F3EBH  ; DEFB 04H     ; Dark blue
+ 210+ 8800              ;
+ 211+ 8800              ;    This variable contains the current border colour. Its value is
+ 212+ 8800              ;set at power-up and thereafter only altered by the "COLOR"
+ 213+ 8800              ;statement. The border colour is used by the CHGCLR standard
+ 214+ 8800              ;routine in 32x24 Text Mode, Graphics Mode and Multicolour Mode
+ 215+ 8800              ;to set the border colour.
+ 216+ 8800              ;
+ 217+ 8800              MAXUPD: equ 0F3ECH ;       DEFB C3H
+ 218+ 8800              ;           0F3EDH         DEFW 0000H
+ 219+ 8800              ;
+ 220+ 8800              ;    These two bytes are filled in by the "LINE" statement handler
+ 221+ 8800              ;to form a Z80 JP to the RIGHTC, LEFTC, UPC or DOWNC standard
+ 222+ 8800              ;routines.
+ 223+ 8800              ;
+ 224+ 8800              MINUPD: equ 0F3EFH  ;      DEFB C3H
+ 225+ 8800              ;           0F3F0H         DEFW 0000H
+ 226+ 8800              ;
+ 227+ 8800              ;    These two bytes are filled in by the "LINE" statement handler
+ 228+ 8800              ;to form a Z80 JP to the RIGHTC, LEFTC, UPC or DOWNC standard
+ 229+ 8800              ;routines.
+ 230+ 8800              ;
+ 231+ 8800              ATRBYT: equ 0F3F2H  ; DEFB 0FH
+ 232+ 8800              ;
+ 233+ 8800              ;    This variable contains the graphics ink colour used by the SETC
+ 234+ 8800              ;and NSETCX standard routines.
+ 235+ 8800              ;
+ 236+ 8800              QUEUES: equ 0F3F3H  ; DEFW F959H
+ 237+ 8800              ;
+ 238+ 8800              ;    This variable contains the address of the control blocks for
+ 239+ 8800              ;the three music queues. Its value is set at power-up and
+ 240+ 8800              ;thereafter unaltered.
+ 241+ 8800              ;
+ 242+ 8800              FRCNEW: equ 0F3F5H  ; DEFB FFH
+ 243+ 8800              ;
+ 244+ 8800              ;    This variable contains a flag to distinguish the two statements
+ 245+ 8800              ;in the "CLOAD/CLOAD?" statement handler: 00H=CLOAD, FFH=CLOAD?.
+ 246+ 8800              ;
+ 247+ 8800              SCNCNT: equ 0F3F6H  ; DEFB 01H
+ 248+ 8800              ;
+ 249+ 8800              ;    This variable is used as a counter by the interrupt handler to
+ 250+ 8800              ;control the rate at which keyboard scans are performed.
+ 251+ 8800              ;
+ 252+ 8800              REPCNT: equ 0F3F7H  ; DEFB 01H
+ 253+ 8800              ;
+ 254+ 8800              ;    This variable is used as a counter by the interrupt handler to
+ 255+ 8800              ;control the key repeat rate.
+ 256+ 8800              ;
+ 257+ 8800              PUTPNT: equ 0F3F8H  ; DEFW FBF0H
+ 258+ 8800              ;
+ 259+ 8800              ;    This variable contains the address of the put position in
+ 260+ 8800              ;KEYBUF.
+ 261+ 8800              ;
+ 262+ 8800              GETPNT: equ 0F3FAH  ; DEFW FBF0H
+ 263+ 8800              ;
+ 264+ 8800              ;    This variable contains the address of the get position in
+ 265+ 8800              ;KEYBUF.
+ 266+ 8800              ;
+ 267+ 8800              CS1200: equ 0F3FCH  ; DEFB 53H     ; LO cycle 1st half
+ 268+ 8800              ;    F3FDH         DEFB 5CH     ; LO cycle 2nd half
+ 269+ 8800              ;    F3FEH         DEFB 26H     ; HI cycle 1st half
+ 270+ 8800              ;    F3FFH         DEFB 2DH     ; HI cycle 2nd half
+ 271+ 8800              ;    F400H         DEFB 0FH     ; Header cycle count
+ 272+ 8800              ;
+ 273+ 8800              ;    These five variables contain the 1200 baud cassette parameters.
+ 274+ 8800              ;Their values are set at power-up and thereafter unaltered.
+ 275+ 8800              ;
+ 276+ 8800              CS2400: equ 0F401H  ; DEFB 25H     ; LO cycle 1st half
+ 277+ 8800              ;    F402H         DEFB 2DH     ; LO cycle 2nd half
+ 278+ 8800              ;    F403H         DEFB 0EH     ; HI cycle 1st half
+ 279+ 8800              ;    F404H         DEFB 16H     ; HI cycle 2nd half
+ 280+ 8800              ;    F405H         DEFB 1FH     ; Header cycle count
+ 281+ 8800              ;
+ 282+ 8800              ;    These five variables contain the 2400 baud cassette parameters.
+ 283+ 8800              ;Their values are set at power-up and thereafter unaltered.
+ 284+ 8800              ;
+ 285+ 8800              ;LOW: equ 0F406H    ; DEFB 53H     ; LO cycle 1st half
+ 286+ 8800              ;    F407H         DEFB 5CH     ; LO cycle 2nd half
+ 287+ 8800              ;HIGH: equ 0F408H  ;  DEFB 26H     ; HI cycle 1st half
+ 288+ 8800              ;    F409H         DEFB 2DH     ; HI cycle 2nd half
+ 289+ 8800              HEADER: equ 0F40AH  ; DEFB 0FH     ; Header cycle count
+ 290+ 8800              ;
+ 291+ 8800              ;    These five variables contain the current cassette parameters.
+ 292+ 8800              ;Their values are set to 1200 baud at power-up and thereafter
+ 293+ 8800              ;only altered by the "CSAVE" and "SCREEN" statements.
+ 294+ 8800              ;
+ 295+ 8800              ASPCT1: equ 0F40BH  ; DEFW 0100H
+ 296+ 8800              ;
+ 297+ 8800              ;    This variable contains the reciprocal of the default "CIRCLE"
+ 298+ 8800              ;aspect ratio multiplied by 256. Its value is set at power-up
+ 299+ 8800              ;and thereafter unaltered.
+ 300+ 8800              ;
+ 301+ 8800              ASPCT2: equ 0F40DH  ; DEFW 01C0H
+ 302+ 8800              ;
+ 303+ 8800              ;    This variable contains the default "CIRCLE" aspect ratio
+ 304+ 8800              ;multiplied by 256. Its value is set at power-up and thereafter
+ 305+ 8800              ;unaltered. The aspect ratio is present in two forms so that the
+ 306+ 8800              ;"CIRCLE" statement handler can select the appropriate one
+ 307+ 8800              ;immediately rather than needing to examine and possibly
+ 308+ 8800              ;reciprocate it as is the case with an operand in the program
+ 309+ 8800              ;text.
+ 310+ 8800              ;
+ 311+ 8800              ENDPRG: equ 0F40FH  ; DEFB ":"
+ 312+ 8800              ;           0F410H    DEFB 00H
+ 313+ 8800              ;           0F411H    DEFB 00H
+ 314+ 8800              ;           0FE12H    DEFB 00H
+ 315+ 8800              ;           0F413H    DEFB 00H
+ 316+ 8800              ;
+ 317+ 8800              ;    These five bytes form a dummy program line. Their values are
+ 318+ 8800              ;set at power-up and thereafter unaltered. The line exists in
+ 319+ 8800              ;case an error occurs in the Interpreter Mainloop before any
+ 320+ 8800              ;tokenized text is available in KBUF. If an "ON ERROR GOTO" is
+ 321+ 8800              ;active at this time then it provides some text for the "RESUME"
+ 322+ 8800              ;statement to terminate on.
+ 323+ 8800              ;
+ 324+ 8800              ERRFLG: equ 0F414H  ; DEFB 00H
+ 325+ 8800              ;
+ 326+ 8800              ;    This variable is used by the Interpreter error handler to save
+ 327+ 8800              ;the error number.
+ 328+ 8800              ;
+ 329+ 8800              LPTPOS: equ 0F415H  ; DEFB 00H
+ 330+ 8800              ;
+ 331+ 8800              ;    This variable is used by the "LPRINT" statement handler to hold
+ 332+ 8800              ;the current position of the printer head.
+ 333+ 8800              ;
+ 334+ 8800              PRTFLG: equ 0F416H  ; DEFB 00H
+ 335+ 8800              ;
+ 336+ 8800              ;    This variable determines whether the OUTDO standard routine
+ 337+ 8800              ;directs its output to the screen or to the printer: 00H=Screen,
+ 338+ 8800              ;01H=Printer.
+ 339+ 8800              ;
+ 340+ 8800              NTMSXP: equ 0F417H  ; DEFB 00H
+ 341+ 8800              ;
+ 342+ 8800              ;    This variable determines whether the OUTDO standard routine
+ 343+ 8800              ;will replace headered graphics characters directed to the
+ 344+ 8800              ;printer with spaces: 00H=Graphics, NZ=Spaces. Its value is set
+ 345+ 8800              ;at power-up and thereafter only altered by the "SCREEN"
+ 346+ 8800              ;statement.
+ 347+ 8800              ;
+ 348+ 8800              RAWPRT: equ 0F418H  ; DEFB 00H
+ 349+ 8800              ;
+ 350+ 8800              ;    This variable determines whether the OUTDO standard routine
+ 351+ 8800              ;will modify control and headered graphics characters directed
+ 352+ 8800              ;to the printer: 00H=Modify, NZ=Raw. Its value is set at power-
+ 353+ 8800              ;up and thereafter unaltered.
+ 354+ 8800              ;
+ 355+ 8800              VLZADR: equ 0F419H  ; DEFW 0000H
+ 356+ 8800              VLZDAT: equ 0F41BH  ; DEFB 00H
+ 357+ 8800              ;
+ 358+ 8800              ;    These variables contain the address and value of any character
+ 359+ 8800              ;temporarily removed by the "VAL" function.
+ 360+ 8800              ;
+ 361+ 8800              CURLIN: equ 0F41CH  ; DEFW FFFFH
+ 362+ 8800              ;
+ 363+ 8800              ;    This variable contains the current Interpreter line number. A
+ 364+ 8800              ;value of FFFFH denotes direct mode.
+ 365+ 8800              ;
+ 366+ 8800              KBFMIN: equ 0F41EH  ; DEFB ":"
+ 367+ 8800              ;
+ 368+ 8800              ;    This byte provides a dummy prefix to the tokenized text
+ 369+ 8800              ;contained in KBUF. Its function is similar to that of ENDPRG
+ 370+ 8800              ;but is used for the situation where an error occurs within a
+ 371+ 8800              ;direct statement.
+ 372+ 8800              ;
+ 373+ 8800              KBUF: equ 0F41FH    ; DEFS 318
+ 374+ 8800              ;
+ 375+ 8800              ;    This buffer contains the tokenized form of the input line
+ 376+ 8800              ;collected by the Interpreter Mainloop. When a direct statement
+ 377+ 8800              ;is executed the contents of this buffer form the program text.
+ 378+ 8800              ;
+ 379+ 8800              BUFMIN: equ 0F55DH  ; DEFB ","
+ 380+ 8800              ;
+ 381+ 8800              ;    This byte provides a dummy prefix to the text contained in BUF.
+ 382+ 8800              ;It is used to synchronize the "INPUT" statement handler as it
+ 383+ 8800              ;starts to analyze the input text.
+ 384+ 8800              ;
+ 385+ 8800              BUF: equ 0F55EH     ; DEFS 259
+ 386+ 8800              ;
+ 387+ 8800              ;    This buffer contains the text collected from the console by the
+ 388+ 8800              ;INLIN standard routine.
+ 389+ 8800              ;
+ 390+ 8800              TTYPOS: equ 0F661H  ; DEFB 00H
+ 391+ 8800              ;
+ 392+ 8800              ;    This variable is used by the "PRINT" statement handler to hold
+ 393+ 8800              ;the current screen position (Teletype!).
+ 394+ 8800              ;
+ 395+ 8800              DIMFLG: equ 0F662H  ; DEFB 00H
+ 396+ 8800              ;
+ 397+ 8800              ;    This variable is normally zero but is set by the "DIM"
+ 398+ 8800              ;statement handler to control the operation of the variable
+ 399+ 8800              ;search routine.
+ 400+ 8800              ;
+ 401+ 8800              VALTYP: equ 0F663H  ; DEFB 02H
+ 402+ 8800              ;
+ 403+ 8800              ;    This variable contains the type code of the operand currently
+ 404+ 8800              ;contained in DAC: integer, 3=String, 4=Single Precision,
+ 405+ 8800              ;8=Double Precision.
+ 406+ 8800              ;
+ 407+ 8800              DORES: equ 0F664H  ; DEFB 00H
+ 408+ 8800              ;
+ 409+ 8800              ;    This variable is normally zero but is set to prevent the
+ 410+ 8800              ;tokenization of unquoted keywords following a "DATA" token.
+ 411+ 8800              ;
+ 412+ 8800              DONUM: equ 0F665H  ; DEFB 00H
+ 413+ 8800              ;
+ 414+ 8800              ;    This variable is normally zero but is set when a numeric
+ 415+ 8800              ;constant follows one of the keywords GOTO, GOSUB, THEN, etc.,
+ 416+ 8800              ;and must be tokenized to the special line number operand form.
+ 417+ 8800              ;
+ 418+ 8800              CONTXT: equ 0F666H  ; DEFW 0000H
+ 419+ 8800              ;
+ 420+ 8800              ;    This variable is used by the CHRGTR standard routine to save
+ 421+ 8800              ;the address of the character following a numeric constant in
+ 422+ 8800              ;the program text.
+ 423+ 8800              ;
+ 424+ 8800              CONSAV: equ 0F668H  ; DEFB 00H
+ 425+ 8800              ;
+ 426+ 8800              ;    This variable is used by the CHRGTR standard routine to save
+ 427+ 8800              ;the token of a numeric constant found in the program text.
+ 428+ 8800              ;
+ 429+ 8800              CONTYP: equ 0F669H  ; DEFB 00H
+ 430+ 8800              ;
+ 431+ 8800              ;    This variable is used by the CHRGTR standard routine to save
+ 432+ 8800              ;the type of a numeric constant found in the program text.
+ 433+ 8800              ;
+ 434+ 8800              CONLO: equ 0F66AH   ; DEFS 8
+ 435+ 8800              ;
+ 436+ 8800              ;    This buffer is used by the CHRGTR standard routine to save the
+ 437+ 8800              ;value of a numeric constant found in the program text.
+ 438+ 8800              ;
+ 439+ 8800              MEMSIZ: equ 0F672H  ; DEFW F168H
+ 440+ 8800              ;
+ 441+ 8800              ;    This variable contains the address of the top of the String
+ 442+ 8800              ;Storage Area. Its value is set at power-up and thereafter only
+ 443+ 8800              ;altered by the "CLEAR" and "MAXFILES" statements.
+ 444+ 8800              ;
+ 445+ 8800              STKTOP: equ 0F674H  ; DEFW F0A0H
+ 446+ 8800              ;
+ 447+ 8800              ;    This variable contains the address of the top of the Z80 stack.
+ 448+ 8800              ;Its value is set at power-up to MEMSIZ-200 and thereafter only
+ 449+ 8800              ;altered by the "CLEAR" and "MAXFILES" statements.
+ 450+ 8800              ;
+ 451+ 8800              TXTTAB: equ 0F676H  ; DEFW 8001H
+ 452+ 8800              ;
+ 453+ 8800              ;    This variable contains the address of the first byte of the
+ 454+ 8800              ;Program Text Area. Its value is set at power-up and thereafter
+ 455+ 8800              ;unaltered.
+ 456+ 8800              ;
+ 457+ 8800              TEMPPT: equ 0F678H  ; DEFW F67AH
+ 458+ 8800              ;
+ 459+ 8800              ;    This variable contains the address of the next free location in
+ 460+ 8800              ;TEMPST.
+ 461+ 8800              ;
+ 462+ 8800              TEMPST: equ 0F67AH  ; DEFS 30
+ 463+ 8800              ;
+ 464+ 8800              ;    This buffer is used to store string descriptors. It functions
+ 465+ 8800              ;as a stack with string producers pushing their results and
+ 466+ 8800              ;string consumers popping them.
+ 467+ 8800              ;
+ 468+ 8800              DSCTMP: equ 0F698H  ; DEFS 3
+ 469+ 8800              ;
+ 470+ 8800              ;    This buffer is used by the string functions to hold a result
+ 471+ 8800              ;descriptor while it is being constructed.
+ 472+ 8800              ;
+ 473+ 8800              FRETOP: equ 0F69BH  ; DEFW F168H
+ 474+ 8800              ;
+ 475+ 8800              ;    This variable contains the address of the next free location in
+ 476+ 8800              ;the String Storage Area. When the area is empty FRETOP is equal
+ 477+ 8800              ;to MEMSIZ.
+ 478+ 8800              ;
+ 479+ 8800              TEMP3: equ 0F69DH  ; DEFW 0000H
+ 480+ 8800              ;
+ 481+ 8800              ;    This variable is used for temporary storage by various parts of
+ 482+ 8800              ;the Interpreter.
+ 483+ 8800              ;
+ 484+ 8800              TEMP8: equ 0F69FH  ; DEFW 0000H
+ 485+ 8800              ;
+ 486+ 8800              ;    This variable is used for temporary storage by various parts of
+ 487+ 8800              ;the Interpreter.
+ 488+ 8800              ;
+ 489+ 8800              ENDFOR: equ 0F6A1H  ; DEFW 0000H
+ 490+ 8800              ;
+ 491+ 8800              ;    This variable is used by the "FOR" statement handler to hold
+ 492+ 8800              ;the end of statement address during construction of a parameter
+ 493+ 8800              ;block.
+ 494+ 8800              ;
+ 495+ 8800              DATLIN: equ 0F6A3H  ; DEFW 0000H
+ 496+ 8800              ;
+ 497+ 8800              ;    This variable contains the line number of the current "DATA"
+ 498+ 8800              ;item in the program text.
+ 499+ 8800              ;
+ 500+ 8800              SUBFLG: equ 0F6A5H  ; DEFB 00H
+ 501+ 8800              ;
+ 502+ 8800              ;    This variable is normally zero but is set by the "ERASE",
+ 503+ 8800              ;"FOR", "FN" and "DEF FN" handlers to control the processing of
+ 504+ 8800              ;subscripts by the variable search routine.
+ 505+ 8800              ;
+ 506+ 8800              FLGINP: equ 0F6A6H  ; DEFB 00H
+ 507+ 8800              ;
+ 508+ 8800              ;    This variable contains a flag to distinguish the two statements
+ 509+ 8800              ;in the "READ/INPUT" statement handler: 00H=INPUT, NZ=READ.
+ 510+ 8800              ;
+ 511+ 8800              TEMP: equ 0F6A7H    ; DEFW 0000H
+ 512+ 8800              ;
+ 513+ 8800              ;    This variable is used for temporary storage by various parts of
+ 514+ 8800              ;the Interpreter.
+ 515+ 8800              ;
+ 516+ 8800              PTRFLG: equ 0F6A9H  ; DEFB 00H
+ 517+ 8800              ;
+ 518+ 8800              ;    This variable is normally zero but is set if any line number
+ 519+ 8800              ;operands in the Program Text Area have been converted to
+ 520+ 8800              ;pointers.
+ 521+ 8800              ;
+ 522+ 8800              AUTFLG: equ 0F6AAH  ; DEFB 00H
+ 523+ 8800              ;
+ 524+ 8800              ;    This variable is normally zero but is set when "AUTO" mode is
+ 525+ 8800              ;turned on.
+ 526+ 8800              ;
+ 527+ 8800              AUTLIN: equ 0F6ABH  ; DEFW 0000H
+ 528+ 8800              ;
+ 529+ 8800              ;    This variable contains the current "AUTO" line number.
+ 530+ 8800              ;
+ 531+ 8800              AUTINC: equ 0F6ADH  ; DEFW 0000H
+ 532+ 8800              ;
+ 533+ 8800              ;    This variable contains the current "AUTO" line number
+ 534+ 8800              ;increment.
+ 535+ 8800              ;
+ 536+ 8800              SAVTXT: equ 0F6AFH  ; DEFW 0000H
+ 537+ 8800              ;
+ 538+ 8800              ;    This variable is updated by the Runloop at the start of every
+ 539+ 8800              ;statement with the current location in the program text. It is
+ 540+ 8800              ;used during error recovery to set ERRTXT for the "RESUME"
+ 541+ 8800              ;statement handler and OLDTXT for the "CONT" statement handler.
+ 542+ 8800              ;
+ 543+ 8800              SAVSTK: equ 0F6B1H  ; DEFW F09EH
+ 544+ 8800              ;
+ 545+ 8800              ;    This variable is updated by the Runloop at the start of every
+ 546+ 8800              ;statement with the current Z80 SP for error recovery purposes.
+ 547+ 8800              ;
+ 548+ 8800              ERRLIN: equ 0F6B3H  ; DEFW 0000H
+ 549+ 8800              ;
+ 550+ 8800              ;    This variable is used by the error handler to hold the line
+ 551+ 8800              ;number of the program line generating an error.
+ 552+ 8800              ;
+ 553+ 8800              DOT: equ 0F6B5H  ; DEFW 0000H
+ 554+ 8800              ;
+ 555+ 8800              ;    This variable is updated by the Mainloop and the error handler
+ 556+ 8800              ;with the current line number for use with the "." parameter.
+ 557+ 8800              ;
+ 558+ 8800              ERRTXT: equ 0F6B7H  ; DEFW 0000H
+ 559+ 8800              ;
+ 560+ 8800              ;    This variable is updated from SAVTXT by the error handler for
+ 561+ 8800              ;use by the "RESUME" statement handler.
+ 562+ 8800              ;
+ 563+ 8800              ONELIN: equ 0F6B9H  ; DEFW 0000H
+ 564+ 8800              ;
+ 565+ 8800              ;    This variable is set by the "ON ERROR GOTO" statement handler
+ 566+ 8800              ;with the address of the program line to execute when an error
+ 567+ 8800              ;occurs.
+ 568+ 8800              ;
+ 569+ 8800              ONEFLG: equ 0F6BBH  ; DEFB 00H
+ 570+ 8800              ;
+ 571+ 8800              ;    This variable is normally zero but is set by the error handler
+ 572+ 8800              ;when control transfers to an "ON ERROR GOTO" statement. This is
+ 573+ 8800              ;to prevent a loop developing if an error occurs inside the
+ 574+ 8800              ;error recovery statements.
+ 575+ 8800              ;
+ 576+ 8800              TEMP2: equ 0F6BCH   ; DEFW 0000H
+ 577+ 8800              ;
+ 578+ 8800              ;    This variable is used for temporary storage by various parts of
+ 579+ 8800              ;the Interpreter.
+ 580+ 8800              ;
+ 581+ 8800              OLDLIN: equ 0F6BEH  ; DEFW 0000H
+ 582+ 8800              ;
+ 583+ 8800              ;    This variable contains the line number of the terminating
+ 584+ 8800              ;program line. It is set by the "END" and "STOP" statement
+ 585+ 8800              ;handlers for use with the "CONT" statement.
+ 586+ 8800              ;
+ 587+ 8800              OLDTXT: equ 0F6C0H  ; DEFW 0000H
+ 588+ 8800              ;
+ 589+ 8800              ;    This variable contains the address of the terminating program
+ 590+ 8800              ;statement.
+ 591+ 8800              ;
+ 592+ 8800              VARTAB: equ 0F6C2H  ; DEFW 8003H
+ 593+ 8800              ;
+ 594+ 8800              ;    This variable contains the address of the first byte of the
+ 595+ 8800              ;Variable Storage Area.
+ 596+ 8800              ;
+ 597+ 8800              ARYTAB: equ 0F6C4H  ; DEFW 8003H
+ 598+ 8800              ;
+ 599+ 8800              ;    This variable contains the address of the first byte of the
+ 600+ 8800              ;Array Storage Area.
+ 601+ 8800              ;
+ 602+ 8800              STREND: equ 0F6C6H  ; DEFW 8003H
+ 603+ 8800              ;
+ 604+ 8800              ;    This variable contains the address of the byte following the
+ 605+ 8800              ;Array Storage Area.
+ 606+ 8800              ;
+ 607+ 8800              DATPTR: equ 0F6C8H  ; DEFW 8000H
+ 608+ 8800              ;
+ 609+ 8800              ;    This variable contains the address of the current "DATA" item
+ 610+ 8800              ;in the program text.
+ 611+ 8800              ;
+ 612+ 8800              DEFTBL: equ 0F6CAH  ; DEFB 08H     ; A
+ 613+ 8800              ;           0F6CBH    DEFB 08H     ; B
+ 614+ 8800              ;           0F6CCH    DEFB 08H     ; C
+ 615+ 8800              ;           0F6CDH    DEFB 08H     ; D
+ 616+ 8800              ;           0F6CEH    DEFB 08H     ; E
+ 617+ 8800              ;           0F6CFH    DEFB 08H     ; F
+ 618+ 8800              ;           0F6D0H    DEFB 08H     ; G
+ 619+ 8800              ;           0F6D1H    DEFB 08H     ; H
+ 620+ 8800              ;           0F6D2H    DEFB 08H     ; I
+ 621+ 8800              ;           0F6D3H    DEFB 08H     ; J
+ 622+ 8800              ;           0F6D4H    DEFB 08H     ; K
+ 623+ 8800              ;           0F6D5H    DEFB 08H     ; L
+ 624+ 8800              ;           0F6D6H    DEFB 08H     ; M
+ 625+ 8800              ;           0F6D7H    DEFB 08H     ; N
+ 626+ 8800              ;           0F6D8H    DEFB 08H     ; O
+ 627+ 8800              ;           0F6D9H    DEFB 08H     ; P
+ 628+ 8800              ;           0F6DAH    DEFB 08H     ; Q
+ 629+ 8800              ;           0F6DBH    DEFB 08H     ; R
+ 630+ 8800              ;           0F6DCH    DEFB 08H     ; S
+ 631+ 8800              ;           0F6DDH    DEFB 08H     ; T
+ 632+ 8800              ;           0F6DEH    DEFB 08H     ; U
+ 633+ 8800              ;           0F6DFH    DEFB 08H     ; V
+ 634+ 8800              ;           0F6E0H    DEFB 08H     ; W
+ 635+ 8800              ;           0F6E1H    DEFB 08H     ; X
+ 636+ 8800              ;           0F6E2H    DEFB 08H     ; Y
+ 637+ 8800              ;           0F6E3H    DEFB 08H     ; Z
+ 638+ 8800              ;
+ 639+ 8800              ;    These twenty-six variables contain the default type for each
+ 640+ 8800              ;group of BASIC Variables. Their values are set to double
+ 641+ 8800              ;precision at power-up, "NEW" and "CLEAR" and thereafter altered
+ 642+ 8800              ;only by the "DEF" group of statements.
+ 643+ 8800              ;
+ 644+ 8800              PRMSTK: equ 0F6E4H  ; DEFW 0000H
+ 645+ 8800              ;
+ 646+ 8800              ;    This variable contains the base address of the previous "FN"
+ 647+ 8800              ;parameter block on the Z80 stack. It is used during string
+ 648+ 8800              ;garbage collection to travel from block to block on the stack.
+ 649+ 8800              ;
+ 650+ 8800              PRMLEN: equ 0F6E6H  ; DEFW 0000H
+ 651+ 8800              ;
+ 652+ 8800              ;    This variable contains the length of the current "FN" parameter
+ 653+ 8800              ;block in PARM1.
+ 654+ 8800              ;
+ 655+ 8800              PARM1: equ 0F6E8H  ; DEFS 100
+ 656+ 8800              ;
+ 657+ 8800              ;    This buffer contains the local Variables belonging to the "FN"
+ 658+ 8800              ;function currently being evaluated.
+ 659+ 8800              ;
+ 660+ 8800              PRMPRV: equ 0F74CH  ; DEFW F6E4H
+ 661+ 8800              ;
+ 662+ 8800              ;    This variable contains the address of the previous "FN"
+ 663+ 8800              ;parameter block. It is actually a constant used to ensure that
+ 664+ 8800              ;string garbage collection commences with the current parameter
+ 665+ 8800              ;block before proceeding to those on the stack.
+ 666+ 8800              ;
+ 667+ 8800              PRMLN2: equ 0F74EH  ; DEFW 0000H
+ 668+ 8800              ;
+ 669+ 8800              ;    This variable contains the length of the "FN" parameter block
+ 670+ 8800              ;being constructed in PARM2
+ 671+ 8800              ;
+ 672+ 8800              PARM2: equ 0F750H  ; DEFS 100
+ 673+ 8800              ;
+ 674+ 8800              ;    This buffer is used to construct the local Variables owned by
+ 675+ 8800              ;the current "FN" function.
+ 676+ 8800              ;
+ 677+ 8800              PRMFLG: equ 0F7B4H  ; DEFB 00H
+ 678+ 8800              ;
+ 679+ 8800              ;    This variable is used during a Variable search to indicate
+ 680+ 8800              ;whether local or global Variables are being examined.
+ 681+ 8800              ;
+ 682+ 8800              ARYTA2: equ 0F7B5H  ; DEFW 0000H
+ 683+ 8800              ;
+ 684+ 8800              ;    This variable is used during a Variable search to hold the
+ 685+ 8800              ;termination address of the storage area being examined.
+ 686+ 8800              ;
+ 687+ 8800              NOFUNS: equ 0F7B7H  ; DEFB 00H
+ 688+ 8800              ;
+ 689+ 8800              ;    This variable is normally zero but is set by the "FN" function
+ 690+ 8800              ;handler to indicate to the variable search routine that local
+ 691+ 8800              ;Variables are present.
+ 692+ 8800              ;
+ 693+ 8800              TEMP9: equ 0F7B8H   ; DEFW 0000H
+ 694+ 8800              ;
+ 695+ 8800              ;    This variable is used for temporary storage by various parts of
+ 696+ 8800              ;the Interpreter.
+ 697+ 8800              ;
+ 698+ 8800              FUNACT: equ 0F7BAH  ; DEFW 0000H
+ 699+ 8800              ;
+ 700+ 8800              ;    This variable contains the number of currently active "FN
+ 701+ 8800              ;functions.
+ 702+ 8800              ;
+ 703+ 8800              SWPTMP: equ 0F7BCH  ; DEFS 8
+ 704+ 8800              ;
+ 705+ 8800              ;    This buffer is used to hold the first operand in a "SWAP"
+ 706+ 8800              ;statement.
+ 707+ 8800              ;
+ 708+ 8800              TRCFLG: equ 0F7C4H  ; DEFB 00H
+ 709+ 8800              ;
+ 710+ 8800              ;    This variable is normally zero but is set by the "TRON"
+ 711+ 8800              ;statement handler to turn on the trace facility.
+ 712+ 8800              ;
+ 713+ 8800              FBUFFR: equ 0F7C5H  ; DEFS 43
+ 714+ 8800              ;
+ 715+ 8800              ;    This buffer is used to hold the text produced during numeric
+ 716+ 8800              ;output conversion.
+ 717+ 8800              ;
+ 718+ 8800              DECTMP: equ 0F7F0H  ; DEFW 0000H
+ 719+ 8800              ;
+ 720+ 8800              ;    This variable is used for temporary storage by the double
+ 721+ 8800              ;precision division routine.
+ 722+ 8800              ;
+ 723+ 8800              DECTM2: equ 0F7F2H  ; DEFW 0000H
+ 724+ 8800              ;
+ 725+ 8800              ;    This variable is used for temporary storage by the double
+ 726+ 8800              ;precision division routine.
+ 727+ 8800              ;
+ 728+ 8800              DECCNT: equ 0F7F4H  ; DEFB 00H
+ 729+ 8800              ;
+ 730+ 8800              ;    This variable is used by the double precision division routine
+ 731+ 8800              ;to hold the number of non-zero bytes in the mantissa of the
+ 732+ 8800              ;second operand.
+ 733+ 8800              ;
+ 734+ 8800              DAC: equ 0F7F6H     ; DEFS 16
+ 735+ 8800              ;
+ 736+ 8800              ;    This buffer functions as the Interpreter's primary accumulator
+ 737+ 8800              ;during expression evaluation.
+ 738+ 8800              ;
+ 739+ 8800              HOLD8: equ 0F806H   ; DEFS 65
+ 740+ 8800              ;
+ 741+ 8800              ;    This buffer is used by the double precision multiplication
+ 742+ 8800              ;routine to hold the multiples of the first operand.
+ 743+ 8800              ;
+ 744+ 8800              ARG: equ 0F847H     ; DEFS 16
+ 745+ 8800              ;
+ 746+ 8800              ;    This buffer functions as the Interpreter's secondary
+ 747+ 8800              ;accumulator during expression evaluation.
+ 748+ 8800              ;
+ 749+ 8800              RNDX: equ 0F857H    ; DEFS 8
+ 750+ 8800              ;
+ 751+ 8800              ;    This buffer contains the current double precision random
+ 752+ 8800              ;number.
+ 753+ 8800              ;
+ 754+ 8800              MAXFIL: equ 0F85FH  ; DEFB 01H
+ 755+ 8800              ;
+ 756+ 8800              ;    This variable contains the number of currently allocated user
+ 757+ 8800              ;I/O buffers. Its value is set to 1 at power-up and thereafter
+ 758+ 8800              ;only altered by the "MAXFILES" statement.
+ 759+ 8800              ;
+ 760+ 8800              FILTAB: equ 0F860H  ; DEFW F16AH
+ 761+ 8800              ;
+ 762+ 8800              ;    This variable contains the address of the pointer table for the
+ 763+ 8800              ;I/O buffer FCBs.
+ 764+ 8800              ;
+ 765+ 8800              NULBUF: equ 0F862H  ; DEFW F177H
+ 766+ 8800              ;
+ 767+ 8800              ;    This variable contains the address of the first byte of the
+ 768+ 8800              ;data buffer belonging to I/O buffer 0.
+ 769+ 8800              ;
+ 770+ 8800              PTRFIL: equ 0F864H  ; DEFW 0000H
+ 771+ 8800              ;
+ 772+ 8800              ;    This variable contains the address of the currently active I/O
+ 773+ 8800              ;buffer FCB.
+ 774+ 8800              ;
+ 775+ 8800              FILNAM: equ 0F866H  ; DEFS 11
+ 776+ 8800              ;
+ 777+ 8800              ;    This buffer holds a user-specified filename. It is eleven
+ 778+ 8800              ;characters long to allow for disc file specs such as
+ 779+ 8800              ;"FILENAME.BAS".
+ 780+ 8800              ;
+ 781+ 8800              FILNM2: equ 0F871H  ; DEFS 11
+ 782+ 8800              ;
+ 783+ 8800              ;    This buffer holds a filename read from an I/O device for
+ 784+ 8800              ;comparison with the contents of FILNAM.
+ 785+ 8800              ;
+ 786+ 8800              NLONLY: equ 0F87CH  ; DEFB 00H
+ 787+ 8800              ;
+ 788+ 8800              ;    This variable is normally zero but is set during a program
+ 789+ 8800              ;"LOAD". Bit 0 is used to prevent I/O buffer 0 being closed
+ 790+ 8800              ;during loading and bit 7 to prevent the user I/O buffers being
+ 791+ 8800              ;closed if auto-run is required.
+ 792+ 8800              ;
+ 793+ 8800              SAVEND: equ 0F87DH  ; DEFW 0000H
+ 794+ 8800              ;
+ 795+ 8800              ;    This variable is used by the "BSAVE" statement handler to hold
+ 796+ 8800              ;the end address of the memory block to be saved.
+ 797+ 8800              ;
+ 798+ 8800              FNKSTR: equ 0F87FH  ; DEFS 160
+ 799+ 8800              ;
+ 800+ 8800              ;    This buffer contains the ten sixteen-character function key
+ 801+ 8800              ;strings. Their values are set at power-up and thereafter only
+ 802+ 8800              ;altered by the "KEY" statement.
+ 803+ 8800              ;
+ 804+ 8800              CGPNT: equ 0F91FH  ; DEFB 00H     ; Slot ID
+ 805+ 8800              ;    F920H         DEFW 1BBFH   ; Address
+ 806+ 8800              ;
+ 807+ 8800              ;    These variables contain the location of the character set
+ 808+ 8800              ;copied to the VDP by the INITXT and INIT32 standard routines.
+ 809+ 8800              ;Their values are set to the MSX ROM character set at power-up
+ 810+ 8800              ;and thereafter unaltered.
+ 811+ 8800              ;
+ 812+ 8800              NAMBAS: equ 0F922H  ; DEFW 0000H
+ 813+ 8800              ;
+ 814+ 8800              ;    This variable contains the current text mode VDP Name Table
+ 815+ 8800              ;base address. Its value is set from TXTNAM or T32NAM whenever
+ 816+ 8800              ;the VDP is initialized to a text mode via the INITXT or INIT32
+ 817+ 8800              ;standard routines.
+ 818+ 8800              ;
+ 819+ 8800              CGPBAS: equ 0F924H  ; DEFW 0800H
+ 820+ 8800              ;
+ 821+ 8800              ;    This variable contains the current text mode VDP Character
+ 822+ 8800              ;Pattern Table base address. Its value is set from TXTCGP or
+ 823+ 8800              ;T32CGP whenever the VDP is initialized to a text mode via the
+ 824+ 8800              ;INITXT or INIT32 standard routines.
+ 825+ 8800              ;
+ 826+ 8800              PATBAS: equ 0F926H  ; DEFW 3800H
+ 827+ 8800              ;
+ 828+ 8800              ;    This variable contains the current VDP Sprite Pattern Table
+ 829+ 8800              ;base address. Its value is set from T32PAT, GRPPAT or MLTPAT
+ 830+ 8800              ;whenever the VDP is initialized via the INIT32, INIGRP or
+ 831+ 8800              ;INIMLT standard routines.
+ 832+ 8800              ;
+ 833+ 8800              ATRBAS: equ 0F928H  ; DEFW 1B00H
+ 834+ 8800              ;
+ 835+ 8800              ;    This variable contains the current VDP Sprite Attribute Table
+ 836+ 8800              ;base address. Its value is set from T32ATR, GRPATR or MLTATR
+ 837+ 8800              ;whenever the VDP is initialized via the INIT32, INIGRP or
+ 838+ 8800              ;INIMLT standard routines.
+ 839+ 8800              ;
+ 840+ 8800              CLOC:  equ 0F92AH ; DEFW 0000H   ; Pixel location
+ 841+ 8800              CMASK: equ 0F92CH  ; DEFB 80H     ; Pixel Mask
+ 842+ 8800              ;
+ 843+ 8800              ;    These variables contain the current pixel physical address used
+ 844+ 8800              ;by the RIGHTC, LEFTC, UPC, TUPC, DOWNC, TDOWNC, FETCHC, STOREC,
+ 845+ 8800              ;READC, SETC, NSETCX, SCANR and SCANL standard routines. CLOC
+ 846+ 8800              ;holds the address of the byte containing the current pixel and
+ 847+ 8800              ;CMASK defines the pixel within that byte.
+ 848+ 8800              ;
+ 849+ 8800              MINDEL: equ 0F92DH  ; DEFW 0000H
+ 850+ 8800              ;
+ 851+ 8800              ;    This variable is used by the "LINE" statement handler to hold
+ 852+ 8800              ;the minimum difference between the end points of the line.
+ 853+ 8800              ;
+ 854+ 8800              MAXDEL: equ 0F92FH  ; DEFW 0000H
+ 855+ 8800              ;
+ 856+ 8800              ;    This variable is used by the "LINE" statement handler to hold
+ 857+ 8800              ;the maximum difference between the end points of the line.
+ 858+ 8800              ;
+ 859+ 8800              ASPECT: equ 0F931H  ; DEFW 0000H
+ 860+ 8800              ;
+ 861+ 8800              ;    This variable is used by the "CIRCLE" statement handler to hold
+ 862+ 8800              ;the current aspect ratio. This is stored as a single byte
+ 863+ 8800              ;binary fraction so an aspect ratio of 0.75 would become 00C0H.
+ 864+ 8800              ;The MSB is only required if the aspect ratio is exactly 1.00,
+ 865+ 8800              ;that is 0100H.
+ 866+ 8800              ;
+ 867+ 8800              CENCNT: equ 0F933H  ; DEFW 0000H
+ 868+ 8800              ;
+ 869+ 8800              ;    This variable is used by the "CIRCLE" statement handler to hold
+ 870+ 8800              ;the point count of the end angle.
+ 871+ 8800              ;
+ 872+ 8800              CLINEF: equ 0F935H  ; DEFB 00H
+ 873+ 8800              ;
+ 874+ 8800              ;    This variable is used by the "CIRCLE" statement handler to hold
+ 875+ 8800              ;the two line flags. Bit 0 is set if a line is required from the
+ 876+ 8800              ;start angle to the centre and bit 7 set if one is required from
+ 877+ 8800              ;the end angle.
+ 878+ 8800              ;
+ 879+ 8800              CNPNTS: equ 0F936H  ; DEFW 0000H
+ 880+ 8800              ;
+ 881+ 8800              ;    This variable is used by the "CIRCLE" statement handler to hold
+ 882+ 8800              ;the number of points within a forty-five degree segment.
+ 883+ 8800              ;
+ 884+ 8800              CPLOTF: equ 0F938H  ; DEFB 00H
+ 885+ 8800              ;
+ 886+ 8800              ;    This variable is normally zero but is set by the "CIRCLE"
+ 887+ 8800              ;statement handler if the end angle is smaller than the start
+ 888+ 8800              ;angle. It is used to determine whether the pixels should be set
+ 889+ 8800              ;"inside" the angles or "outside" them.
+ 890+ 8800              ;
+ 891+ 8800              CPCNT: equ 0F939H   ; DEFW 0000H
+ 892+ 8800              ;
+ 893+ 8800              ;    This variable is used by the 'CIRCLE" statement handler to hold
+ 894+ 8800              ;the point count within the current forty-five degree segment,
+ 895+ 8800              ;this is in fact the Y coordinate.
+ 896+ 8800              ;
+ 897+ 8800              CPCNT8: equ 0F93BH  ; DEFW 0000H
+ 898+ 8800              ;
+ 899+ 8800              ;    This variable is used by the "CIRCLE" statement handler to hold
+ 900+ 8800              ;the total point count of the present position.
+ 901+ 8800              ;
+ 902+ 8800              CRCSUM: equ 0F93DH  ; DEFW 0000H
+ 903+ 8800              ;
+ 904+ 8800              ;    This variable is used by the "CIRCLE" statement handler as the
+ 905+ 8800              ;point computation counter.
+ 906+ 8800              ;
+ 907+ 8800              CSTCNT: equ 0F93FH  ; DEFW 0000H
+ 908+ 8800              ;
+ 909+ 8800              ;    This variable is used by the "CIRCLE" statement handler to hold
+ 910+ 8800              ;the point count of the start angle.
+ 911+ 8800              ;
+ 912+ 8800              CSCLXY: equ 0F941H  ; DEFB 00H
+ 913+ 8800              ;
+ 914+ 8800              ;    This variable is used by the "CIRCLE" statement handler as a
+ 915+ 8800              ;flag to determine in which direction the elliptic squash is to
+ 916+ 8800              ;be applied: 00H=Y, 01H=X.
+ 917+ 8800              ;
+ 918+ 8800              CSAVEA: equ 0F942H  ; DEFW 0000H
+ 919+ 8800              ;
+ 920+ 8800              ;    This variable is used for temporary storage by the SCANR
+ 921+ 8800              ;standard routine.
+ 922+ 8800              ;
+ 923+ 8800              CSAVEM: equ 0F944H  ; DEFB 00h
+ 924+ 8800              ;
+ 925+ 8800              ;    This variable is used for temporary storage by the SCANR
+ 926+ 8800              ;standard routine.
+ 927+ 8800              ;
+ 928+ 8800              CXOFF: equ 0F945H  ; DEFW 0000H
+ 929+ 8800              ;
+ 930+ 8800              ;    This variable is used for temporary storage by the "CIRCLE"
+ 931+ 8800              ;statement handler.
+ 932+ 8800              ;
+ 933+ 8800              CYOFF: equ 0F947H  ; DEFW 0000H
+ 934+ 8800              ;
+ 935+ 8800              ;    This variable is used for temporary storage by the "CIRCLE"
+ 936+ 8800              ;statement handler.
+ 937+ 8800              ;
+ 938+ 8800              LOHMSK: equ 0F949H  ; DEFB 00H
+ 939+ 8800              ;
+ 940+ 8800              ;    This variable is used by the "PAINT" statement handler to hold
+ 941+ 8800              ;the leftmost position of a LH excursion.
+ 942+ 8800              ;
+ 943+ 8800              LOHDIR: equ 0F94AH  ; DEFB 00H
+ 944+ 8800              ;
+ 945+ 8800              ;    This variable is used by the "PAINT" statement handler to hold
+ 946+ 8800              ;the new paint direction required by a LH excursion.
+ 947+ 8800              ;
+ 948+ 8800              LOHADR: equ 0F94BH  ; DEFW 0000H
+ 949+ 8800              ;
+ 950+ 8800              ;    This variable is used by the "PAINT" statement handler to hold
+ 951+ 8800              ;the leftmost position of a LH excursion.
+ 952+ 8800              ;
+ 953+ 8800              LOHCNT: equ 0F94DH  ; DEFW 0000H
+ 954+ 8800              ;
+ 955+ 8800              ;    This variable is used by the "PAINT" statement handler to hold
+ 956+ 8800              ;the size of a LH excursion.
+ 957+ 8800              ;
+ 958+ 8800              SKPCNT: equ 0F94FH  ; DEFW 0000H
+ 959+ 8800              ;
+ 960+ 8800              ;    This variable is used by the "PAINT" statement handler to hold
+ 961+ 8800              ;the skip count returned by the SCANR standard routine.
+ 962+ 8800              ;
+ 963+ 8800              MOVCNT: equ 0F951H  ; DEFW 0000H
+ 964+ 8800              ;
+ 965+ 8800              ;    This variable is used by the "PAINT" statement handler to hold
+ 966+ 8800              ;the movement count returned by the SCANR standard routine.
+ 967+ 8800              ;
+ 968+ 8800              PDIREC: equ 0F953H  ; DEFB 00H
+ 969+ 8800              ;
+ 970+ 8800              ;    This variable is used by the "PAINT" statement handler to hold
+ 971+ 8800              ;the current paint direction: 40H=Down, C0H=Up, 00H=Terminate.
+ 972+ 8800              ;
+ 973+ 8800              LFPROG: equ 0F954H  ; DEFB 00H
+ 974+ 8800              ;
+ 975+ 8800              ;    This variable is normally zero but is set by the "PAINT"
+ 976+ 8800              ;statement handler if there has been any leftwards progress.
+ 977+ 8800              ;
+ 978+ 8800              RTPROG: equ 0F955H  ; DEFB 00H
+ 979+ 8800              ;
+ 980+ 8800              ;    This variable is normally zero but is set by the "PAINT"
+ 981+ 8800              ;statement handler if there has been any rightwards progress.
+ 982+ 8800              ;
+ 983+ 8800              MCLTAB: equ 0F956H  ; DEFW 0000H
+ 984+ 8800              ;
+ 985+ 8800              ;    This variable contains the address of the command table to be
+ 986+ 8800              ;used by the macro language parser. The "DRAW" table is at 5D83H
+ 987+ 8800              ;and the "PLAY" table at 752EH.
+ 988+ 8800              ;
+ 989+ 8800              MCLFLG: equ 0F958H  ; DEFB 00H
+ 990+ 8800              ;
+ 991+ 8800              ;    This variable is zero if the macro language parser is being
+ 992+ 8800              ;used by the "DRAW", statement handler and non-zero if it is
+ 993+ 8800              ;being used by "PLAY".
+ 994+ 8800              ;
+ 995+ 8800              QUETAB: equ 0F959H  ; DEFB 00H     ; AQ Put position
+ 996+ 8800              ;           0F95AH    DEFB 00H     ; AQ Get position
+ 997+ 8800              ;           0F95BH    DEFB 00H     ; AQ Putback flag
+ 998+ 8800              ;           0F95CH    DEFB 7FH     ; AQ Size
+ 999+ 8800              ;           0F95DH    DEFW F975H   ; AQ Address
+1000+ 8800              ;
+1001+ 8800              ;           0F95FH    DEFB 00H     ; BQ Put position
+1002+ 8800              ;           0F960H    DEFB 00H     ; BQ Get position
+1003+ 8800              ;           0F961H    DEFB 00H     ; BQ Putback flag
+1004+ 8800              ;           0F962H    DEFB 7FH     ; BQ Size
+1005+ 8800              ;           0F963H    DEFW F9F5H   ; BQ Address
+1006+ 8800              ;
+1007+ 8800              ;           0F965H    DEFB 00H     ; CQ Put position
+1008+ 8800              ;           0F966H    DEFB 00H     ; CQ Get position
+1009+ 8800              ;           0F967H    DEFB 00H     ; CQ Putback flag
+1010+ 8800              ;           0F968H    DEFB 7FH     ; CQ Size
+1011+ 8800              ;           0F969H    DEFW FA75H   ; CQ Address
+1012+ 8800              ;
+1013+ 8800              ;           0F96BH    DEFB 00H     ; RQ Put position
+1014+ 8800              ;           0F96CH    DEFB 00H     ; RQ Get position
+1015+ 8800              ;           0F96DH    DEFB 00H     ; RQ Putback flag
+1016+ 8800              ;           0F96EH    DEFB 00H     ; RQ Size
+1017+ 8800              ;           0F96FH    DEFW 0000H   ; RQ Address
+1018+ 8800              ;
+1019+ 8800              ;    These twenty-four variables form the control blocks for the
+1020+ 8800              ;three music queues (VOICAQ, VOICBQ and VOICCQ) and the RS232
+1021+ 8800              ;queue. The three music control blocks are initialized by the
+1022+ 8800              ;GICINI standard routine and thereafter maintained by the
+1023+ 8800              ;interrupt handler and the PUTQ standard routine. The RS232
+1024+ 8800              ;control block is unused in the current MSX ROM.
+1025+ 8800              ;
+1026+ 8800              QUEBAK: equ 0F971H  ; DEFB 00H     ; AQ Putback character
+1027+ 8800              ;           0F972H    DEFB 00H     ; BQ Putback character
+1028+ 8800              ;           0F973H    DEFB 00H     ; CQ Putback character
+1029+ 8800              ;           0F974H    DEFB 00H     ; RQ Putback character
+1030+ 8800              ;
+1031+ 8800              ;    These four variables are used to hold any unwanted character
+1032+ 8800              ;returned to the associated queue. Although the putback facility
+1033+ 8800              ;is implemented in the MSX ROM it is currently unused.
+1034+ 8800              ;
+1035+ 8800              VOICAQ: equ 0F975H  ; DEFS 128     ; Voice A queue
+1036+ 8800              VOICBQ: equ 0F9F5H  ; DEFS 128     ; Voice B queue
+1037+ 8800              VOICCQ: equ 0FA75H  ; DEFS 128     ; Voice C queue
+1038+ 8800              RS2IQ:  equ 0FAF5H  ; DEFS 64      ; RS232 queue
+1039+ 8800              ;
+1040+ 8800              ;    These four buffers contain the three music queues and the RS232
+1041+ 8800              ;queue, the latter is unused.
+1042+ 8800              ;
+1043+ 8800              PRSCNT: equ 0FB35H  ; DEFB 00H
+1044+ 8800              ;
+1045+ 8800              ;    This variable is used by the "PLAY" statement handler to count
+1046+ 8800              ;the number of completed operand strings. Bit 7 is also set
+1047+ 8800              ;after each of the three operands has been parsed to prevent
+1048+ 8800              ;repeated activation of the STRTMS standard routine.
+1049+ 8800              ;
+1050+ 8800              SAVSP: equ 0FB36H  ; DEFW 0000H
+1051+ 8800              ;
+1052+ 8800              ;    This variable is used by the "PLAY" statement handler to save
+1053+ 8800              ;the Z80 SP before control transfers to the macro language
+1054+ 8800              ;parser. Its value is compared with the SP on return to
+1055+ 8800              ;determine whether any data has been left on the stack because
+1056+ 8800              ;of a queue-full termination by the parser.
+1057+ 8800              ;
+1058+ 8800              VOICEN: equ 0FB38H  ; DEFB 00H
+1059+ 8800              ;
+1060+ 8800              ;    This variable contains the current voice number being processed
+1061+ 8800              ;by the "PLAY" statement handler. The values 0, 1 and 2
+1062+ 8800              ;correspond to PSG channels A, B and C.
+1063+ 8800              ;
+1064+ 8800              SAVVOL: equ 0FB39H  ; DEFW 0000H
+1065+ 8800              ;
+1066+ 8800              ;    This variable is used by the "PLAY" statement "R" command
+1067+ 8800              ;handler to save the current volume setting while a zero-
+1068+ 8800              ;amplitude rest is generated.
+1069+ 8800              ;
+1070+ 8800              MCLLEN: equ 0FB3BH  ; DEFB 00H
+1071+ 8800              ;
+1072+ 8800              ;    This variable is used by the macro language parser to hold the
+1073+ 8800              ;length of the string operand being parsed.
+1074+ 8800              ;
+1075+ 8800              MCLPTR: equ 0FB3CH  ; DEFW 0000H
+1076+ 8800              ;
+1077+ 8800              ;    This variable is used by the macro language parser to hold the
+1078+ 8800              ;address of the string operand being parsed.
+1079+ 8800              ;
+1080+ 8800              QUEUEN: equ 0FB3EH  ; DEFB 00H
+1081+ 8800              ;
+1082+ 8800              ;    This variable is used by the interrupt handler to hold the
+1083+ 8800              ;number of the music queue currently being processed. The values
+1084+ 8800              ;0, 1 and 2 correspond to PSG channels A, B and C.
+1085+ 8800              ;
+1086+ 8800              MUSICF: equ 0FB3FH  ; DEFB 00H
+1087+ 8800              ;
+1088+ 8800              ;    This variable contains three bit flags set by the STRTMS
+1089+ 8800              ;standard routine to initiate processing of a music queue by the
+1090+ 8800              ;interrupt handler. Bits 0, 1 and 2 correspond to VOICAQ, VOICBQ
+1091+ 8800              ;and VOICCQ.
+1092+ 8800              ;
+1093+ 8800              PLYCNT: equ 0FB40H  ; DEFB 00H
+1094+ 8800              ;
+1095+ 8800              ;    This variable is used by the STRTMS standard routine to hold
+1096+ 8800              ;the number of "PLAY" statement sequences currently held in the
+1097+ 8800              ;music queues. It is examined when all three end of queue marks
+1098+ 8800              ;have been found for one sequence to determine whether
+1099+ 8800              ;dequeueing should be restarted.
+1100+ 8800              ;
+1101+ 8800              VCBA: equ 0FB41H  ; DEFW 0000H   ; Duration counter
+1102+ 8800              ;         0FB43H    DEFB 00H     ; String length
+1103+ 8800              ;         0FB44H    DEFW 0000H   ; String address
+1104+ 8800              ;         0FB46H    DEFW 0000H   ; Stack data address
+1105+ 8800              ;         0FB48H    DEFB 00H     ; Music packet length
+1106+ 8800              ;         0FB49H    DEFS 7       ; Music packet
+1107+ 8800              ;         0FB50H    DEFB 04H     ; Octave
+1108+ 8800              ;         0FB51H    DEFB 04H     ; Length
+1109+ 8800              ;         0FB52H    DEFB 78H     ; Tempo
+1110+ 8800              ;         0FB53H    DEFB 88H     ; Volume
+1111+ 8800              ;         0FB54H    DEFW 00FFH   ; Envelope period
+1112+ 8800              ;         0FB56H    DEFS 16      ; Space for stack data
+1113+ 8800              ;
+1114+ 8800              ;    This thirty-seven byte buffer is used by the "PLAY" statement
+1115+ 8800              ;handler to hold the current parameters for voice A.
+1116+ 8800              ;
+1117+ 8800              VCBB: equ 0FB66H  ; DEFS 37
+1118+ 8800              ;
+1119+ 8800              ;    This buffer is used by the "PLAY" statement handler to hold the
+1120+ 8800              ;current parameters for voice B, its structure is the same as
+1121+ 8800              ;VCBA.
+1122+ 8800              ;
+1123+ 8800              VCBC: equ 0FB8BH  ; DEFS 37
+1124+ 8800              ;
+1125+ 8800              ;    This buffer is used by the "PLAY" statement handler to hold the
+1126+ 8800              ;current parameters for voice C, its structure is the same as
+1127+ 8800              ;VCBA.
+1128+ 8800              ;
+1129+ 8800              ENSTOP: equ 0FBB0H  ; DEFB 00H
+1130+ 8800              ;
+1131+ 8800              ;    This variable determines whether the interrupt handler will
+1132+ 8800              ;execute a warm start to the Interpreter upon detecting the keys
+1133+ 8800              ;CODE, GRAPH, CTRL and SHIFT depressed together: 00H=Disable,
+1134+ 8800              ;NZ=Enable.
+1135+ 8800              ;
+1136+ 8800              BASROM: equ 0FBB1H  ; DEFB 00H
+1137+ 8800              ;
+1138+ 8800              ;    This variable determines whether the ISCNTC and INLIN standard
+1139+ 8800              ;routines will respond to the CTRL-STOP key: 00H=Enable,
+1140+ 8800              ;NZ=Disable. It is used to prevent termination of a BASIC ROM
+1141+ 8800              ;located during the power-up ROM search.
+1142+ 8800              ;
+1143+ 8800              LINTTB: equ 0FBB2H  ; DEFS 24
+1144+ 8800              ;
+1145+ 8800              ;    Each of these twenty-four variables is normally non-zero but is
+1146+ 8800              ;zeroed if the contents of the corresponding screen row have
+1147+ 8800              ;overflowed onto the next row. They are maintained by the BIOS
+1148+ 8800              ;but only actually used by the INLIN standard routine (the
+1149+ 8800              ;screen editor) to discriminate between logical and physical
+1150+ 8800              ;lines.
+1151+ 8800              ;
+1152+ 8800              FSTPOS: equ 0FBCAH  ; DEFW 0000H
+1153+ 8800              ;
+1154+ 8800              ;    This variable is used to hold the cursor coordinates upon entry
+1155+ 8800              ;to the INLIN standard routine. Its function is to restrict the
+1156+ 8800              ;extent of backtracking performed when the text is collected
+1157+ 8800              ;from the screen at termination.
+1158+ 8800              ;
+1159+ 8800              CURSAV: equ 0FBCCH  ; DEFB 00H
+1160+ 8800              ;
+1161+ 8800              ;    This variable is used to hold the screen character replaced by
+1162+ 8800              ;the text cursor.
+1163+ 8800              ;
+1164+ 8800              FNKSWI: equ 0FBCDH  ; DEFB 00H
+1165+ 8800              ;
+1166+ 8800              ;    This variable is used by the CHSNS standard routine to
+1167+ 8800              ;determine whether the shifted or unshifted function keys are
+1168+ 8800              ;currently displayed: 00H=Shifted, 01H=Unshifted.
+1169+ 8800              ;
+1170+ 8800              FNKFLG: equ 0FBCEH  ; DEFS 10
+1171+ 8800              ;
+1172+ 8800              ;    Each of these ten variables is normally zero but is set to 01H
+1173+ 8800              ;if the associated function key has been turned on by a "KEY(n)
+1174+ 8800              ;ON" statement. They are used by the interrupt handler to
+1175+ 8800              ;determine whether, in program mode only, it should return a
+1176+ 8800              ;character string or update the associated entry in TRPTBL.
+1177+ 8800              ;
+1178+ 8800              ONGSBF: equ 0FBD8H  ; DEFB 00H
+1179+ 8800              ;
+1180+ 8800              ;    This variable is normally zero but is incremented by the
+1181+ 8800              ;interrupt handler whenever a device has achieved the conditions
+1182+ 8800              ;necessary to generate a program interrupt. It is used by the
+1183+ 8800              ;Runloop to determine whether any program interrupts are pending
+1184+ 8800              ;without having to search TRPTBL.
+1185+ 8800              ;
+1186+ 8800              CLIKFL: equ 0FBD9H  ; DEFB 00H
+1187+ 8800              ;
+1188+ 8800              ;    This variable is used internally by the interrupt handler to
+1189+ 8800              ;prevent spurious key clicks when returning multiple characters
+1190+ 8800              ;from a single key depression such as a function key.
+1191+ 8800              ;
+1192+ 8800              OLDKEY: equ 0FBDAH  ; DEFS 11
+1193+ 8800              ;
+1194+ 8800              ;    This buffer is used by the interrupt handler to hold the
+1195+ 8800              ;previous state of the keyboard matrix, each byte contains one
+1196+ 8800              ;row of keys starting with row 0.
+1197+ 8800              ;
+1198+ 8800              NEWKEY: equ 0FBE5H  ; DEFS 11
+1199+ 8800              ;
+1200+ 8800              ;    This buffer is used by the interrupt handler to hold the
+1201+ 8800              ;current state of the keyboard matrix. Key transitions are
+1202+ 8800              ;detected by comparison with the contents of OLDKEY after which
+1203+ 8800              ;OLDKEY is updated with the current state.
+1204+ 8800              ;
+1205+ 8800              KEYBUF: equ 0FBF0H  ; DEFS 40
+1206+ 8800              ;
+1207+ 8800              ;    This buffer contains the decoded keyboard characters produced
+1208+ 8800              ;by the interrupt handler. Note that the buffer is organized as
+1209+ 8800              ;a circular queue driven by GETPNT and PUTPNT and consequently
+1210+ 8800              ;has no fixed starting point.
+1211+ 8800              ;
+1212+ 8800              LINWRK: equ 0FC18H  ; DEFS 40
+1213+ 8800              ;
+1214+ 8800              ;    This buffer is used by the BIOS to hold a complete line of
+1215+ 8800              ;screen characters.
+1216+ 8800              ;
+1217+ 8800              PATWRK: equ 0FC40H  ; DEFS 8
+1218+ 8800              ;
+1219+ 8800              ;    This buffer is used by the BIOS to hold an 8x8 pixel pattern.
+1220+ 8800              ;
+1221+ 8800              BOTTOM: equ 0FC48H  ; DEFW 8000H
+1222+ 8800              ;
+1223+ 8800              ;    This variable contains the address of the lowest RAM location
+1224+ 8800              ;used by the Interpreter. Its value is set at power-up and
+1225+ 8800              ;thereafter unaltered.
+1226+ 8800              ;
+1227+ 8800              HIMEM: equ 0FC4AH  ; DEFW F380H
+1228+ 8800              ;
+1229+ 8800              ;    This variable contains the address of the byte following the
+1230+ 8800              ;highest RAM location used by the Interpreter. Its value is set
+1231+ 8800              ;at power-up and thereafter only altered by the "CLEAR"
+1232+ 8800              ;statement.
+1233+ 8800              ;
+1234+ 8800              TRPTBL: equ 0FC4CH  ; DEFS 3       ; KEY 1
+1235+ 8800              ;           0FC4FH    DEFS 3       ; KEY 2
+1236+ 8800              ;           0FC52H    DEFS 3       ; KEY 3
+1237+ 8800              ;           0FC55H    DEFS 3       ; KEY 4
+1238+ 8800              ;           0FC58H    DEFS 3       ; KEY 5
+1239+ 8800              ;           0FC5BH    DEFS 3       ; KEY 6
+1240+ 8800              ;           0FC5EH    DEFS 3       ; KEY 7
+1241+ 8800              ;           0FC61H    DEFS 3       ; KEY 8
+1242+ 8800              ;           0FC64H    DEFS 3       ; KEY 9
+1243+ 8800              ;           0FC67H    DEFS 3       ; KEY 10
+1244+ 8800              ;           0FC6AH    DEFS 3       ; STOP
+1245+ 8800              ;           0FC6DH    DEFS 3       ; SPRITE
+1246+ 8800              ;           0FC70H    DEFS 3       ; STRIG 0
+1247+ 8800              ;           0FC73H    DEFS 3       ; STRIG 1
+1248+ 8800              ;           0FC76H    DEFS 3       ; STRIG 2
+1249+ 8800              ;           0FC79H    DEFS 3       ; STRIG 3
+1250+ 8800              ;           0FC7CH    DEFS 3       ; STRIG 4
+1251+ 8800              ;           0FC7FH    DEFS 3       ; INTERVAL
+1252+ 8800              ;           0FC82H    DEFS 3       ; Unused
+1253+ 8800              ;           0FC85H    DEFS 3       ; Unused
+1254+ 8800              ;           0FC88H    DEFS 3       ; Unused
+1255+ 8800              ;           0FC8BH    DEFS 3       ; Unused
+1256+ 8800              ;           0FC8EH    DEFS 3       ; Unused
+1257+ 8800              ;           0FC91H    DEFS 3       ; Unused
+1258+ 8800              ;           0FC94H    DEFS 3       ; Unused
+1259+ 8800              ;           0FC97H    DEFS 3       ; Unused
+1260+ 8800              ;
+1261+ 8800              ;    These twenty-six three byte variables hold the current state of
+1262+ 8800              ;the interrupt generating devices. The first byte of each entry
+1263+ 8800              ;contains the device status (bit 0=On, bit 1=Stop, bit 2=Event
+1264+ 8800              ;active) and is updated by the interrupt handler, the Runloop
+1265+ 8800              ;interrupt processor and the "DEVICE 0=ON/OFF/STOP" and "RETURN"
+1266+ 8800              ;statement handlers. The remaining two bytes of each entry are
+1267+ 8800              ;set by the "ON DEVICE GOSUB" statement handler and contain the
+1268+ 8800              ;address of the program line to execute upon a program
+1269+ 8800              ;interrupt.
+1270+ 8800              ;
+1271+ 8800              RTYCNT: equ 0FC9AH  ; DEFB 00H
+1272+ 8800              ;
+1273+ 8800              ;    This variable is unused by the current MSX ROM.
+1274+ 8800              ;
+1275+ 8800              INTFLG: equ 0FC9BH  ; DEFB 00H
+1276+ 8800              ;
+1277+ 8800              ;    This variable is normally zero but is set to 03H or 04H if the
+1278+ 8800              ;CTRL-STOP or STOP keys are detected by the interrupt handler.
+1279+ 8800              ;
+1280+ 8800              PADY: equ 0FC9CH  ; DEFB 00H
+1281+ 8800              ;
+1282+ 8800              ;    This variable contains the Y coordinate of the last point
+1283+ 8800              ;detected by a touchpad.
+1284+ 8800              ;
+1285+ 8800              PADX: equ 0FC9DH  ; DEFB 00H
+1286+ 8800              ;
+1287+ 8800              ;    This variable contains the X coordinate of the last point
+1288+ 8800              ;detected by a touchpad.
+1289+ 8800              ;
+1290+ 8800              JIFFY: equ 0FC9EH  ; DEFW 0000H
+1291+ 8800              ;
+1292+ 8800              ;    This variable is continually incremented by the interrupt
+1293+ 8800              ;handler. Its value may be set or read by the "TIME" statement
+1294+ 8800              ;or function.
+1295+ 8800              ;
+1296+ 8800              INTVAL: equ 0FCA0H  ; DEFW 0000H
+1297+ 8800              ;
+1298+ 8800              ;    This variable holds the interval duration set by the "ON
+1299+ 8800              ;INTERVAL" statement handler.
+1300+ 8800              ;
+1301+ 8800              INTCNT: equ 0FCA2H  ; DEFW 0000H
+1302+ 8800              ;
+1303+ 8800              ;    This variable is continually decremented by the interrupt
+1304+ 8800              ;handler. When zero is reached its value is reset from INTVAL
+1305+ 8800              ;and, if applicable, a program interrupt generated. Note that
+1306+ 8800              ;this variable always counts irrespective of whether an
+1307+ 8800              ;"INTERVAL ON" statement is active.
+1308+ 8800              ;
+1309+ 8800              LOWLIM: equ 0FCA4H  ; DEFB 31H
+1310+ 8800              ;
+1311+ 8800              ;    This variable is used to hold the minimum allowable start bit
+1312+ 8800              ;duration as determined by the TAPION standard routine.
+1313+ 8800              ;
+1314+ 8800              WINWID: equ 0FCA5H  ; DEFB 22H
+1315+ 8800              ;
+1316+ 8800              ;    This variable is used to hold the LO/HI cycle discrimination
+1317+ 8800              ;duration as determined by the TAPION standard routine.
+1318+ 8800              ;
+1319+ 8800              GRPHED: equ 0FCA6H  ; DEFB 00H
+1320+ 8800              ;
+1321+ 8800              ;    This variable is normally zero but is set to 01H by the CNVCHR
+1322+ 8800              ;standard routine upon detection of a graphic header code.
+1323+ 8800              ;
+1324+ 8800              ESCCNT: equ 0FCA7H  ; DEFB 00H
+1325+ 8800              ;
+1326+ 8800              ;    This variable is used by the CHPUT standard routine ESC
+1327+ 8800              ;sequence processor to count escape parameters.
+1328+ 8800              ;
+1329+ 8800              INSFLG: equ 0FCA8H  ; DEFB 00H
+1330+ 8800              ;
+1331+ 8800              ;    This variable is normally zero but is set to FFH by the INLIN
+1332+ 8800              ;standard routine when insert mode is on.
+1333+ 8800              ;
+1334+ 8800              CSRSW: equ 0FCA9H  ; DEFB 00H
+1335+ 8800              ;
+1336+ 8800              ;    If this variable is zero the cursor is only displayed while the
+1337+ 8800              ;CHGET standard routine is waiting for a keyboard character. If
+1338+ 8800              ;it is non-zero the cursor is permanently displayed via the
+1339+ 8800              ;CHPUT standard routine.
+1340+ 8800              ;
+1341+ 8800              CSTYLE: equ 0FCAAH  ; DEFB 00H
+1342+ 8800              ;
+1343+ 8800              ;    This variable determines the cursor style: 00H=Block,
+1344+ 8800              ;NZ=Underline.
+1345+ 8800              ;
+1346+ 8800              CAPST: equ 0FCABH  ; DEFB 00H
+1347+ 8800              ;
+1348+ 8800              ;    This variable is used by   the interrupt handler to hold the
+1349+ 8800              ;current caps lock status: 00H=Off, NZ=On.
+1350+ 8800              ;
+1351+ 8800              KANAST: equ 0FCACH  ; DEFB 00H
+1352+ 8800              ;
+1353+ 8800              ;    This variable is used to hold the keyboard Kana lock status on
+1354+ 8800              ;Japanese machines and the DEAD key status on European machines.
+1355+ 8800              ;
+1356+ 8800              KANAMD: equ 0FCADH  ; DEFB 00H
+1357+ 8800              ;
+1358+ 8800              ;    This variable holds a keyboard mode on Japanese machines only.
+1359+ 8800              ;
+1360+ 8800              FLBMEM: equ 0FCAEH  ; DEFB 00H
+1361+ 8800              ;
+1362+ 8800              ;    This variable is set by the file I/O error generators but is
+1363+ 8800              ;otherwise unused.
+1364+ 8800              ;
+1365+ 8800              SCRMOD: equ 0FCAFH  ; DEFB 00H
+1366+ 8800              ;
+1367+ 8800              ;    This variable contains the current screen mode: 0=40x24 Text
+1368+ 8800              ;Mode, 1=32x24 Text Mode, 2=Graphics Mode, 3=Multicolour Mode.
+1369+ 8800              ;
+1370+ 8800              OLDSCR: equ 0FCB0H  ; DEFB 00H
+1371+ 8800              ;
+1372+ 8800              ;    This variable holds the screen mode of the last text mode set.
+1373+ 8800              ;
+1374+ 8800              CASPRV: equ 0FCB1H  ; DEFB 00H
+1375+ 8800              ;
+1376+ 8800              ;    This variable is used to hold any character returned to an I/O
+1377+ 8800              ;buffer by the cassette putback function.
+1378+ 8800              ;
+1379+ 8800              BDRATR: equ 0FCB2H  ; DEFB 00H
+1380+ 8800              ;
+1381+ 8800              ;    This variable contains the boundary colour for the "PAINT"
+1382+ 8800              ;statement handler. Its value is set by the PNTINI standard
+1383+ 8800              ;routine and used by the SCANR and SCANL standard routines.
+1384+ 8800              ;
+1385+ 8800              GXPOS: equ 0FCB3H  ; DEFW 0000H
+1386+ 8800              ;
+1387+ 8800              ;    This variable is used for temporary storage of a graphics X
+1388+ 8800              ;coordinate.
+1389+ 8800              ;
+1390+ 8800              GYPOS: equ 0FCB5H  ; DEFW 0000H
+1391+ 8800              ;
+1392+ 8800              ;    This variable is used for temporary storage of a graphics Y
+1393+ 8800              ;coordinate.
+1394+ 8800              ;
+1395+ 8800              GRPACX: equ 0FCB7H  ; DEFW 0000H
+1396+ 8800              ;
+1397+ 8800              ;    This variable contains the current graphics X coordinate for
+1398+ 8800              ;the GRPPRT standard routine.
+1399+ 8800              ;
+1400+ 8800              GRPACY: equ 0FCB9H  ; DEFW 0000H
+1401+ 8800              ;
+1402+ 8800              ;    This variable contains the current graphics Y coordinate for
+1403+ 8800              ;the GRPPRT standard routine.
+1404+ 8800              ;
+1405+ 8800              DRWFLG: equ 0FCBBH  ; DEFB 00H
+1406+ 8800              ;
+1407+ 8800              ;    Bits 6 and 7 of this variable are set by the "DRAW" statement
+1408+ 8800              ;"N" and "B" command handlers to turn the associated mode on.
+1409+ 8800              ;
+1410+ 8800              DRWSCL: equ 0FCBCH  ; DEFB 00H
+1411+ 8800              ;
+1412+ 8800              ;    This variable is used by the "DRAW" statement "S" command
+1413+ 8800              ;handler to hold the current scale factor.
+1414+ 8800              ;
+1415+ 8800              DRWANG: equ 0FCBDH  ; DEFB 00H
+1416+ 8800              ;
+1417+ 8800              ;    This variable is used by the "DRAW" statement "A" command
+1418+ 8800              ;handler to hold the current angle.
+1419+ 8800              ;
+1420+ 8800              RUNBNF: equ 0FCBEH  ; DEFB 00H
+1421+ 8800              ;
+1422+ 8800              ;    This variable is normally zero but is set by the "BLOAD"
+1423+ 8800              ;statement handler when an auto-run "R" parameter is specified.
+1424+ 8800              ;
+1425+ 8800              SAVENT: equ 0FCBFH  ; DEFW 0000H
+1426+ 8800              ;
+1427+ 8800              ;    This variable contains the "BSAVE" and "BLOAD" entry address.
+1428+ 8800              ;
+1429+ 8800              EXPTBL: equ 0FCC1H  ; DEFB 00H     ; Primary Slot 0
+1430+ 8800              ;           0FCC2H    DEFB 00H     ; Primary Slot 1
+1431+ 8800              ;           0FCC3H    DEFB 00H     ; Primary Slot 2
+1432+ 8800              ;           0FCC4H    DEFB 00H     ; Primary Slot 3
+1433+ 8800              ;
+1434+ 8800              ;    Each of these four variables is normally zero but is set to 80H
+1435+ 8800              ;during the power-up RAM search if the associated Primary Slot
+1436+ 8800              ;is found to be expanded.
+1437+ 8800              ;
+1438+ 8800              SLTTBL:  equ 0FCC5H ; DEFB 00H     ; Primary Slot 0
+1439+ 8800              ;            0FCC6H   DEFB 00H     ; Primary Slot 1
+1440+ 8800              ;            0FCC7H   DEFB 00H     ; Primary Slot 2
+1441+ 8800              ;            0FCC8H   DEFB 00H     ; Primary Slot 3
+1442+ 8800              ;
+1443+ 8800              ;    These four variables duplicate the contents of the four
+1444+ 8800              ;possible Secondary Slot Registers. The contents of each
+1445+ 8800              ;variable should only be regarded as valid if EXPTBL shows the
+1446+ 8800              ;associated Primary Slot to be expanded.
+1447+ 8800              ;
+1448+ 8800              SLTATR: equ 0FCC9H  ; DEFS 4       ; PS0, SS0
+1449+ 8800              ;           0FCCDH    DEFS 4       ; PS0, SS1
+1450+ 8800              ;           0FCD1H    DEFS 4       ; PS0, SS2
+1451+ 8800              ;           0FCD5H    DEFS 4       ; PS0, SS3
+1452+ 8800              ;
+1453+ 8800              ;           0FCD9H    DEFS 4       ; PS1, SS0
+1454+ 8800              ;           0FCDDH    DEFS 4       ; PS1, SS1
+1455+ 8800              ;           0FCE1H    DEFS 4       ; PS1, SS2
+1456+ 8800              ;           0FCE5H    DEFS 4       ; PS1, SS3
+1457+ 8800              ;
+1458+ 8800              ;           0FCE9H    DEFS 4       ; PS2, SS0
+1459+ 8800              ;           0FCEDH    DEFS 4       ; PS2, SS1
+1460+ 8800              ;           0FCF1H    DEFS 4       ; PS2, SS2
+1461+ 8800              ;           0FCF5H    DEFS 4       ; PS2, SS3
+1462+ 8800              ;
+1463+ 8800              ;           0FCF9H    DEFS 4       ; PS3, SS0
+1464+ 8800              ;           0FCFDH    DEFS 4       ; PS3, SS1
+1465+ 8800              ;           0FD01H    DEFS 4       ; PS3, SS2
+1466+ 8800              ;           0FD05H    DEFS 4       ; PS3, SS3
+1467+ 8800              ;
+1468+ 8800              ;    These sixty-four variables contain the attributes of any
+1469+ 8800              ;extension ROMs found during the power-up ROM search. The
+1470+ 8800              ;characteristics of each 16 KB ROM are encoded into a single byte
+1471+ 8800              ;so four bytes are required for each possible slot. The encoding
+1472+ 8800              ;is:
+1473+ 8800              ;
+1474+ 8800              ;
+1475+ 8800              ;        Bit 7 set=BASIC program
+1476+ 8800              ;        Bit 6 set=Device handler
+1477+ 8800              ;        Bit 5 set=Statement handler
+1478+ 8800              ;
+1479+ 8800              ;
+1480+ 8800              ;    Note that the entries for page 0 (0000H to 3FFFH) and page 3
+1481+ 8800              ;(C000H to FFFFH) will always be zero as only page 1 (4000H to
+1482+ 8800              ;7FFFH) and page 2 (8000H to BFFFH) are actually examined. The
+1483+ 8800              ;MSX convention is that machine code extension ROMs are placed
+1484+ 8800              ;in page 1 and BASIC program ROMs in page 2.
+1485+ 8800              ;
+1486+ 8800              SLTWRK: equ 0FD09H  ; DEFS 128
+1487+ 8800              ;
+1488+ 8800              ;    This buffer provides two bytes of local workspace for each of
+1489+ 8800              ;the sixty-four possible extension ROMs.
+1490+ 8800              ;
+1491+ 8800              PROCNM: equ 0FD89H  ; DEFS 16
+1492+ 8800              ;
+1493+ 8800              ;    This buffer is used to hold a device or statement name for
+1494+ 8800              ;examination by an extension ROM.
+1495+ 8800              ;
+1496+ 8800              DEVICE: equ 0FD99H ;  DEFB 00H
+1497+ 8800              ;
+1498+ 8800              ;    This variable is used to pass a device code, from 0 to 3, to an
+1499+ 8800              ;extension ROM.
+1500+ 8800              ;
+1501+ 8800              ;
+1502+ 8800               ENDIF
+# file closed: ./system_variables.inc
+   4  8800               INCLUDE "system_hooks.inc"
+# file opened: ./system_hooks.inc
+   1+ 8800              ;+------------------------------------------------------------------+
+   2+ 8800              ;|                         MSX System Hooks                         |
+   3+ 8800              ;+------------------------------------------------------------------+
+   4+ 8800              ;|                                                                  |
+   5+ 8800              ;|  Taken from MSX RED BOOK  (c) 1985 by Avalon Software            |
+   6+ 8800              ;|                           (c) 1988 by McGraw Hill                |
+   7+ 8800              ;|                                                                  |
+   8+ 8800              ;|  Formatted as Z80 Assembly include by Daniel Jose Viana, 2014    |
+   9+ 8800              ;|                                                                  |
+  10+ 8800              ;+------------------------------------------------------------------+
+  11+ 8800              ;
+  12+ 8800              ;    The section of the Workspace Area from FD9AH to FFC9H
+  13+ 8800              ;contains one hundred and twelve hooks, each of which is filled
+  14+ 8800              ;with five Z80 RET opcodes at power-up. These are called from
+  15+ 8800              ;strategic locations within the BIOS/Interpreter so that the ROM
+  16+ 8800              ;can be extended, particularly so that it can be upgraded to
+  17+ 8800              ;Disk BASIC. Each hook has sufficient room to hold a far call to
+  18+ 8800              ;any slot:
+  19+ 8800              ;
+  20+ 8800              ;        RST 30H
+  21+ 8800              ;        DEFB Slot ID
+  22+ 8800              ;        DEFW Address
+  23+ 8800              ;        RET
+  24+ 8800              ;
+  25+ 8800              ;    The hooks are listed on the following pages together with the
+  26+ 8800              ;address they are called from and a brief note as to their
+  27+ 8800              ;function.
+  28+ 8800              ;
+  29+ 8800
+  30+ 8800               IFNDEF SYSTEM_HOOKS
+  31+ 8800               DEFINE SYSTEM_HOOKS
+  32+ 8800
+  33+ 8800              HKEYI: equ 0FD9AH  ; DEFS 5   -> 0C4AH Interrupt handler
+  34+ 8800              HTIMI: equ 0FD9FH  ; DEFS 5   -> 0C53H Interrupt handler
+  35+ 8800              HCHPU: equ 0FDA4H  ; DEFS 5   -> 08C0H CHPUT standard routine
+  36+ 8800              HDSPC: equ 0FDA9H  ; DEFS 5   -> 09E6H Display cursor
+  37+ 8800              HERAC: equ 0FDAEH  ; DEFS 5   -> 0A33H Erase cursor
+  38+ 8800              HDSPF: equ 0FDB3H  ; DEFS 5   -> 0B2BH DSPFNK standard routine
+  39+ 8800              HERAF: equ 0FDB8H  ; DEFS 5   -> 0B15H ERAFNK standard routine
+  40+ 8800              HTOTE: equ 0FDBDH  ; DEFS 5   -> 0842H TOTEXT standard routine
+  41+ 8800              HCHGE: equ 0FDC2H  ; DEFS 5   -> 10CEH CHGET standard routine
+  42+ 8800              HINIP: equ 0FDC7H  ; DEFS 5   -> 071EH Copy character set to VDP
+  43+ 8800              HKEYC: equ 0FDCCH  ; DEFS 5   -> 1025H Keyboard decoder
+  44+ 8800              HKYEA: equ 0FDD1H  ; DEFS 5   -> 0F10H Keyboard decoder
+  45+ 8800              HNMI:  equ 0FDD6H  ; DEFS 5   -> 1398H NMI standard routine
+  46+ 8800              HPINL: equ 0FDDBH  ; DEFS 5   -> 23BFH PINLIN standard routine
+  47+ 8800              HQINL: equ 0FDE0H  ; DEFS 5   -> 23CCH QINLIN standard routine
+  48+ 8800              HINLI: equ 0FDE5H  ; DEFS 5   -> 23D5H INLIN standard routine
+  49+ 8800              HONGO: equ 0FDEAH  ; DEFS 5   -> 7810H "ON DEVICE GOSUB"
+  50+ 8800              HDSKO: equ 0FDEFH  ; DEFS 5   -> 7C16H "DSKO$"
+  51+ 8800              HSETS: equ 0FDF4H  ; DEFS 5   -> 7C1BH "SET"
+  52+ 8800              HNAME: equ 0FDF9H  ; DEFS 5   -> 7C20H "NAME"
+  53+ 8800              HKILL: equ 0FDFEH  ; DEFS 5   -> 7C25H "KILL"
+  54+ 8800              HIPL:  equ 0FE03H  ; DEFS 5   -> 7C2AH "IPL"
+  55+ 8800              HCOPY: equ 0FE08H  ; DEFS 5   -> 7C2FH "COPY"
+  56+ 8800              HCMD:  equ 0FE0DH  ; DEFS 5   -> 7C34H "CMD"
+  57+ 8800              HDSKF: equ 0FE12H  ; DEFS 5   -> 7C39H "DSKF"
+  58+ 8800              HDSKI: equ 0FE17H  ; DEFS 5   -> 7C3EH "DSKI$"
+  59+ 8800              HATTR: equ 0FE1CH  ; DEFS 5   -> 7C43H "ATTR$"
+  60+ 8800              HLSET: equ 0FE21H  ; DEFS 5   -> 7C48H "LSET"
+  61+ 8800              HRSET: equ 0FE26H  ; DEFS 5   -> 7C4DH "RSET"
+  62+ 8800              HFIEL: equ 0FE2BH  ; DEFS 5   -> 7C52H "FIELD"
+  63+ 8800              HMKIS: equ 0FE30H  ; DEFS 5   -> 7C57H "MKI$"
+  64+ 8800              HMKSS: equ 0FE35H  ; DEFS 5   -> 7C5CH "MKS$"
+  65+ 8800              HMKDS: equ 0FE3AH  ; DEFS 5   -> 7C61H "MKD$"
+  66+ 8800              HCVI:  equ 0FE3FH  ; DEFS 5   -> 7C66H "CVI"
+  67+ 8800              HCVS:  equ 0FE44H  ; DEFS 5   -> 7C6BH "CVS"
+  68+ 8800              HCVD:  equ 0FE49H  ; DEFS 5   -> 7C70H "CVD"
+  69+ 8800              HGETP: equ 0FE4EH  ; DEFS 5   -> 6A93H Locate FCB
+  70+ 8800              HSETF: equ 0FE53H  ; DEFS 5   -> 6AB3H Locate FCB
+  71+ 8800              HNOFO: equ 0FE58H  ; DEFS 5   -> 6AF6H "OPEN"
+  72+ 8800              HNULO: equ 0FE5DH  ; DEFS 5   -> 6B0FH "OPEN"
+  73+ 8800              HNTFL: equ 0FE62H  ; DEFS 5   -> 6B3BH Close I/O buffer 0
+  74+ 8800              HMERG: equ 0FE67H  ; DEFS 5   -> 6B63H "MERGE/LOAD"
+  75+ 8800              HSAVE: equ 0FE6CH  ; DEFS 5   -> 6BA6H "SAVE"
+  76+ 8800              HBINS: equ 0FE71H  ; DEFS 5   -> 6BCEH "SAVE"
+  77+ 8800              HBINL: equ 0FE76H  ; DEFS 5   -> 6BD4H "MERGE/LOAD"
+  78+ 8800              HFILE: equ 0FE7BH  ; DEFS 5   -> 6C2FH "FILES"
+  79+ 8800              HDGET: equ 0FE80H  ; DEFS 5   -> 6C3BH "GET/PUT"
+  80+ 8800              HFILO: equ 0FE85H  ; DEFS 5   -> 6C51H Sequential output
+  81+ 8800              HINDS: equ 0FE8AH  ; DEFS 5   -> 6C79H Sequential input
+  82+ 8800              HRSLF: equ 0FE8FH  ; DEFS 5   -> 6CD8H "INPUT$"
+  83+ 8800              HSAVD: equ 0FE94H  ; DEFS 5   -> 6D03H "LOC", 6D14H "LOF",
+  84+ 8800              	 	  		 ;          -> 6D25H "EOF", 6D39H "FPOS"
+  85+ 8800              HLOC:  equ 0FE99H  ; DEFS 5   -> 6D0FH "LOC"
+  86+ 8800              HLOF:  equ 0FE9EH  ; DEFS 5   -> 6D20H "LOF"
+  87+ 8800              HEOF:  equ 0FEA3H  ; DEFS 5   -> 6D33H "EOF"
+  88+ 8800              HFPOS: equ 0FEA8H  ; DEFS 5   -> 6D43H "FPOS"
+  89+ 8800              HBAKU: equ 0FEADH  ; DEFS 5   -> 6E36H "LINE INPUT#"
+  90+ 8800              HPARD: equ 0FEB2H  ; DEFS 5   -> 6F15H Parse device name
+  91+ 8800              HNODE: equ 0FEB7H  ; DEFS 5   -> 6F33H Parse device name
+  92+ 8800              HPOSD: equ 0FEBCH  ; DEFS 5   -> 6F37H Parse device name
+  93+ 8800              HDEVN: equ 0FEC1H  ; DEFS 5   -> This hook is not used.
+  94+ 8800              HGEND: equ 0FEC6H  ; DEFS 5   -> 6F8FH I/O function dispatcher
+  95+ 8800              HRUNC: equ 0FECBH  ; DEFS 5   -> 629AH Run-clear
+  96+ 8800              HCLEA: equ 0FED0H  ; DEFS 5   -> 62A1H Run-clear
+  97+ 8800              HLOPD: equ 0FED5H  ; DEFS 5   -> 62AFH Run-clear
+  98+ 8800              HSTKE: equ 0FEDAH  ; DEFS 5   -> 62F0H Reset stack
+  99+ 8800              HISFL: equ 0FEDFH  ; DEFS 5   -> 145FH ISFLIO standard routine
+ 100+ 8800              HOUTD: equ 0FEE4H  ; DEFS 5   -> 1B46H OUTDO standard routine
+ 101+ 8800              HCRDO: equ 0FEE9H  ; DEFS 5   -> 7328H CR,LF to OUTDO
+ 102+ 8800              HDSKC: equ 0FEEEH  ; DEFS 5   -> 7374H Mainloop line input
+ 103+ 8800              HDOGR: equ 0FEF3H  ; DEFS 5   -> 593CH Line draw
+ 104+ 8800              HPRGE: equ 0FEF8H  ; DEFS 5   -> 4039H Program end
+ 105+ 8800              HERRP: equ 0FEFDH  ; DEFS 5   -> 40DCH Error handler
+ 106+ 8800              HERRF: equ 0FF02H  ; DEFS 5   -> 40FDH Error handler
+ 107+ 8800              HREAD: equ 0FF07H  ; DEFS 5   -> 4128H Mainloop "OK"
+ 108+ 8800              HMAIN: equ 0FF0CH  ; DEFS 5   -> 4134H Mainloop
+ 109+ 8800              HDIRD: equ 0FF11H  ; DEFS 5   -> 41A8H Mainloop direct statement
+ 110+ 8800              HFINI: equ 0FF16H  ; DEFS 5   -> 4237H Mainloop finished
+ 111+ 8800              HFINE: equ 0FF1BH  ; DEFS 5   -> 4247H Mainloop finished
+ 112+ 8800              HCRUN: equ 0FF20H  ; DEFS 5   -> 42B9H Tokenize
+ 113+ 8800              HCRUS: equ 0FF25H  ; DEFS 5   -> 4353H Tokenize
+ 114+ 8800              HISRE: equ 0FF2AH  ; DEFS 5   -> 437CH Tokenize
+ 115+ 8800              HNTFN: equ 0FF2FH  ; DEFS 5   -> 43A4H Tokenize
+ 116+ 8800              HNOTR: equ 0FF34H  ; DEFS 5   -> 44EBH Tokenize
+ 117+ 8800              HSNGF: equ 0FF39H  ; DEFS 5   -> 45D1H "FOR"
+ 118+ 8800              HNEWS: equ 0FF3EH  ; DEFS 5   -> 4601H Runloop new statement
+ 119+ 8800              HGONE: equ 0FF43H  ; DEFS 5   -> 4646H Runloop execute
+ 120+ 8800              HCHRG: equ 0FF48H  ; DEFS 5   -> 4666H CHRGTR standard routine
+ 121+ 8800              HRETU: equ 0FF4DH  ; DEFS 5   -> 4821H "RETURN"
+ 122+ 8800              HPRTF: equ 0FF52H  ; DEFS 5   -> 4A5EH "PRINT"
+ 123+ 8800              HCOMP: equ 0FF57H  ; DEFS 5   -> 4A54H "PRINT"
+ 124+ 8800              HFINP: equ 0FF5CH  ; DEFS 5   -> 4AFFH "PRINT"
+ 125+ 8800              HTRMN: equ 0FF61H  ; DEFS 5   -> 4B4DH "READ/INPUT" error
+ 126+ 8800              HFRME: equ 0FF66H  ; DEFS 5   -> 4C6DH Expression Evaluator
+ 127+ 8800              HNTPL: equ 0FF6BH  ; DEFS 5   -> 4CA6H Expression Evaluator
+ 128+ 8800              HEVAL: equ 0FF70H  ; DEFS 5   -> 4DD9H Factor Evaluator
+ 129+ 8800              HOKNO: equ 0FF75H  ; DEFS 5   -> 4F2CH Factor Evaluator
+ 130+ 8800              HFING: equ 0FF7AH  ; DEFS 5   -> 4F3EH Factor Evaluator
+ 131+ 8800              HISMI: equ 0FF7FH  ; DEFS 5   -> 51C3H Runloop execute
+ 132+ 8800              HWIDT: equ 0FF84H  ; DEFS 5   -> 51CCH "WIDTH"
+ 133+ 8800              HLIST: equ 0FF89H  ; DEFS 5   -> 522EH "LIST"
+ 134+ 8800              HBUFL: equ 0FF8EH  ; DEFS 5   -> 532DH Detokenize
+ 135+ 8800              HFRQI: equ 0FF93H  ; DEFS 5   -> 543FH Convert to integer
+ 136+ 8800              HSCNE: equ 0FF98H  ; DEFS 5   -> 5514H Line number to pointer
+ 137+ 8800              HFRET: equ 0FF9DH  ; DEFS 5   -> 67EEH Free descriptor
+ 138+ 8800              HPTRG: equ 0FFA2H  ; DEFS 5   -> 5EA9H Variable search
+ 139+ 8800              HPHYD: equ 0FFA7H  ; DEFS 5   -> 148AH PHYDIO standard routine
+ 140+ 8800              HFORM: equ 0FFACH  ; DEFS 5   -> 148EH FORMAT standard routine
+ 141+ 8800              HERRO: equ 0FFB1H  ; DEFS 5   -> 406FH Error handler
+ 142+ 8800              HLPTO: equ 0FFB6H  ; DEFS 5   -> 085DH LPTOUT standard routine
+ 143+ 8800              HLPTS: equ 0FFBBH  ; DEFS 5   -> 0884H LPTSTT standard routine
+ 144+ 8800              HSCRE: equ 0FFC0H  ; DEFS 5   -> 79CCH "SCREEN"
+ 145+ 8800              HPLAY: equ 0FFC5H  ; DEFS 5   -> 73E5H "PLAY" statement
+ 146+ 8800              ;
+ 147+ 8800               ENDIF
+# file closed: ./system_hooks.inc
+   5  8800               INCLUDE "bios_calls.inc"
+# file opened: ./bios_calls.inc
+   1+ 8800              ;+------------------------------------------------------------------+
+   2+ 8800              ;|                         MSX Bios CALLS                           |
+   3+ 8800              ;+------------------------------------------------------------------+
+   4+ 8800              ;|                                                                  |
+   5+ 8800              ;|  Taken from MSX RED BOOK  (c) 1985 by Avalon Software            |
+   6+ 8800              ;|                           (c) 1988 by McGraw Hill                |
+   7+ 8800              ;|                                                                  |
+   8+ 8800              ;|  Formatted as Z80 Assembly include by Daniel Jose Viana, 2014    |
+   9+ 8800              ;|                                                                  |
+  10+ 8800              ;+------------------------------------------------------------------+
+  11+ 8800              ;
+  12+ 8800              ; Terminology
+  13+ 8800              ;
+  14+ 8800              ;
+  15+ 8800              ;     Reference is frequently made in this chapter to the standard
+  16+ 8800              ; routines and to Workspace Area variables. Whenever this is done
+  17+ 8800              ; the Microsoft-recommended name is used in upper case letters,
+  18+ 8800              ; for example "the FILVRM standard routine" and "SCRMOD is set".
+  19+ 8800              ; Subroutines which are not named are referred to by a
+  20+ 8800              ; parenthesized address, "the screen is cleared (0777H)" for
+  21+ 8800              ; example. When reference is made to the Z80 status flags
+  22+ 8800              ; assembly language conventions are used, for example "Flag C"
+  23+ 8800              ; would mean that the carry flag is set while "Flag NZ" means
+  24+ 8800              ; that the zero flag is reset. The terms "EI" and "DI" mean
+  25+ 8800              ; enabled interrupts and disabled interrupts respectively.
+  26+ 8800
+  27+ 8800               IFNDEF BIOS_CALLS
+  28+ 8800               DEFINE BIOS_CALLS
+  29+ 8800
+  30+ 8800              ;NAME    ADDR.      CALL TO  FUNCTION
+  31+ 8800              ;-------------------------------------------------------------
+  32+ 8800              CHKRAM equ 0000H ; 02D7H   Power-up, check RAM
+  33+ 8800              SYNCHR equ 0008H ; 2683H   Check BASIC program character
+  34+ 8800              RDSLT  equ 000CH ; 01B6H   Read RAM in any slot
+  35+ 8800              CHRGTR equ 0010H ; 2686H   Get next BASIC program character
+  36+ 8800              WRSLT  equ 0014H ; 01D1H   Write to RAM in any slot
+  37+ 8800              OUTDO  equ 0018H ; 1B45H   Output to current device
+  38+ 8800              CALSLT equ 001CH ; 0217H   Call routine in any slot
+  39+ 8800              DCOMPR equ 0020H ; 146AH   Compare register pairs HL and DE
+  40+ 8800              ENASLT equ 0024H ; 025EH   Enable any slot permanently
+  41+ 8800              GETYPR equ 0028H ; 2689H   Get BASIC operand type
+  42+ 8800              CALLF  equ 0030H ; 0205H   Call routine in any slot
+  43+ 8800              KEYINT equ 0038H ; 0C3CH   Interrupt handler, keyboard scan
+  44+ 8800              INITIO equ 003BH ; 049DH   Initialize I/O devices
+  45+ 8800              INIFNK equ 003EH ; 139DH   Initialize function key strings
+  46+ 8800              DISSCR equ 0041H ; 0577H   Disable screen
+  47+ 8800              ENASCR equ 0044H ; 0570H   Enable screen
+  48+ 8800              WRTVDP equ 0047H ; 057FH   Write to any VDP register
+  49+ 8800              RDVRM  equ 004AH ; 07D7H   Read byte from VRAM
+  50+ 8800              WRTVRM equ 004DH ; 07CDH   Write byte to VRAM
+  51+ 8800              SETRD  equ 0050H ; 07ECH   Set up VDP for read
+  52+ 8800              SETWRT equ 0053H ; 07DFH   Set up VDP for write
+  53+ 8800              FILVRM equ 0056H ; 0815H   Fill block of VRAM with data byte
+  54+ 8800              LDIRMV equ 0059H ; 070FH   Copy block to memory from VRAM
+  55+ 8800              LDIRVM equ 005CH ; 0744H   Copy block to VRAM, from memory
+  56+ 8800              CHGMOD equ 005FH ; 084FH   Change VDP mode
+  57+ 8800              CHGCLR equ 0062H ; 07F7H   Change VDP colours
+  58+ 8800              NMI    equ 0066H ; 1398H   Non Maskable Interrupt handler
+  59+ 8800              CLRSPR equ 0069H ; 06A8H   Clear all sprites
+  60+ 8800              INITXT equ 006CH ; 050EH   Initialize VDP to 40x24 Text Mode
+  61+ 8800              INIT32 equ 006FH ; 0538H   Initialize VDP to 32x24 Text Mode
+  62+ 8800              INIGRP equ 0072H ; 05D2H   Initialize VDP to Graphics Mode
+  63+ 8800              INIMLT equ 0075H ; 061FH   Initialize VDP to Multicolour Mode
+  64+ 8800              SETTXT equ 0078H ; 0594H   Set VDP to 40x24 Text Mode
+  65+ 8800              SETT32 equ 007BH ; 05B4H   Set VDP to 32x24 Text Mode
+  66+ 8800              SETGRP equ 007EH ; 0602H   Set VDP to Graphics Mode
+  67+ 8800              SETMLT equ 0081H ; 0659H   Set VDP to Multicolour Mode
+  68+ 8800              CALPAT equ 0084H ; 06E4H   Calculate address of sprite pattern
+  69+ 8800              CALATR equ 0087H ; 06F9H   Calculate address of sprite attribute
+  70+ 8800              GSPSIZ equ 008AH ; 0704H   Get sprite size
+  71+ 8800              GRPPRT equ 008DH ; 1510H   Print character on graphic screen
+  72+ 8800              GICINI equ 0090H ; 04BDH   Initialize PSG (GI Chip)
+  73+ 8800              WRTPSG equ 0093H ; 1102H   Write to any PSG register
+  74+ 8800              RDPSG  equ 0096H ; 110EH   Read from any PSG register
+  75+ 8800              STRTMS equ 0099H ; 11C4H   Start music dequeueing
+  76+ 8800              CHSNS  equ 009CH ; 0D6AH   Sense keyboard buffer for character
+  77+ 8800              CHGET  equ 009FH ; 10CBH   Get character from keyboard buffer (wait)
+  78+ 8800              CHPUT  equ 00A2H ; 08BCH   Screen character output
+  79+ 8800              LPTOUT equ 00A5H ; 085DH   Line printer character output
+  80+ 8800              LPTSTT equ 00A8H ; 0884H   Line printer status test
+  81+ 8800              CNVCHR equ 00ABH ; 089DH   Convert character with graphic header
+  82+ 8800              PINLIN equ 00AEH ; 23BFH   Get line from console (editor)
+  83+ 8800              INLIN  equ 00B1H ; 23D5H   Get line from console (editor)
+  84+ 8800              QINLIN equ 00B4H ; 23CCH   Display "?", get line from console (editor)
+  85+ 8800              BREAKX equ 00B7H ; 046FH   Check CTRL-STOP key directly
+  86+ 8800              ISCNTC equ 00BAH ; 03FBH   Check CRTL-STOP key
+  87+ 8800              CKCNTC equ 00BDH ; 10F9H   Check CTRL-STOP key
+  88+ 8800              BEEP   equ 00C0H ; 1113H   Go beep
+  89+ 8800              CLS    equ 00C3H ; 0848H   Clear screen
+  90+ 8800              POSIT  equ 00C6H ; 088EH   Set cursor position
+  91+ 8800              FNKSB  equ 00C9H ; 0B26H   Check if function key display on
+  92+ 8800              ERAFNK equ 00CCH ; 0B15H   Erase function key display
+  93+ 8800              DSPFNK equ 00CFH ; 0B2BH   Display function keys
+  94+ 8800              TOTEXT equ 00D2H ; 083BH   Return VDP to text mode
+  95+ 8800              GTSTCK equ 00D5H ; 11EEH   Get joystick status
+  96+ 8800              GTTRIG equ 00D8H ; 1253H   Get trigger status
+  97+ 8800              GTPAD  equ 00DBH ; 12ACH   Get touch pad status
+  98+ 8800              GTPDL  equ 00DEH ; 1273H   Get paddle status
+  99+ 8800              TAPION equ 00E1H ; 1A63H   Tape input ON
+ 100+ 8800              TAPIN  equ 00E4H ; 1ABCH   Tape input
+ 101+ 8800              TAPIOF equ 00E7H ; 19E9H   Tape input OFF
+ 102+ 8800              TAPOON equ 00EAH ; 19F1H   Tape output ON
+ 103+ 8800              TAPOUT equ 00EDH ; 1A19H   Tape output
+ 104+ 8800              TAPOOF equ 00F0H ; 19DDH   Tape output OFF
+ 105+ 8800              STMOTR equ 00F3H ; 1384H   Turn motor ON/OFF
+ 106+ 8800              LFTQ   equ 00F6H ; 14EBH   Space left in music queue
+ 107+ 8800              PUTQ   equ 00F9H ; 1492H   Put byte in music queue
+ 108+ 8800              RIGHTC equ 00FCH ; 16C5H   Move current pixel physical address right
+ 109+ 8800              LEFTC  equ 00FFH ; 16EEH   Move current pixel physical address left
+ 110+ 8800              UPC    equ 0102H ; 175DH   Move current pixel physical address up
+ 111+ 8800              TUPC   equ 0105H ; 173CH   Test then UPC if legal
+ 112+ 8800              DOWNC  equ 0108H ; 172AH   Move current pixel physical address down
+ 113+ 8800              TDOWNC equ 010BH ; 170AH   Test then DOWNC if legal
+ 114+ 8800              SCALXY equ 010EH ; 1599H   Scale graphics coordinates
+ 115+ 8800              MAPXYC equ 0111H ; 15DFH   Map graphic coordinates to physical address
+ 116+ 8800              FETCHC equ 0114H ; 1639H   Fetch current pixel physical address
+ 117+ 8800              STOREC equ 0117H ; 1640H   Store current pixel physical address
+ 118+ 8800              SETATR equ 011AH ; 1676H   Set attribute byte
+ 119+ 8800              READC  equ 011DH ; 1647H   Read attribute of current pixel
+ 120+ 8800              SETC   equ 0120H ; 167EH   Set attribute of current pixel
+ 121+ 8800              NSETCX equ 0123H ; 1809H   Set attribute of number of pixels
+ 122+ 8800              GTASPC equ 0126H ; 18C7H   Get aspect ratio
+ 123+ 8800              PNTINI equ 0129H ; 18CFH   Paint initialize
+ 124+ 8800              SCANR  equ 012CH ; 18E4H   Scan pixels to right
+ 125+ 8800              SCANL  equ 012FH ; 197AH   Scan pixels to left
+ 126+ 8800              CHGCAP equ 0132H ; 0F3DH   Change Caps Lock LED
+ 127+ 8800              CHGSND equ 0135H ; 0F7AH   Change Key Click sound output
+ 128+ 8800              RSLREG equ 0138H ; 144CH   Read Primary Slot Register
+ 129+ 8800              WSLREG equ 013BH ; 144FH   Write to Primary Slot Register
+ 130+ 8800              RDVDP  equ 013EH ; 1449H   Read VDP Status Register
+ 131+ 8800              SNSMAT equ 0141H ; 1452H   Read row of keyboard matrix
+ 132+ 8800              PHYDIO equ 0144H ; 148AH   Disk, no action
+ 133+ 8800              FORMAT equ 0147H ; 148EH   Disk, no action
+ 134+ 8800              ISFLIO equ 014AH ; 145FH   Check for file I/O
+ 135+ 8800              OUTDLP equ 014DH ; 1B63H   Formatted output to line printer
+ 136+ 8800              GETVCP equ 0150H ; 1470H   Get music voice pointer
+ 137+ 8800              GETVC2 equ 0153H ; 1474H   Get music voice pointer
+ 138+ 8800              KILBUF equ 0156H ; 0468H   Clear keyboard buffer
+ 139+ 8800              CALBAS equ 0159H ; 01FFH   Call to BASIC from any slot
+ 140+ 8800
+ 141+ 8800               ENDIF
+# file closed: ./bios_calls.inc
+   6  8800
+   7  8800              RAMAD0	equ	0F341h	; Main-RAM Slot (00000h~03FFFh)
+   8  8800              RAMAD1	equ	0F342h	; Main-RAM Slot (04000h~07FFFh)
+   9  8800              RAMAD2	equ	0F343h	; Main-RAM Slot (08000h~0BFFFh)
+  10  8800              RAMAD3	equ	0F344h	; Main-RAM Slot (0C000h~0FFFFh)
+  11  8800
+  12  8800 FE            DB 0FEH ; header
+  13  8801 07 88         DW LoaderBegin
+  14  8803 B2 8D         DW LoaderEnd-1
+  15  8805 75 8D         DW LoaderStart
+  16  8807
+  17  8807              LoaderBegin:
+  18  8807
+  19  8807               INCBIN "bin/main.bin"
+  20  8CB6
+  21  8CB6              DATA_END:
+  22  8CB6
+  23  8CB6              ; ****************************************************************************************************
+  24  8CB6              ; function gets slot and subslot data for specific page
+  25  8CB6              ; input A=page (0, 1 or 2)
+  26  8CB6              ; output B = 0A8H register value
+  27  8CB6              ; output D = 0 is no subslots, 1 if yes
+  28  8CB6              ; output C = 0A8H value when page 3 slot equals to requested page slot
+  29  8CB6              ; output E = subslot value if present
+  30  8CB6              ; modifies AF, BC, DE, HL
+  31  8CB6              GET_PAGE_INFO:
+  32  8CB6 6F               LD L, A
+  33  8CB7 C6 C1            ADD A, low (EXPTBL)
+  34  8CB9 32 C3 8C         LD (GET_PAGE_INFO_L1+1), A
+  35  8CBC DB A8            IN A, (0A8H)
+  36  8CBE 47               LD B, A
+  37  8CBF E6 3F            AND 03FH
+  38  8CC1 4F               LD C, A
+  39  8CC2              GET_PAGE_INFO_L1:
+  40  8CC2 3A C1 FC         LD A, (EXPTBL) ; modified by code above
+  41  8CC5 E6 80            AND 080H
+  42  8CC7 28 1B            JR Z, GET_PAGE_INFO_L2
+  43  8CC9                  ; expanded
+  44  8CC9 2D               DEC L
+  45  8CCA FA E9 8C         JP M, GET_PAGE_INFO_L3
+  46  8CCD 2D               DEC L
+  47  8CCE FA E7 8C         JP M, GET_PAGE_INFO_L4
+  48  8CD1                  ; page 2
+  49  8CD1 07               RLCA
+  50  8CD2 07               RLCA
+  51  8CD3              GET_PAGE_INFO_L5:
+  52  8CD3 E6 C0            AND 0C0H
+  53  8CD5 B1               OR C
+  54  8CD6 D3 A8            OUT (0A8H), A ; slot 3 = slot of page requested
+  55  8CD8 4F               LD C, A
+  56  8CD9 3A FF FF         LD A, (0FFFFH)
+  57  8CDC 2F               CPL
+  58  8CDD 5F               LD E, A
+  59  8CDE 16 01            LD D, 1
+  60  8CE0 78               LD A, B ; return stack
+  61  8CE1 D3 A8            OUT (0A8H), A
+  62  8CE3 C9               RET
+  63  8CE4              GET_PAGE_INFO_L2:
+  64  8CE4                  ; not expanded
+  65  8CE4 16 00            LD D, 0
+  66  8CE6 C9               RET
+  67  8CE7              GET_PAGE_INFO_L4:
+  68  8CE7                  ; page 1
+  69  8CE7 0F               RRCA
+  70  8CE8 0F               RRCA
+  71  8CE9              GET_PAGE_INFO_L3:
+  72  8CE9                  ; page 0
+  73  8CE9 0F               RRCA
+  74  8CEA 0F               RRCA
+  75  8CEB 18 E6            JR GET_PAGE_INFO_L5
+  76  8CED              ; ****************************************************************************************************
+  77  8CED
+  78  8CED              ; ****************************************************************************************************
+  79  8CED              ; function returns original slot and subslot info
+  80  8CED              ; input B = 0A8H register value
+  81  8CED              ; input D = 0 is no subslots, 1 if yes
+  82  8CED              ; input C = 0A8H value when page 3 slot equals to requested page slot
+  83  8CED              ; input E = subslot value if present
+  84  8CED              ; modifies AF
+  85  8CED              RESTORE_PAGE_INFO:
+  86  8CED 7A               LD A, D
+  87  8CEE B7               OR A
+  88  8CEF 28 07            JR Z, RESTORE_PAGE_INFO_L1
+  89  8CF1 79               LD A, C
+  90  8CF2 D3 A8            OUT (0A8H), A
+  91  8CF4 7B               LD A, E
+  92  8CF5 32 FF FF         LD (0FFFFH), A
+  93  8CF8              RESTORE_PAGE_INFO_L1:
+  94  8CF8 78               LD A, B
+  95  8CF9 D3 A8            OUT (0A8H), A
+  96  8CFB C9               RET
+  97  8CFC              ; ****************************************************************************************************
+  98  8CFC
+  99  8CFC              ; *******************************************************************************************************
+ 100  8CFC              ; SELECTS A SLOT IN THE PAGE SPECIFIED BY AN ADDRESS.
+ 101  8CFC              ; INPUT:  A = SLOT ID: EXXXSSPP
+ 102  8CFC              ; E = EXPANDED FLAG
+ 103  8CFC              ; SS = SECONDARY SLOT NUMBER (ONLY IF EXPANDED)
+ 104  8CFC              ; PP = PRIMARY SLOT NUMBER
+ 105  8CFC              ;     HL = ADDRESS INSIDE THE PAGE TO CHANGE
+ 106  8CFC              ; CHANGES: AF, BC, DE
+ 107  8CFC
+ 108  8CFC              LOCAL_ENASLT:
+ 109  8CFC CD 1C 8D         CALL L0353
+ 110  8CFF FA 09 8D         JP M, L0340
+ 111  8D02 DB A8            IN A, (0A8H)
+ 112  8D04 A1               AND C
+ 113  8D05 B0               OR B
+ 114  8D06 D3 A8            OUT (0A8H), A
+ 115  8D08 C9               RET
+ 116  8D09              L0340:
+ 117  8D09 E5               PUSH HL
+ 118  8D0A CD 41 8D         CALL L0378
+ 119  8D0D 4F               LD C, A
+ 120  8D0E 06 00            LD B, 0
+ 121  8D10 7D               LD A, L
+ 122  8D11 A4               AND H
+ 123  8D12 B2               OR D
+ 124  8D13 21 C5 FC         LD HL, 0FCC5H
+ 125  8D16 09               ADD HL, BC
+ 126  8D17 77               LD (HL), A
+ 127  8D18 E1               POP HL
+ 128  8D19 79               LD A, C
+ 129  8D1A 18 E0            JR LOCAL_ENASLT
+ 130  8D1C              L0353:
+ 131  8D1C F3               DI
+ 132  8D1D F5               PUSH AF
+ 133  8D1E 7C               LD A, H
+ 134  8D1F 07               RLCA
+ 135  8D20 07               RLCA
+ 136  8D21 E6 03            AND 3
+ 137  8D23 5F               LD E, A
+ 138  8D24 3E C0            LD A, 0C0H
+ 139  8D26              L035D:
+ 140  8D26 07               RLCA
+ 141  8D27 07               RLCA
+ 142  8D28 1D               DEC E
+ 143  8D29 F2 26 8D         JP P, L035D
+ 144  8D2C 5F               LD E, A
+ 145  8D2D 2F               CPL
+ 146  8D2E 4F               LD C, A
+ 147  8D2F F1               POP AF
+ 148  8D30 F5               PUSH AF
+ 149  8D31 E6 03            AND 3
+ 150  8D33 3C               INC A
+ 151  8D34 47               LD B, A
+ 152  8D35 3E AB            LD A, 0ABH
+ 153  8D37              L036E:
+ 154  8D37 C6 55            ADD A, 055H
+ 155  8D39 10 FC            DJNZ L036E
+ 156  8D3B 57               LD D, A
+ 157  8D3C A3               AND E
+ 158  8D3D 47               LD B, A
+ 159  8D3E F1               POP AF
+ 160  8D3F A7               AND A
+ 161  8D40 C9               RET
+ 162  8D41              L0378:
+ 163  8D41 F5               PUSH AF
+ 164  8D42 7A               LD A, D
+ 165  8D43 E6 C0            AND 0C0H
+ 166  8D45 4F               LD C, A
+ 167  8D46 F1               POP AF
+ 168  8D47 F5               PUSH AF
+ 169  8D48 57               LD D, A
+ 170  8D49 DB A8            IN A, (0A8H)
+ 171  8D4B 47               LD B, A
+ 172  8D4C E6 3F            AND 03FH
+ 173  8D4E B1               OR C
+ 174  8D4F D3 A8            OUT (0A8H), A
+ 175  8D51 7A               LD A, D
+ 176  8D52 0F               RRCA
+ 177  8D53 0F               RRCA
+ 178  8D54 E6 03            AND 3
+ 179  8D56 57               LD D, A
+ 180  8D57 3E AB            LD A, 0ABH
+ 181  8D59              L0390:
+ 182  8D59 C6 55            ADD A, 055H
+ 183  8D5B 15               DEC D
+ 184  8D5C F2 59 8D         JP P, L0390
+ 185  8D5F A3               AND E
+ 186  8D60 57               LD D, A
+ 187  8D61 7B               LD A, E
+ 188  8D62 2F               CPL
+ 189  8D63 67               LD H, A
+ 190  8D64 3A FF FF         LD A, (0FFFFH)
+ 191  8D67 2F               CPL
+ 192  8D68 6F               LD L, A
+ 193  8D69 A4               AND H
+ 194  8D6A B2               OR D
+ 195  8D6B 32 FF FF         LD (0FFFFH), A
+ 196  8D6E 78               LD A, B
+ 197  8D6F D3 A8            OUT (0A8H), A
+ 198  8D71 F1               POP AF
+ 199  8D72 E6 03            AND 3
+ 200  8D74 C9               RET
+ 201  8D75              ; *******************************************************************************************************
+ 202  8D75
+ 203  8D75              LoaderStart:
+ 204  8D75 F3               DI
+ 205  8D76
+ 206  8D76 3E 01            LD A, 1
+ 207  8D78 CD B6 8C         CALL GET_PAGE_INFO
+ 208  8D7B C5               PUSH BC
+ 209  8D7C D5               PUSH DE
+ 210  8D7D 3A 42 F3         LD A, (RAMAD1)
+ 211  8D80 26 40            LD H, 040H
+ 212  8D82 CD FC 8C         CALL LOCAL_ENASLT
+ 213  8D85
+ 214  8D85 21 07 88         LD HL, LoaderBegin
+ 215  8D88 11 00 40         LD DE, 04000H
+ 216  8D8B 01 AF 04         LD BC, DATA_END-LoaderBegin
+ 217  8D8E ED B0            LDIR
+ 218  8D90
+ 219  8D90                  ; mark slot where RAM is as BASIC extension
+ 220  8D90 3A 42 F3         LD A, (RAMAD1)
+ 221  8D93 A7            	AND A
+ 222  8D94 FA 99 8D     	JP M, .SKIP   ; SlotID has SubSlot information
+ 223  8D97 E6 03        	AND 3
+ 224  8D99              .SKIP
+ 225  8D99 E6 0F        	AND 15
+ 226  8D9B 5F           	LD E, A
+ 227  8D9C 07           	RLCA
+ 228  8D9D 07           	RLCA
+ 229  8D9E 07           	RLCA
+ 230  8D9F 07           	RLCA
+ 231  8DA0 B3           	OR E
+ 232  8DA1 E6 3C        	AND 60
+ 233  8DA3 16 00        	LD D, 0
+ 234  8DA5 5F           	LD E, A
+ 235  8DA6 21 CA FC     	LD HL, SLTATR+1
+ 236  8DA9 19           	ADD HL, DE
+ 237  8DAA CB EE        	SET 5, (HL)     ; Set bit 5 to enable CALL handler
+ 238  8DAC
+ 239  8DAC D1               POP DE
+ 240  8DAD C1               POP BC
+ 241  8DAE CD ED 8C         CALL RESTORE_PAGE_INFO
+ 242  8DB1
+ 243  8DB1 FB               EI
+ 244  8DB2 C9               RET
+ 245  8DB3
+ 246  8DB3              LoaderEnd:
+ 247  8DB3
+# file closed: asm\MBGE.asm
