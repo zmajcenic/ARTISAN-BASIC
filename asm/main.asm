@@ -24,6 +24,7 @@ SYNCHR	EQU		#558C
 VALTYP  EQU     #F663
 USR     EQU     #F7F8
 PROCNM	EQU		#FD89
+BIOS_FILVRM  EQU     #56
 
 RAMAD0	EQU	0F341h	; Main-RAM Slot (00000h~03FFFh)
 RAMAD1	EQU	0F342h	; Main-RAM Slot (04000h~07FFFh)
@@ -33,6 +34,32 @@ EXPTBL	EQU #FCC1
 
  ; simulate cartridge with BASIC extension
  DW 04241H, 0, CALLHAND, 0, 0, 0, 0, 0
+
+; this location #400A stores last location used by basic extension
+; free memory after that point
+ DW EXTEND 
+
+; List of available instructions (as ASCIIZ) and execute address (as word)
+CMDS:
+	DEFB	"UPRINT",0      ; Print upper case string
+	DEFW	UPRINT
+ 
+	DEFB	"LPRINT",0      ; Print lower case string
+	DEFW	LPRINT
+
+	DB "MEMCPY", 0
+	DW	MEMCPY
+
+    DB "FILVRM", 0
+    DW FILVRM
+
+    DB "FILRAM", 0
+    DW FILRAM
+
+    DB "GENCAL", 0
+    DW GENCAL
+ 
+	DEFB	0               ; No more instructions
 
 ; ****************************************************************************************************
 ; function gets slot and subslot data for specific page
@@ -218,7 +245,6 @@ L0390:
 ; General BASIC CALL-instruction handler
  
 CALLHAND:
- 
 	PUSH    HL
 	LD	HL,CMDS	        ; Table with "_" instructions
 .CHKCMD:
@@ -256,20 +282,6 @@ CALLHAND:
 	RET
  
 ;---------------------------
-CMDS:
- 
-; List of available instructions (as ASCIIZ) and execute address (as word)
- 
-	DEFB	"UPRINT",0      ; Print upper case string
-	DEFW	UPRINT
- 
-	DEFB	"LPRINT",0      ; Print lower case string
-	DEFW	LPRINT
-
-	DB "MEMCPY", 0
-	DW	MEMCPY
- 
-	DEFB	0               ; No more instructions
  
 ;---------------------------
 UPRINT:
@@ -381,8 +393,8 @@ SYNTAX_ERROR:
 ; _MEMCPY ( INT source, 
 ;			INT destination, 
 ;			INT count, 
-;			(option) BYTE enable_ram,
-;			(option) BYTE wait_vsync)
+;			BYTE enable_ram, >0 = true
+;			BYTE wait_vsync) >0 = treu
 ; enable_ram will put ram in page 0 also, page 1 is already there
 ; wait_vsync will issue HALT before copying
 MEMCPY:
@@ -425,6 +437,7 @@ MEMCPY:
 	CALL CHKCHAR
 	DB ')'
 
+    EI
 	; save position
 	PUSH HL
 	POP IX
@@ -434,7 +447,6 @@ MEMCPY:
 	POP AF
 	OR A
 	JR Z, .L1
-	EI
 	HALT
 
 .L1:
@@ -469,3 +481,245 @@ MEMCPY:
 	PUSH IX
 	POP HL
 	RET
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function to handle CALL FILVRM basic extension
+; FILVRM ( INT offset, 
+;		   INT count, 
+;		   BYTE value,
+;		   BYTE wait_vsync) >0 = true
+; wait_vsync will issue HALT before copying
+FILVRM:
+	; opening (
+	CALL CHKCHAR
+	DB '('
+	; get offset address
+	LD IX, FRMQNT
+	CALL CALBAS
+	PUSH DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get count
+	LD IX, FRMQNT
+	CALL CALBAS
+	PUSH DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get value
+	LD IX, GETBYT
+	CALL CALBAS
+	PUSH AF
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get vsync wait
+	LD IX, GETBYT
+	CALL CALBAS
+	PUSH AF
+	; ending )
+	CALL CHKCHAR
+	DB ')'
+
+    EI
+	; save position
+	PUSH HL
+	POP IX
+
+	; syntax ok
+	; wait for vsync if needed
+	POP AF
+	OR A
+	JR Z, .L1
+	HALT
+
+.L1:
+    POP AF ; value
+    POP BC ; count
+    POP HL ; offset
+    CALL BIOS_FILVRM
+
+.L3:
+	PUSH IX
+	POP HL
+	RET 
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function to handle CALL FILRAM basic extension
+; FILRAM ( INT start address, 
+;		   INT count, 
+;		   BYTE value,
+;	   	   BYTE enable_ram, >0 = true
+;		   BYTE wait_vsync) >0 = true
+; enable_ram will put ram in page 0 also, page 1 is already there
+; wait_vsync will issue HALT before copying
+FILRAM:
+	; opening (
+	CALL CHKCHAR
+	DB '('
+	; get start address
+	LD IX, FRMQNT
+	CALL CALBAS
+	PUSH DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get count
+	LD IX, FRMQNT
+	CALL CALBAS
+	PUSH DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get value
+	LD IX, GETBYT
+	CALL CALBAS
+	PUSH AF
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get ROM/RAM
+	LD IX, GETBYT
+	CALL CALBAS
+	PUSH AF
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get vsync wait
+	LD IX, GETBYT
+	CALL CALBAS
+	PUSH AF
+	; ending )
+	CALL CHKCHAR
+	DB ')'
+
+    EI
+	; save position
+	PUSH HL
+	POP IX
+
+	; syntax ok
+	; wait for vsync if needed
+	POP AF
+	OR A
+	JR Z, .L1
+	HALT
+
+.L1:
+	; enable RAM in page 0 if needed
+	POP AF
+	OR A
+	; pop LDIR parameters and store away for later
+	POP DE ; actually AF
+	POP BC ; count
+	POP HL ; start address
+	JR Z, .L2
+	EXX
+    XOR A
+    CALL GET_PAGE_INFO
+    PUSH BC
+    PUSH DE
+    LD A, (RAMAD0)
+    LD H, 0
+	DI
+    CALL LOCAL_ENASLT
+	EXX
+	CALL .FILLVALUE
+    POP DE
+    POP BC
+    CALL RESTORE_PAGE_INFO
+	JR .L3
+
+.L2:
+	CALL .FILLVALUE
+
+.L3:
+	PUSH IX
+	POP HL
+	RET
+
+.FILLVALUE:
+    LD (HL), D
+    LD D, H
+    LD E, L
+    INC DE
+    DEC BC
+    LDIR
+    RET
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function to handle CALL GENCAL basic extension
+; GENCAL ( INT fn_addr, = address of the function to call
+;		   INT reg_list_ptr, = pointer to array holding register values (AF,BC,DE,HL,IX,IY)
+; output values of reristers will also be stored at reg_list_ptr
+GENCAL_VAR_SP:
+    DW 0
+GENCAL_VAR_SP2:
+    DW 0
+GENCAL:
+	; opening (
+	CALL CHKCHAR
+	DB '('
+	; get function address
+	LD IX, FRMQNT
+	CALL CALBAS
+	PUSH DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get pointer to register list
+	LD IX, FRMQNT
+	CALL CALBAS
+	PUSH DE
+	; ending )
+	CALL CHKCHAR
+	DB ')'
+
+	; save BASIC token position
+	PUSH HL
+    EXX
+	POP HL ; HL'=next basic token
+    EXX
+
+    POP HL ; get pointer to register values
+    LD (GENCAL_VAR_SP), SP
+    DI
+    LD SP, HL
+    POP AF
+    POP BC
+    POP DE
+    POP HL
+    POP IX
+    POP IY
+    EXX
+    LD (GENCAL_VAR_SP2), SP
+    LD SP, (GENCAL_VAR_SP)
+    EI
+    POP DE ; get function to call
+    PUSH HL
+    CALL .EXXDECALL
+    DI
+    LD (GENCAL_VAR_SP), SP
+    LD SP, (GENCAL_VAR_SP2)
+    PUSH IY
+    PUSH IX
+    PUSH HL
+    PUSH DE
+    PUSH BC
+    PUSH AF
+    LD SP, (GENCAL_VAR_SP)
+    EI
+    POP HL
+	RET 
+
+.EXXDECALL:
+    PUSH DE
+    EXX
+    RET
+; *******************************************************************************************************
+
+EXTEND:
