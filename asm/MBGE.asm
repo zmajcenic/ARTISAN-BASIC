@@ -17,6 +17,7 @@ RAMAD3	equ	0F344h	; Main-RAM Slot (0C000h~0FFFFh)
 LoaderBegin:
 
  INCBIN "bin/main.bin"
+ INCLUDE "symbol/main.exp"
 
 DATA_END:
 
@@ -235,6 +236,21 @@ LoaderStart:
 	LD HL, SLTATR+1
 	ADD HL, DE
 	SET 5, (HL)     ; Set bit 5 to enable CALL handler
+
+    ; save original H.TIMI handler
+    LD HL, HTIMI
+    LD DE, ORIG.HTIMI
+    LD BC, 5
+    LDIR
+
+    ; write new handler
+    LD IX, HTIMI
+    LD (IX), #F7 ; RST #30
+    LD A, (RAMAD1)
+    LD (IX+1), A ; slot info
+    LD (IX+2), low (MBGE_HTIMI)
+    LD (IX+3), high (MBGE_HTIMI) ; function address
+    LD (IX+4), #C9 ; RET
 
     POP DE
     POP BC

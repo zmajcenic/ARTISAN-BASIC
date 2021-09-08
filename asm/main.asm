@@ -39,6 +39,14 @@ EXPTBL	EQU #FCC1
 ; free memory after that point
  DW EXT_END 
 
+; binary included AKG player compiled at #4012
+ INCBIN "bin/AKG.bin"
+ INCLUDE "symbol/AKG.sym"
+
+ORIG.HTIMI:
+	DB 0, 0, 0, 0, 0
+ EXPORT ORIG.HTIMI
+
 ; List of pointers to available instructions (as ASCIIZ) and execute address (as word)
 ; per starting letter, if no commands with this letter, NULL value
 CMDS:
@@ -60,7 +68,7 @@ CMDS:
     DW 0 ; P
     DW 0 ; Q
     DW 0 ; R
-    DW 0 ; S
+    DW CMDS_S ; S
     DW 0 ; T
     DW CMDS_U ; U
     DW CMDS_V ; V
@@ -96,6 +104,10 @@ CMDS_G:
 CMDS_V:
 	DB "VRMMEM", 0
 	DW VRMMEM
+	DB 0
+CMDS_S:
+	DB "SNDPLYINI", 0
+	DW SNDPLYINIT
 	DB 0
 
 ; ****************************************************************************************************
@@ -1001,5 +1013,87 @@ VRMMEM:
     RET
 ; *******************************************************************************************************
 
+; *******************************************************************************************************
+; H.TIMI function
+MBGE_HTIMI:
+ EXPORT MBGE_HTIMI
+	PUSH AF
+	POP AF
+	JP ORIG.HTIMI
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function to handle CALL SNDPLYINIT basic extension
+; copies from RAM to VRAM
+; _SNDPLYINIT ( INT music_offset, 
+;				INT sfx_offset, can be -1 if no SFX
+; will put ram in page 0 also, page 1 is already there
+; sets variables MUSIC_INIT_STATUS and SFX_INIT_STATUS
+MUSIC_INIT_STATUS:
+ DB 0
+SFX_INIT_STATUS:
+ DB 0
+
+SNDPLYINIT:
+	; opening (
+	CALL CHKCHAR
+	DB '('
+	; get music address
+	LD IX, FRMQNT
+	CALL CALBAS
+	PUSH DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get sfx address
+	LD IX, FRMQNT
+	CALL CALBAS
+	PUSH DE
+	; ending )
+	CALL CHKCHAR
+	DB ')'
+
+    ; save position in BASIC text
+	LD B, H
+	LD C, L
+
+	; pop LDIR parameters and store away for later
+	POP DE ; sfx address
+	POP HL ; music address
+	PUSH BC ; basic text location
+	EXX
+    XOR A
+    CALL GET_PAGE_INFO
+    PUSH BC
+    PUSH DE
+    LD A, (RAMAD0)
+    LD H, 0
+    CALL LOCAL_ENASLT
+	EXX
+
+	PUSH DE
+	XOR A
+	; HL = music location
+	CALL PLY_AKG_INIT
+	LD A, 1
+	LD (MUSIC_INIT_STATUS), A
+
+	POP HL
+	INC HL
+	LD A, L
+	OR H
+	JR Z,.L1
+	DEC HL
+	CALL PLY_AKG_INITSOUNDEFFECTS
+	LD A, 1
+	LD (SFX_INIT_STATUS), A
+.L1:
+    POP DE
+    POP BC
+    CALL RESTORE_PAGE_INFO
+
+	POP HL
+	RET
+; *******************************************************************************************************
 
 EXT_END:

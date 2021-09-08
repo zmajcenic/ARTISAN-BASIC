@@ -1,7 +1,7 @@
 BIN_DIR = bin
 SYM_DIR = symbol
 
-.PHONY: all basic bin
+.PHONY: all basic bin sound
 
 all: 
 
@@ -10,11 +10,12 @@ basic:
 	./append_ctrl_z.sh
 
 sound:
-	rasm -sp -ob sound/AKY.bin -os sound/AKY.sym sound/AKY.asm
-	rasm -sp -ob sound/AKG.bin -os sound/AKG.sym sound/AKG.asm
+	rasm -sp -ob bin/AKG.bin -os symbol/AKG.sym AKG/AKG.asm
+	sjasmplus --fullpath asm\\song.asm --raw=$(BIN_DIR)\\song.bin --sym=$(SYM_DIR)\\song.sym  -I.
+	cp bin/song.bin dsk/
 
 bin:
-	sjasmplus --fullpath asm\\main.asm --raw=$(BIN_DIR)\\main.bin --sym=$(SYM_DIR)\\main.sym --lst=$(SYM_DIR)\\main.lst -I.
+	sjasmplus --fullpath asm\\main.asm --raw=$(BIN_DIR)\\main.bin --sym=$(SYM_DIR)\\main.sym --lst=$(SYM_DIR)\\main.lst --exp=$(SYM_DIR)\\main.exp -I.
 	sjasmplus --fullpath asm\\MBGE.asm --raw=$(BIN_DIR)\\MBGE.bin --sym=$(SYM_DIR)\\MBGE.sym --lst=$(SYM_DIR)\\MBGE.lst -I.
 	cp bin/MBGE.bin dsk/
 
