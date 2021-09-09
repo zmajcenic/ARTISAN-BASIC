@@ -152,10 +152,14 @@ CMDS_V:
 	DW VRMMEM
 	DB 0
 CMDS_S:
+	DB "SNDSFX", 0
+	DW SNDSFX
 	DB "SNDPLYINI", 0
 	DW SNDPLYINIT
 	DB "SNDPLYON", 0
 	DW SNDPLYON
+	DB "SNDPLYOFF", 0
+	DW SNDPLYOFF
 	DB 0
 
 ; ****************************************************************************************************
@@ -1194,5 +1198,109 @@ SNDPLYON:
 	RET
 ; *******************************************************************************************************
 
+; *******************************************************************************************************
+; function to handle CALL SNDPLYOFF basic extension
+; disables sound player
+; _SNDPLYOFF
+; sets SOUND_ENABLED variable to 0
+; calls AKG to stop music and SFX on all channels if initialized
+SNDPLYOFF:
+	LD A, (SOUND_ENABLED)
+	OR A
+	RET Z ; already stopped
+	XOR A
+	LD (SOUND_ENABLED), A
+	PUSH HL
+	CALL PLY_AKG_STOP
+	LD A, (SFX_INIT_STATUS)
+	OR A
+	JR Z, .EXIT ; SFX not in use
+	XOR A
+	CALL PLY_AKG_STOPSOUNDEFFECTFROMCHANNEL
+	LD A, 1
+	CALL PLY_AKG_STOPSOUNDEFFECTFROMCHANNEL
+	LD A, 2
+	CALL PLY_AKG_STOPSOUNDEFFECTFROMCHANNEL
+.EXIT:
+	POP HL
+	RET
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function to handle CALL SNDSFX basic extension
+; plays a sound effect
+; _SNDSFX ( BYTE sfx_number, >0
+;			BYTE channel, = 0,1 or 2
+;			BYTE inverted_volume = 0-16, 0 being full volume
+; will put ram in page 0 also, page 1 is already there
+; if sound off throws illegal function call
+; if sfx not initialized, throws out of data
+SNDSFX:
+	; opening (
+	CALL CHKCHAR
+	DB '('
+	; get sfx_number
+	LD IX, GETBYT
+	CALL CALBAS
+	PUSH DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get sfx address
+	LD IX, GETBYT
+	CALL CALBAS
+	PUSH DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get inverted volume
+	LD IX, GETBYT
+	CALL CALBAS
+	PUSH DE
+	; ending )
+	CALL CHKCHAR
+	DB ')'
+
+	LD A, (SOUND_ENABLED)
+	OR A
+	JR NZ, .L1
+	; sound disabled, throw illegal function call
+	LD E, 5
+	JP THROW_ERROR
+.L1:
+	LD A, (SFX_INIT_STATUS)
+	OR A
+	JR NZ, .L2
+	; sfx data not initialized, throw out of data
+	LD E, 4
+	JP THROW_ERROR
+.L2:
+	; pop  parameters and store away for later
+	POP DE ; inverted volume
+	LD B, E
+	POP DE ; channel
+	LD C, E
+	POP DE
+	LD A, E
+	PUSH HL ; basic text location
+	EXX
+    XOR A
+    CALL GET_PAGE_INFO
+    PUSH BC
+    PUSH DE
+    LD A, (RAMAD0)
+    LD H, 0
+    CALL LOCAL_ENASLT
+	EXX
+
+	CALL PLY_AKG_PLAYSOUNDEFFECT
+
+    POP DE
+    POP BC
+    CALL RESTORE_PAGE_INFO
+
+	POP HL
+	RET
+; *******************************************************************************************************
 
 EXT_END:
