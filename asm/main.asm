@@ -25,12 +25,51 @@ VALTYP  EQU     #F663
 USR     EQU     #F7F8
 PROCNM	EQU		#FD89
 BIOS_FILVRM  EQU     #56
+CLIKSW	EQU		#F3DB
 
 RAMAD0	EQU	0F341h	; Main-RAM Slot (00000h~03FFFh)
 RAMAD1	EQU	0F342h	; Main-RAM Slot (04000h~07FFFh)
 RAMAD2	EQU	0F343h	; Main-RAM Slot (08000h~0BFFFh)
 RAMAD3	EQU	0F344h	; Main-RAM Slot (0C000h~0FFFFh)
 EXPTBL	EQU #FCC1
+
+; BASIC error codes
+;01 NEXT without FOR 
+;02 Syntax error 
+;03 RETURN without GOSUB 
+;04 Out of DATA 
+;05 Illegal function call 
+;06 Overflow 
+;07 Out of memory 
+;08 Undefined line number 
+;09 Subscript out of range 
+;10 Redimensioned array 
+;11 Division by zero 
+;12 Illegal direct 
+;13 Type mismatch 
+;14 Out of string space 
+;15 String too long 
+;16 String formula too complex 
+;17 Can't CONTINUE 
+;18 Undefined user function
+;19 Device I/O error
+;20 Verify error
+;21 No RESUME
+;22 RESUME without error
+;23 Unprintable error
+;24 Missing operand
+;25 Line buffer overflow
+;50 FIELD overflow
+;51 Internal error
+;52 Bad file number
+;53 File not found
+;54 File already open
+;55 Input past end
+;56 Bad file name
+;57 Direct statement in file
+;58 Sequential I/O only
+;59 File not OPEN
+
 
  ; simulate cartridge with BASIC extension
  DW 04241H, 0, CALLHAND, 0, 0, 0, 0, 0
@@ -46,6 +85,13 @@ EXPTBL	EQU #FCC1
 ORIG.HTIMI:
 	DB 0, 0, 0, 0, 0
  EXPORT ORIG.HTIMI
+
+MUSIC_INIT_STATUS:
+ DB 0
+SFX_INIT_STATUS:
+ DB 0
+SOUND_ENABLED:
+ DB 0
 
 ; List of pointers to available instructions (as ASCIIZ) and execute address (as word)
 ; per starting letter, if no commands with this letter, NULL value
@@ -108,6 +154,8 @@ CMDS_V:
 CMDS_S:
 	DB "SNDPLYINI", 0
 	DW SNDPLYINIT
+	DB "SNDPLYON", 0
+	DW SNDPLYON
 	DB 0
 
 ; ****************************************************************************************************
@@ -441,11 +489,12 @@ GETPREVCHAR:
  
  
 TYPE_MISMATCH:
-        LD      E,13
-        DB      1
+    LD E, 13 ; Type mismatch 
+    JR THROW_ERROR
  
 SYNTAX_ERROR:
-        LD      E,2
+    LD E, 2 ; Syntax error 
+THROW_ERROR:
 	LD	IX,ERRHAND	; Call the Basic error handler
 	JP	CALBAS
  
@@ -1018,22 +1067,50 @@ VRMMEM:
 MBGE_HTIMI:
  EXPORT MBGE_HTIMI
 	PUSH AF
+	LD A, (SOUND_ENABLED)
+	OR A
+	JR Z, .EXIT
+
+	; enable page 2
+    LD A, 2
+    CALL GET_PAGE_INFO
+    PUSH BC
+    PUSH DE
+    LD A, (RAMAD2)
+    LD H, 080H
+    CALL LOCAL_ENASLT
+	; enable page 0
+    XOR A
+    CALL GET_PAGE_INFO
+    PUSH BC
+    PUSH DE
+    LD A, (RAMAD0)
+    LD H, 0
+    CALL LOCAL_ENASLT
+
+	CALL PLY_AKG_PLAY
+
+	; restore page 0
+    POP DE
+    POP BC
+    CALL RESTORE_PAGE_INFO
+	; restore page 2
+    POP DE
+    POP BC
+    CALL RESTORE_PAGE_INFO
+
+.EXIT:
 	POP AF
 	JP ORIG.HTIMI
 ; *******************************************************************************************************
 
 ; *******************************************************************************************************
 ; function to handle CALL SNDPLYINIT basic extension
-; copies from RAM to VRAM
+; initializes sound player
 ; _SNDPLYINIT ( INT music_offset, 
 ;				INT sfx_offset, can be -1 if no SFX
 ; will put ram in page 0 also, page 1 is already there
 ; sets variables MUSIC_INIT_STATUS and SFX_INIT_STATUS
-MUSIC_INIT_STATUS:
- DB 0
-SFX_INIT_STATUS:
- DB 0
-
 SNDPLYINIT:
 	; opening (
 	CALL CHKCHAR
@@ -1095,5 +1172,27 @@ SNDPLYINIT:
 	POP HL
 	RET
 ; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function to handle CALL SNDPLYON basic extension
+; enables sound player
+; _SNDPLYON
+; sets SOUND_ENABLED variable to 1 if init call was done
+; if not throws out of data error
+SNDPLYON:
+	LD A, (MUSIC_INIT_STATUS)
+	OR A
+	JR NZ, .L1
+	; player not initialized, throw error
+	LD E, 04 ; Out of DATA 
+	JP THROW_ERROR
+.L1:
+	LD (SOUND_ENABLED), A
+	; disable key click
+	XOR A
+	LD (CLIKSW), A
+	RET
+; *******************************************************************************************************
+
 
 EXT_END:
