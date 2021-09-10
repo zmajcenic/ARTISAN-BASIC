@@ -26,12 +26,14 @@ USR     EQU     #F7F8
 PROCNM	EQU		#FD89
 BIOS_FILVRM  EQU     #56
 CLIKSW	EQU		#F3DB
+ATRBAS	EQU		#F928
 
 RAMAD0	EQU	0F341h	; Main-RAM Slot (00000h~03FFFh)
 RAMAD1	EQU	0F342h	; Main-RAM Slot (04000h~07FFFh)
 RAMAD2	EQU	0F343h	; Main-RAM Slot (08000h~0BFFFh)
 RAMAD3	EQU	0F344h	; Main-RAM Slot (0C000h~0FFFFh)
 EXPTBL	EQU #FCC1
+SCRMOD	EQU #FCAF ; current screen mode
 
 ; BASIC error codes
 ;01 NEXT without FOR 
@@ -92,6 +94,19 @@ SFX_INIT_STATUS:
  DB 0
 SOUND_ENABLED:
  DB 0
+
+SPRATR_INIT_STATUS:
+ DB 0
+SPRATR_UPDATE_FLAG:
+ DW 0
+SPRATR_DATA:
+ DW 0
+SPRATR_SPRITE_NUM:
+ DB 0
+
+; to temporarily store stack pointer
+TMPSP:
+ DW 0
 
 ; List of pointers to available instructions (as ASCIIZ) and execute address (as word)
 ; per starting letter, if no commands with this letter, NULL value
@@ -161,6 +176,20 @@ CMDS_S:
 	DB "SNDPLYOFF", 0
 	DW SNDPLYOFF
 	DB 0
+
+; ****************************************************************************************************
+; function sets VRAM address
+; input HL=address
+; modifies AF
+SETWRT_LOCAL:
+	LD	A, L
+	OUT	(099H), A
+	LD	A, H
+	AND	03FH
+	OR	040H
+	OUT	(099H), A
+	RET
+; ****************************************************************************************************
 
 ; ****************************************************************************************************
 ; function gets slot and subslot data for specific page
@@ -342,6 +371,107 @@ L0390:
     RET
 ; *******************************************************************************************************
 
+; *******************************************************************************************************
+; function updates sprite attribute table in VRAM based on buffer of the form
+; struct {
+; DW y
+; DW x
+; DW pattern (0-31)
+; DW color
+; } [SPRATR_SPRITE_NUM]
+; will hide sprites whose location is outside of visible area
+; works in screen 1 and 2
+; triggered by value in (SPRATR_UPDATE_FLAG) != 0 and after being done resets it to 0
+SPRATR_UPDATE:
+	; check if initialized
+	LD A, (SPRATR_INIT_STATUS)
+	OR A
+	RET Z
+	; check if update requested
+	LD HL, (SPRATR_UPDATE_FLAG)
+	LD A, (HL)
+	OR A
+	RET Z
+	; check screen mode
+	LD A, (SCRMOD)
+	DEC A
+	JR Z, .L0 ; screen 1
+	DEC A
+	RET NZ ; not screen 2
+.L0:
+	; get number of sprites to process
+	LD A, (SPRATR_SPRITE_NUM)
+	LD B, A
+	LD C, #98 ; register for vpd data output
+	; set VDP address
+	LD HL, (ATRBAS)
+	CALL SETWRT_LOCAL
+	LD (TMPSP), SP
+	LD SP, (SPRATR_DATA)
+
+.LOOP:
+	POP HL
+	INC H
+	JR Z, .L1 ; negative number above -256
+	DEC H
+	JR NZ, .OUT3 ; sprite verticall can't be visible
+	LD A, L
+	CP 192
+	JR NC, .OUT3
+	DEC A ; due to VDP rule that top of screen is -1
+	LD D, A
+	JP .X
+.L1:
+	LD A, L
+	ADD 16
+	JP M, .OUT3 ; below -16
+	DEC L ; due to VDP rule that top of screen is -1
+	LD D, L
+	JP .X
+.OUT3:
+	POP HL ; skip x value
+.OUT2:
+	POP HL ; skip pattern
+	POP HL ; skip color
+	LD A, #D1
+	OUT (#98), A ; sprite hidden
+	OUT (#98), A ; value unimportant
+	OUT (#98), A ; value unimportant
+	OUT (#98), A ; value unimportant
+	DJNZ .LOOP
+.X:
+	POP HL
+	INC H
+	JR Z, .L2
+	DEC H
+	JR NZ, .OUT2
+	LD E, 0 ; EC bit
+	JP .XY
+.L2:
+	LD A, L
+	ADD 32
+	JP M, .OUT2
+	LD L, A
+	LD E, #80
+.XY:
+	OUT (C), D
+	OUT (C), L
+	POP HL ; pattern
+	LD A, L
+	ADD A, A
+	ADD A, A ; needs to go at 4x
+	OUT (#98), A
+	POP HL ; color
+	LD A, L
+	OR E
+	OUT (#98), A
+	DJNZ .LOOP
+
+	LD SP, (TMPSP)
+	LD HL, (SPRATR_UPDATE_FLAG)
+	LD (HL), 0 ; zero out update flag
+	RET
+; *******************************************************************************************************
 
 ; General BASIC CALL-instruction handler
 CALLHAND:
@@ -933,12 +1063,9 @@ MEMVRM:
 	RET
 
 .LDIRVM:
-	LD	A, E
-	OUT	(099H), A
-	LD	A, D
-	AND	03FH
-	OR	040H
-	OUT	(099H), A
+	EX DE, HL
+	CALL SETWRT_LOCAL
+	EX DE, HL
     
 .L4:
     LD A, (HL)
@@ -1047,13 +1174,7 @@ VRMMEM:
 	RET
 
 .LDIRMV:
-	LD	A, L
-	OUT	(099H), A
-	LD	A, H
-	AND	03FH
-	OR	040H
-	OUT	(099H), A
-    
+	CALL SETWRT_LOCAL
 .L4:
     IN A, (#98)
 	LD (DE), A
@@ -1070,6 +1191,9 @@ VRMMEM:
 MBGE_HTIMI:
  EXPORT MBGE_HTIMI
 	PUSH AF
+	
+	CALL SPRATR_UPDATE
+
 	LD A, (SOUND_ENABLED)
 	OR A
 	JR Z, .EXIT
