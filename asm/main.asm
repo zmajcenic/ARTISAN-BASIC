@@ -344,7 +344,6 @@ L0390:
 
 
 ; General BASIC CALL-instruction handler
- 
 CALLHAND:
 	PUSH HL
 	LD	HL, CMDS ; pointer table based on starting letter
@@ -1282,6 +1281,7 @@ SNDSFX:
 	LD C, E
 	POP DE
 	LD A, E
+	EX AF, AF'
 	PUSH HL ; basic text location
 	EXX
     XOR A
@@ -1292,7 +1292,7 @@ SNDSFX:
     LD H, 0
     CALL LOCAL_ENASLT
 	EXX
-
+	EX AF, AF'
 	CALL PLY_AKG_PLAYSOUNDEFFECT
 
     POP DE

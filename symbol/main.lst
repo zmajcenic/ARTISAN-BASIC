@@ -80,7 +80,7 @@
   76  4010
   77  4010              ; this location #400A stores last location used by basic extension
   78  4010              ; free memory after that point
-  79  4010 DC 52         DW EXT_END
+  79  4010 DE 52         DW EXT_END
   80  4012
   81  4012              ; binary included AKG player compiled at #4012
   82  4012               INCBIN "bin/AKG.bin"
@@ -1752,27 +1752,28 @@
 1282  52BE 4B           	LD C, E
 1283  52BF D1           	POP DE
 1284  52C0 7B           	LD A, E
-1285  52C1 E5           	PUSH HL ; basic text location
-1286  52C2 D9           	EXX
-1287  52C3 AF               XOR A
-1288  52C4 CD A5 4D         CALL GET_PAGE_INFO
-1289  52C7 C5               PUSH BC
-1290  52C8 D5               PUSH DE
-1291  52C9 3A 41 F3         LD A, (RAMAD0)
-1292  52CC 26 00            LD H, 0
-1293  52CE CD EB 4D         CALL LOCAL_ENASLT
-1294  52D1 D9           	EXX
-1295  52D2
-1296  52D2 CD 1F 40     	CALL PLY_AKG_PLAYSOUNDEFFECT
-1297  52D5
-1298  52D5 D1               POP DE
-1299  52D6 C1               POP BC
-1300  52D7 CD DC 4D         CALL RESTORE_PAGE_INFO
-1301  52DA
-1302  52DA E1           	POP HL
-1303  52DB C9           	RET
-1304  52DC              ; *******************************************************************************************************
-1305  52DC
-1306  52DC              EXT_END:
-1307  52DC
+1285  52C1 08           	EX AF, AF'
+1286  52C2 E5           	PUSH HL ; basic text location
+1287  52C3 D9           	EXX
+1288  52C4 AF               XOR A
+1289  52C5 CD A5 4D         CALL GET_PAGE_INFO
+1290  52C8 C5               PUSH BC
+1291  52C9 D5               PUSH DE
+1292  52CA 3A 41 F3         LD A, (RAMAD0)
+1293  52CD 26 00            LD H, 0
+1294  52CF CD EB 4D         CALL LOCAL_ENASLT
+1295  52D2 D9           	EXX
+1296  52D3 08           	EX AF, AF'
+1297  52D4 CD 1F 40     	CALL PLY_AKG_PLAYSOUNDEFFECT
+1298  52D7
+1299  52D7 D1               POP DE
+1300  52D8 C1               POP BC
+1301  52D9 CD DC 4D         CALL RESTORE_PAGE_INFO
+1302  52DC
+1303  52DC E1           	POP HL
+1304  52DD C9           	RET
+1305  52DE              ; *******************************************************************************************************
+1306  52DE
+1307  52DE              EXT_END:
+1308  52DE
 # file closed: asm\main.asm
