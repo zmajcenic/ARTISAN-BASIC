@@ -101,12 +101,13 @@ SPRATR_UPDATE_FLAG:
  DW 0
 SPRATR_DATA:
  DW 0
-SPRATR_SPRITE_NUM:
- DB 0
 
 ; to temporarily store stack pointer
 TMPSP:
  DW 0
+; to support sprite flicker
+FLICKER:
+ DB 0
 
 ; List of pointers to available instructions (as ASCIIZ) and execute address (as word)
 ; per starting letter, if no commands with this letter, NULL value
@@ -169,12 +170,14 @@ CMDS_V:
 CMDS_S:
 	DB "SNDSFX", 0
 	DW SNDSFX
-	DB "SNDPLYINI", 0
-	DW SNDPLYINIT
 	DB "SNDPLYON", 0
 	DW SNDPLYON
 	DB "SNDPLYOFF", 0
 	DW SNDPLYOFF
+	DB "SNDPLYINI", 0
+	DW SNDPLYINIT
+	DB "SPRATRINI", 0
+	DW SPRATRINI
 	DB 0
 
 ; ****************************************************************************************************
@@ -372,16 +375,17 @@ L0390:
 ; *******************************************************************************************************
 
 ; *******************************************************************************************************
-; function updates sprite attribute table in VRAM based on buffer of the form
+; function updates sprite attribute table in VRAM based on buffer of the form with rotating for flicker
 ; struct {
 ; DW y
 ; DW x
 ; DW pattern (0-31)
 ; DW color
-; } [SPRATR_SPRITE_NUM]
+; } [32]
 ; will hide sprites whose location is outside of visible area
 ; works in screen 1 and 2
 ; triggered by value in (SPRATR_UPDATE_FLAG) != 0 and after being done resets it to 0
+; modifies AF, AF', BC, DE, HL
 SPRATR_UPDATE:
 	; check if initialized
 	LD A, (SPRATR_INIT_STATUS)
@@ -399,12 +403,19 @@ SPRATR_UPDATE:
 	DEC A
 	RET NZ ; not screen 2
 .L0:
-	; get number of sprites to process
-	LD A, (SPRATR_SPRITE_NUM)
-	LD B, A
+	LD B, 32 ; sprite number
 	LD C, #98 ; register for vpd data output
 	; set VDP address
 	LD HL, (ATRBAS)
+	LD A, (FLICKER)
+	LD E, A
+	EX AF, AF'
+	LD A, E
+	ADD A, A
+	ADD A, A
+	LD D, 0
+	LD E, A
+	ADD HL, DE
 	CALL SETWRT_LOCAL
 	LD (TMPSP), SP
 	LD SP, (SPRATR_DATA)
@@ -438,7 +449,7 @@ SPRATR_UPDATE:
 	OUT (#98), A ; value unimportant
 	OUT (#98), A ; value unimportant
 	OUT (#98), A ; value unimportant
-	DJNZ .LOOP
+	JP .NEXT
 .X:
 	POP HL
 	INC H
@@ -465,7 +476,22 @@ SPRATR_UPDATE:
 	LD A, L
 	OR E
 	OUT (#98), A
+.NEXT:
+	EX AF, AF'
+	INC A
+	AND 31
+	JP NZ, .NEXT2
+	EX AF, AF'
+	LD HL, (ATRBAS)
+	CALL SETWRT_LOCAL
+	JP .NEXT3
+.NEXT2:
+	EX AF, AF'
+.NEXT3:
 	DJNZ .LOOP
+	EX AF, AF'
+	INC A
+	LD (FLICKER), A
 
 	LD SP, (TMPSP)
 	LD HL, (SPRATR_UPDATE_FLAG)
@@ -1424,6 +1450,52 @@ SNDSFX:
     CALL RESTORE_PAGE_INFO
 
 	POP HL
+	RET
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function to handle CALL SPRATRINI basic extension
+; initializes sprites handler
+; _SPRATRINI ( INT sprites_attributes_data, 
+;			   INT update_variable_location )
+; expects both locations to be in range #8000+ or throws an error
+; since these should be BASIC variables
+; sets variables SPRATR_INIT_STATUS, SPRATR_UPDATE_FLAG, SPRATR_DATA
+SPRATRINI:
+	; opening (
+	CALL CHKCHAR
+	DB '('
+	; get address of sprite attribute table DIM SA%(3,31)
+	LD IX, FRMQNT
+	CALL CALBAS
+	PUSH DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get update variable location SU%
+	LD IX, FRMQNT
+	CALL CALBAS
+	PUSH DE
+	; ending )
+	CALL CHKCHAR
+	DB ')'
+
+	POP DE ; update variable location
+	BIT 7, D ; is address >= &h8000
+	JR NZ, .L1
+	LD E, 5 ; illegal function call
+	JP THROW_ERROR
+.L1:
+	LD (SPRATR_UPDATE_FLAG), DE
+	POP DE ; address of sprite attribute table
+	BIT 7, D ; is address >= &h8000
+	JR NZ, .L2
+	LD E, 5 ; illegal function call
+	JP THROW_ERROR
+.L2:
+	LD (SPRATR_DATA), DE
+	LD A, 1
+	LD (SPRATR_INIT_STATUS), A
 	RET
 ; *******************************************************************************************************
 

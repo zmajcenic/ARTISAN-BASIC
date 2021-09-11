@@ -76,13 +76,13 @@
   75  4000
   76  4000               ; simulate cartridge with BASIC extension
   77  4000 41 42 00 00   DW 04241H, 0, CALLHAND, 0, 0, 0, 0, 0
-  77  4004 F9 4E 00 00
+  77  4004 27 4F 00 00
   77  4008 00 00 00 00
   77  400C 00 00 00 00
   78  4010
   79  4010              ; this location #400A stores last location used by basic extension
   80  4010              ; free memory after that point
-  81  4010 6A 53         DW EXT_END
+  81  4010 D6 53         DW EXT_END
   82  4012
   83  4012              ; binary included AKG player compiled at #4012
   84  4012               INCBIN "bin/AKG.bin"
@@ -556,1347 +556,1421 @@
  101  4CF7 00 00         DW 0
  102  4CF9              SPRATR_DATA:
  103  4CF9 00 00         DW 0
- 104  4CFB              SPRATR_SPRITE_NUM:
- 105  4CFB 00            DB 0
- 106  4CFC
- 107  4CFC              ; to temporarily store stack pointer
- 108  4CFC              TMPSP:
- 109  4CFC 00 00         DW 0
- 110  4CFE
- 111  4CFE              ; List of pointers to available instructions (as ASCIIZ) and execute address (as word)
- 112  4CFE              ; per starting letter, if no commands with this letter, NULL value
- 113  4CFE              CMDS:
- 114  4CFE 00 00            DW 0 ; A
- 115  4D00 00 00            DW 0 ; B
- 116  4D02 00 00            DW 0 ; C
- 117  4D04 00 00            DW 0 ; D
- 118  4D06 00 00            DW 0 ; E
- 119  4D08 59 4D            DW CMDS_F; F
- 120  4D0A 6C 4D            DW CMDS_G; G
- 121  4D0C 00 00            DW 0 ; H
- 122  4D0E 00 00            DW 0 ; I
- 123  4D10 00 00            DW 0 ; J
- 124  4D12 00 00            DW 0 ; K
- 125  4D14 3C 4D            DW CMDS_L ; L
- 126  4D16 46 4D            DW CMDS_M ; M
- 127  4D18 00 00            DW 0 ; N
- 128  4D1A 00 00            DW 0 ; O
- 129  4D1C 00 00            DW 0 ; P
- 130  4D1E 00 00            DW 0 ; Q
- 131  4D20 00 00            DW 0 ; R
- 132  4D22 80 4D            DW CMDS_S ; S
- 133  4D24 00 00            DW 0 ; T
- 134  4D26 32 4D            DW CMDS_U ; U
- 135  4D28 76 4D            DW CMDS_V ; V
- 136  4D2A 00 00            DW 0 ; W
- 137  4D2C 00 00            DW 0 ; X
- 138  4D2E 00 00            DW 0 ; Y
- 139  4D30 00 00            DW 0 ; Z
- 140  4D32
- 141  4D32              CMDS_U:
- 142  4D32 55 50 52 49  	DEFB	"UPRINT",0      ; Print upper case string
- 142  4D36 4E 54 00
- 143  4D39 36 4F        	DEFW	UPRINT
- 144  4D3B 00               DB 0
- 145  4D3C              CMDS_L:
- 146  4D3C 4C 50 52 49  	DEFB	"LPRINT",0      ; Print lower case string
- 146  4D40 4E 54 00
- 147  4D43 53 4F        	DEFW	LPRINT
- 148  4D45 00               DB 0
- 149  4D46              CMDS_M:
- 150  4D46 4D 45 4D 56      DB "MEMVRM", 0
- 150  4D4A 52 4D 00
- 151  4D4D 48 51            DW MEMVRM
- 152  4D4F 4D 45 4D 43  	DB "MEMCPY", 0
- 152  4D53 50 59 00
- 153  4D56 BA 4F        	DW MEMCPY
- 154  4D58 00               DB 0
- 155  4D59              CMDS_F:
- 156  4D59 46 49 4C 56      DB "FILVRM", 0
- 156  4D5D 52 4D 00
- 157  4D60 2A 50            DW FILVRM
- 158  4D62 46 49 4C 52      DB "FILRAM", 0
- 158  4D66 41 4D 00
- 159  4D69 71 50            DW FILRAM
- 160  4D6B 00               DB 0
- 161  4D6C              CMDS_G:
- 162  4D6C 47 45 4E 43      DB "GENCAL", 0
- 162  4D70 41 4C 00
- 163  4D73 EF 50            DW GENCAL
- 164  4D75 00           	DB	0
- 165  4D76              CMDS_V:
- 166  4D76 56 52 4D 4D  	DB "VRMMEM", 0
- 166  4D7A 45 4D 00
- 167  4D7D CA 51        	DW VRMMEM
- 168  4D7F 00           	DB 0
- 169  4D80              CMDS_S:
- 170  4D80 53 4E 44 53  	DB "SNDSFX", 0
- 170  4D84 46 58 00
- 171  4D87 09 53        	DW SNDSFX
- 172  4D89 53 4E 44 50  	DB "SNDPLYINI", 0
- 172  4D8D 4C 59 49 4E
- 172  4D91 49 00
- 173  4D93 82 52        	DW SNDPLYINIT
- 174  4D95 53 4E 44 50  	DB "SNDPLYON", 0
- 174  4D99 4C 59 4F 4E
- 174  4D9D 00
- 175  4D9E D3 52        	DW SNDPLYON
- 176  4DA0 53 4E 44 50  	DB "SNDPLYOFF", 0
- 176  4DA4 4C 59 4F 46
- 176  4DA8 46 00
- 177  4DAA E6 52        	DW SNDPLYOFF
- 178  4DAC 00           	DB 0
- 179  4DAD
- 180  4DAD              ; ****************************************************************************************************
- 181  4DAD              ; function sets VRAM address
- 182  4DAD              ; input HL=address
- 183  4DAD              ; modifies AF
- 184  4DAD              SETWRT_LOCAL:
- 185  4DAD 7D           	LD	A, L
- 186  4DAE D3 99        	OUT	(099H), A
- 187  4DB0 7C           	LD	A, H
- 188  4DB1 E6 3F        	AND	03FH
- 189  4DB3 F6 40        	OR	040H
- 190  4DB5 D3 99        	OUT	(099H), A
- 191  4DB7 C9           	RET
- 192  4DB8              ; ****************************************************************************************************
- 193  4DB8
- 194  4DB8              ; ****************************************************************************************************
- 195  4DB8              ; function gets slot and subslot data for specific page
- 196  4DB8              ; input A=page (0, 1 or 2)
- 197  4DB8              ; output B = 0A8H register value
- 198  4DB8              ; output D = 0 is no subslots, 1 if yes
- 199  4DB8              ; output C = 0A8H value when page 3 slot equals to requested page slot
- 200  4DB8              ; output E = subslot value if present
- 201  4DB8              ; modifies AF, BC, DE, HL
- 202  4DB8              GET_PAGE_INFO:
- 203  4DB8 6F               LD L, A
- 204  4DB9 C6 C1            ADD A, low (EXPTBL)
- 205  4DBB 32 C5 4D         LD (GET_PAGE_INFO_L1+1), A
- 206  4DBE DB A8            IN A, (0A8H)
- 207  4DC0 47               LD B, A
- 208  4DC1 E6 3F            AND 03FH
- 209  4DC3 4F               LD C, A
- 210  4DC4              GET_PAGE_INFO_L1:
- 211  4DC4 3A C1 FC         LD A, (EXPTBL) ; modified by code above
- 212  4DC7 E6 80            AND 080H
- 213  4DC9 28 1B            JR Z, GET_PAGE_INFO_L2
- 214  4DCB                  ; expanded
- 215  4DCB 2D               DEC L
- 216  4DCC FA EB 4D         JP M, GET_PAGE_INFO_L3
- 217  4DCF 2D               DEC L
- 218  4DD0 FA E9 4D         JP M, GET_PAGE_INFO_L4
- 219  4DD3                  ; page 2
- 220  4DD3 07               RLCA
- 221  4DD4 07               RLCA
- 222  4DD5              GET_PAGE_INFO_L5:
- 223  4DD5 E6 C0            AND 0C0H
- 224  4DD7 B1               OR C
- 225  4DD8 D3 A8            OUT (0A8H), A ; slot 3 = slot of page requested
- 226  4DDA 4F               LD C, A
- 227  4DDB 3A FF FF         LD A, (0FFFFH)
- 228  4DDE 2F               CPL
- 229  4DDF 5F               LD E, A
- 230  4DE0 16 01            LD D, 1
- 231  4DE2 78               LD A, B ; return stack
- 232  4DE3 D3 A8            OUT (0A8H), A
- 233  4DE5 C9               RET
- 234  4DE6              GET_PAGE_INFO_L2:
- 235  4DE6                  ; not expanded
- 236  4DE6 16 00            LD D, 0
- 237  4DE8 C9               RET
- 238  4DE9              GET_PAGE_INFO_L4:
- 239  4DE9                  ; page 1
- 240  4DE9 0F               RRCA
- 241  4DEA 0F               RRCA
- 242  4DEB              GET_PAGE_INFO_L3:
- 243  4DEB                  ; page 0
- 244  4DEB 0F               RRCA
- 245  4DEC 0F               RRCA
- 246  4DED 18 E6            JR GET_PAGE_INFO_L5
- 247  4DEF              ; ****************************************************************************************************
- 248  4DEF
- 249  4DEF              ; ****************************************************************************************************
- 250  4DEF              ; function returns original slot and subslot info
- 251  4DEF              ; input B = 0A8H register value
- 252  4DEF              ; input D = 0 is no subslots, 1 if yes
- 253  4DEF              ; input C = 0A8H value when page 3 slot equals to requested page slot
- 254  4DEF              ; input E = subslot value if present
- 255  4DEF              ; modifies AF
- 256  4DEF              RESTORE_PAGE_INFO:
- 257  4DEF 7A               LD A, D
- 258  4DF0 B7               OR A
- 259  4DF1 28 07            JR Z, RESTORE_PAGE_INFO_L1
- 260  4DF3 79               LD A, C
- 261  4DF4 D3 A8            OUT (0A8H), A
- 262  4DF6 7B               LD A, E
- 263  4DF7 32 FF FF         LD (0FFFFH), A
- 264  4DFA              RESTORE_PAGE_INFO_L1:
- 265  4DFA 78               LD A, B
- 266  4DFB D3 A8            OUT (0A8H), A
- 267  4DFD C9               RET
- 268  4DFE              ; ****************************************************************************************************
- 269  4DFE
- 270  4DFE              ; *******************************************************************************************************
- 271  4DFE              ; SELECTS A SLOT IN THE PAGE SPECIFIED BY AN ADDRESS.
- 272  4DFE              ; INPUT:  A = SLOT ID: EXXXSSPP
- 273  4DFE              ; E = EXPANDED FLAG
- 274  4DFE              ; SS = SECONDARY SLOT NUMBER (ONLY IF EXPANDED)
- 275  4DFE              ; PP = PRIMARY SLOT NUMBER
- 276  4DFE              ;     HL = ADDRESS INSIDE THE PAGE TO CHANGE
- 277  4DFE              ; CHANGES: AF, BC, DE
- 278  4DFE
- 279  4DFE              LOCAL_ENASLT:
- 280  4DFE CD 1E 4E         CALL L0353
- 281  4E01 FA 0B 4E         JP M, L0340
- 282  4E04 DB A8            IN A, (0A8H)
- 283  4E06 A1               AND C
- 284  4E07 B0               OR B
- 285  4E08 D3 A8            OUT (0A8H), A
- 286  4E0A C9               RET
- 287  4E0B              L0340:
- 288  4E0B E5               PUSH HL
- 289  4E0C CD 43 4E         CALL L0378
- 290  4E0F 4F               LD C, A
- 291  4E10 06 00            LD B, 0
- 292  4E12 7D               LD A, L
- 293  4E13 A4               AND H
- 294  4E14 B2               OR D
- 295  4E15 21 C5 FC         LD HL, 0FCC5H
- 296  4E18 09               ADD HL, BC
- 297  4E19 77               LD (HL), A
- 298  4E1A E1               POP HL
- 299  4E1B 79               LD A, C
- 300  4E1C 18 E0            JR LOCAL_ENASLT
- 301  4E1E              L0353:
- 302  4E1E F3               DI
- 303  4E1F F5               PUSH AF
- 304  4E20 7C               LD A, H
- 305  4E21 07               RLCA
- 306  4E22 07               RLCA
- 307  4E23 E6 03            AND 3
- 308  4E25 5F               LD E, A
- 309  4E26 3E C0            LD A, 0C0H
- 310  4E28              L035D:
- 311  4E28 07               RLCA
- 312  4E29 07               RLCA
- 313  4E2A 1D               DEC E
- 314  4E2B F2 28 4E         JP P, L035D
- 315  4E2E 5F               LD E, A
- 316  4E2F 2F               CPL
- 317  4E30 4F               LD C, A
- 318  4E31 F1               POP AF
- 319  4E32 F5               PUSH AF
- 320  4E33 E6 03            AND 3
- 321  4E35 3C               INC A
- 322  4E36 47               LD B, A
- 323  4E37 3E AB            LD A, 0ABH
- 324  4E39              L036E:
- 325  4E39 C6 55            ADD A, 055H
- 326  4E3B 10 FC            DJNZ L036E
- 327  4E3D 57               LD D, A
- 328  4E3E A3               AND E
- 329  4E3F 47               LD B, A
- 330  4E40 F1               POP AF
- 331  4E41 A7               AND A
- 332  4E42 C9               RET
- 333  4E43              L0378:
- 334  4E43 F5               PUSH AF
- 335  4E44 7A               LD A, D
- 336  4E45 E6 C0            AND 0C0H
- 337  4E47 4F               LD C, A
- 338  4E48 F1               POP AF
- 339  4E49 F5               PUSH AF
- 340  4E4A 57               LD D, A
- 341  4E4B DB A8            IN A, (0A8H)
- 342  4E4D 47               LD B, A
- 343  4E4E E6 3F            AND 03FH
- 344  4E50 B1               OR C
- 345  4E51 D3 A8            OUT (0A8H), A
- 346  4E53 7A               LD A, D
- 347  4E54 0F               RRCA
- 348  4E55 0F               RRCA
- 349  4E56 E6 03            AND 3
- 350  4E58 57               LD D, A
- 351  4E59 3E AB            LD A, 0ABH
- 352  4E5B              L0390:
- 353  4E5B C6 55            ADD A, 055H
- 354  4E5D 15               DEC D
- 355  4E5E F2 5B 4E         JP P, L0390
- 356  4E61 A3               AND E
- 357  4E62 57               LD D, A
- 358  4E63 7B               LD A, E
- 359  4E64 2F               CPL
- 360  4E65 67               LD H, A
- 361  4E66 3A FF FF         LD A, (0FFFFH)
- 362  4E69 2F               CPL
- 363  4E6A 6F               LD L, A
- 364  4E6B A4               AND H
- 365  4E6C B2               OR D
- 366  4E6D 32 FF FF         LD (0FFFFH), A
- 367  4E70 78               LD A, B
- 368  4E71 D3 A8            OUT (0A8H), A
- 369  4E73 F1               POP AF
- 370  4E74 E6 03            AND 3
- 371  4E76 C9               RET
- 372  4E77              ; *******************************************************************************************************
- 373  4E77
- 374  4E77              ; *******************************************************************************************************
- 375  4E77              ; function updates sprite attribute table in VRAM based on buffer of the form
- 376  4E77              ; struct {
- 377  4E77              ; DW y
- 378  4E77              ; DW x
- 379  4E77              ; DW pattern (0-31)
- 380  4E77              ; DW color
- 381  4E77              ; } [SPRATR_SPRITE_NUM]
- 382  4E77              ; will hide sprites whose location is outside of visible area
- 383  4E77              ; works in screen 1 and 2
- 384  4E77              ; triggered by value in (SPRATR_UPDATE_FLAG) != 0 and after being done resets it to 0
- 385  4E77              SPRATR_UPDATE:
- 386  4E77              	; check if initialized
- 387  4E77 3A F6 4C     	LD A, (SPRATR_INIT_STATUS)
- 388  4E7A B7           	OR A
- 389  4E7B C8           	RET Z
- 390  4E7C              	; check if update requested
- 391  4E7C 2A F7 4C     	LD HL, (SPRATR_UPDATE_FLAG)
- 392  4E7F 7E           	LD A, (HL)
- 393  4E80 B7           	OR A
- 394  4E81 C8           	RET Z
- 395  4E82              	; check screen mode
- 396  4E82 3A AF FC     	LD A, (SCRMOD)
- 397  4E85 3D           	DEC A
- 398  4E86 28 02        	JR Z, .L0 ; screen 1
- 399  4E88 3D           	DEC A
- 400  4E89 C0           	RET NZ ; not screen 2
- 401  4E8A              .L0:
- 402  4E8A              	; get number of sprites to process
- 403  4E8A 3A FB 4C     	LD A, (SPRATR_SPRITE_NUM)
- 404  4E8D 47           	LD B, A
- 405  4E8E 0E 98        	LD C, #98 ; register for vpd data output
- 406  4E90              	; set VDP address
- 407  4E90 2A 28 F9     	LD HL, (ATRBAS)
- 408  4E93 CD AD 4D     	CALL SETWRT_LOCAL
- 409  4E96 ED 73 FC 4C  	LD (TMPSP), SP
- 410  4E9A ED 7B F9 4C  	LD SP, (SPRATR_DATA)
- 411  4E9E
- 412  4E9E              .LOOP:
- 413  4E9E E1           	POP HL
- 414  4E9F 24           	INC H
- 415  4EA0 28 0D        	JR Z, .L1 ; negative number above -256
- 416  4EA2 25           	DEC H
- 417  4EA3 20 15        	JR NZ, .OUT3 ; sprite verticall can't be visible
- 418  4EA5 7D           	LD A, L
- 419  4EA6 FE C0        	CP 192
- 420  4EA8 30 10        	JR NC, .OUT3
- 421  4EAA 3D           	DEC A ; due to VDP rule that top of screen is -1
- 422  4EAB 57           	LD D, A
- 423  4EAC C3 C9 4E     	JP .X
- 424  4EAF              .L1:
- 425  4EAF 7D           	LD A, L
- 426  4EB0 C6 10        	ADD 16
- 427  4EB2 FA BA 4E     	JP M, .OUT3 ; below -16
- 428  4EB5 2D           	DEC L ; due to VDP rule that top of screen is -1
- 429  4EB6 55           	LD D, L
- 430  4EB7 C3 C9 4E     	JP .X
- 431  4EBA              .OUT3:
- 432  4EBA E1           	POP HL ; skip x value
- 433  4EBB              .OUT2:
- 434  4EBB E1           	POP HL ; skip pattern
- 435  4EBC E1           	POP HL ; skip color
- 436  4EBD 3E D1        	LD A, #D1
- 437  4EBF D3 98        	OUT (#98), A ; sprite hidden
- 438  4EC1 D3 98        	OUT (#98), A ; value unimportant
- 439  4EC3 D3 98        	OUT (#98), A ; value unimportant
- 440  4EC5 D3 98        	OUT (#98), A ; value unimportant
- 441  4EC7 10 D5        	DJNZ .LOOP
- 442  4EC9              .X:
- 443  4EC9 E1           	POP HL
- 444  4ECA 24           	INC H
- 445  4ECB 28 08        	JR Z, .L2
- 446  4ECD 25           	DEC H
- 447  4ECE 20 EB        	JR NZ, .OUT2
- 448  4ED0 1E 00        	LD E, 0 ; EC bit
- 449  4ED2 C3 DE 4E     	JP .XY
- 450  4ED5              .L2:
- 451  4ED5 7D           	LD A, L
- 452  4ED6 C6 20        	ADD 32
- 453  4ED8 FA BB 4E     	JP M, .OUT2
- 454  4EDB 6F           	LD L, A
- 455  4EDC 1E 80        	LD E, #80
- 456  4EDE              .XY:
- 457  4EDE ED 51        	OUT (C), D
- 458  4EE0 ED 69        	OUT (C), L
- 459  4EE2 E1           	POP HL ; pattern
- 460  4EE3 7D           	LD A, L
- 461  4EE4 87           	ADD A, A
- 462  4EE5 87           	ADD A, A ; needs to go at 4x
- 463  4EE6 D3 98        	OUT (#98), A
- 464  4EE8 E1           	POP HL ; color
- 465  4EE9 7D           	LD A, L
- 466  4EEA B3           	OR E
- 467  4EEB D3 98        	OUT (#98), A
- 468  4EED 10 AF        	DJNZ .LOOP
- 469  4EEF
- 470  4EEF ED 7B FC 4C  	LD SP, (TMPSP)
- 471  4EF3 2A F7 4C     	LD HL, (SPRATR_UPDATE_FLAG)
- 472  4EF6 36 00        	LD (HL), 0 ; zero out update flag
- 473  4EF8 C9           	RET
- 474  4EF9              ; *******************************************************************************************************
- 475  4EF9
- 476  4EF9              ; General BASIC CALL-instruction handler
- 477  4EF9              CALLHAND:
- 478  4EF9 E5           	PUSH HL
- 479  4EFA 21 FE 4C     	LD	HL, CMDS ; pointer table based on starting letter
- 480  4EFD 3A 89 FD         LD A, (PROCNM)
- 481  4F00 D6 41            SUB 'A'
- 482  4F02 87               ADD A, A
- 483  4F03 16 00            LD D, 0
- 484  4F05 5F               LD E, A
- 485  4F06 19               ADD HL, DE
- 486  4F07 5E               LD E, (HL)
- 487  4F08 23               INC HL
- 488  4F09 56               LD D, (HL)
- 489  4F0A 7A               LD A, D
- 490  4F0B B3               OR E
- 491  4F0C 28 24            JR Z, .CMDNOTRECOGNIZED
- 492  4F0E EB               EX DE, HL
- 493  4F0F              .CHKCMD:
- 494  4F0F 11 89 FD     	LD	DE, PROCNM
- 495  4F12 1A           .LOOP:	LD	A,(DE)
- 496  4F13 BE           	CP	(HL)
- 497  4F14 20 11        	JR	NZ,.TONEXTCMD	; Not equal
- 498  4F16 13           	INC	DE
- 499  4F17 23           	INC	HL
- 500  4F18 A7           	AND	A
- 501  4F19 20 F7        	JR	NZ,.LOOP	; No end of instruction name, go checking
- 502  4F1B 5E           	LD	E,(HL)
- 503  4F1C 23           	INC	HL
- 504  4F1D 56           	LD	D,(HL)
- 505  4F1E E1           	POP	HL		; routine address
- 506  4F1F CD A5 4F     	CALL	GETPREVCHAR
- 507  4F22 CD 34 4F     	CALL	.CALLDE		; Call routine
- 508  4F25 A7           	AND	A
- 509  4F26 C9           	RET
- 510  4F27
- 511  4F27              .TONEXTCMD:
- 512  4F27 0E FF        	LD	C,0FFH
- 513  4F29 AF           	XOR	A
- 514  4F2A ED B1        	CPIR			; Skip to end of instruction name
- 515  4F2C 23           	INC	HL
- 516  4F2D 23           	INC	HL		; Skip address
- 517  4F2E BE           	CP	(HL)
- 518  4F2F 20 DE        	JR	NZ,.CHKCMD	; Not end of table, go checking
- 519  4F31 E1           	POP	HL
- 520  4F32              .CMDNOTRECOGNIZED:
- 521  4F32 37               SCF
- 522  4F33 C9           	RET
- 523  4F34
- 524  4F34              .CALLDE:
- 525  4F34 D5           	PUSH	DE
- 526  4F35 C9           	RET
- 527  4F36
- 528  4F36              ;---------------------------
- 529  4F36
- 530  4F36              ;---------------------------
- 531  4F36              UPRINT:
- 532  4F36 CD 7A 4F     	CALL	EVALTXTPARAM	; Evaluate text parameter
- 533  4F39 E5           	PUSH	HL
- 534  4F3A CD 70 4F             CALL    GETSTRPNT
- 535  4F3D              .LOOP
- 536  4F3D 7E                   LD      A,(HL)
- 537  4F3E CD 4A 4F             CALL    .UCASE
- 538  4F41 CD A2 00             CALL    CHPUT  ;Print
- 539  4F44 23                   INC     HL
- 540  4F45 10 F6                DJNZ    .LOOP
- 541  4F47
- 542  4F47 E1           	POP	HL
- 543  4F48 B7           	OR      A
- 544  4F49 C9           	RET
- 545  4F4A
- 546  4F4A              .UCASE:
- 547  4F4A FE 61                CP      "a"
- 548  4F4C D8                   RET     C
- 549  4F4D FE 7B                CP      "z"+1
- 550  4F4F D0                   RET     NC
- 551  4F50 E6 DF                AND     %11011111
- 552  4F52 C9                   RET
- 553  4F53              ;---------------------------
- 554  4F53              LPRINT:
- 555  4F53 CD 7A 4F     	CALL	EVALTXTPARAM	; Evaluate text parameter
- 556  4F56 E5           	PUSH	HL
- 557  4F57 CD 70 4F             CALL    GETSTRPNT
- 558  4F5A              .LOOP
- 559  4F5A 7E                   LD      A,(HL)
- 560  4F5B CD 67 4F             CALL    .LCASE
- 561  4F5E CD A2 00             CALL    CHPUT  ;Print
- 562  4F61 23                   INC     HL
- 563  4F62 10 F6                DJNZ    .LOOP
- 564  4F64
- 565  4F64 E1           	POP	HL
- 566  4F65 B7           	OR      A
- 567  4F66 C9           	RET
- 568  4F67
- 569  4F67              .LCASE:
- 570  4F67 FE 41                CP      "A"
- 571  4F69 D8                   RET     C
- 572  4F6A FE 5B                CP      "Z"+1
- 573  4F6C D0                   RET     NC
- 574  4F6D F6 20                OR      %00100000
- 575  4F6F C9                   RET
- 576  4F70              ;---------------------------
- 577  4F70
- 578  4F70              GETSTRPNT:
- 579  4F70              ; OUT:
- 580  4F70              ; HL = String Address
- 581  4F70              ; B  = Lenght
- 582  4F70
- 583  4F70 2A F8 F7             LD      HL,(USR)
- 584  4F73 46                   LD      B,(HL)
- 585  4F74 23                   INC     HL
- 586  4F75 5E                   LD      E,(HL)
- 587  4F76 23                   INC     HL
- 588  4F77 56                   LD      D,(HL)
- 589  4F78 EB                   EX      DE,HL
- 590  4F79 C9                   RET
- 591  4F7A
- 592  4F7A              EVALTXTPARAM:
- 593  4F7A CD 9B 4F     	CALL	CHKCHAR
- 594  4F7D 28           	DEFB	"("             ; Check for (
- 595  4F7E DD 21 64 4C  	LD	IX,FRMEVL
- 596  4F82 CD 59 01     	CALL	CALBAS		; Evaluate expression
- 597  4F85 3A 63 F6             LD      A,(VALTYP)
- 598  4F88 FE 03                CP      3               ; Text type?
- 599  4F8A C2 AD 4F             JP      NZ,TYPE_MISMATCH
- 600  4F8D E5                   PUSH	HL
- 601  4F8E DD 21 D0 67          LD	IX,FRESTR         ; Free the temporary string
- 602  4F92 CD 59 01             CALL	CALBAS
- 603  4F95 E1                   POP	HL
- 604  4F96 CD 9B 4F     	CALL	CHKCHAR
- 605  4F99 29           	DEFB	")"             ; Check for )
- 606  4F9A C9                   RET
- 607  4F9B
- 608  4F9B
- 609  4F9B              CHKCHAR:
- 610  4F9B CD A5 4F     	CALL	GETPREVCHAR	; Get previous basic char
- 611  4F9E E3           	EX	(SP),HL
- 612  4F9F BE           	CP	(HL) 	        ; Check if good char
- 613  4FA0 20 0F        	JR	NZ,SYNTAX_ERROR	; No, Syntax error
- 614  4FA2 23           	INC	HL
- 615  4FA3 E3           	EX	(SP),HL
- 616  4FA4 23           	INC	HL		; Get next basic char
- 617  4FA5
- 618  4FA5              GETPREVCHAR:
- 619  4FA5 2B           	DEC	HL
- 620  4FA6 DD 21 66 46  	LD	IX,CHRGTR
- 621  4FAA C3 59 01     	JP      CALBAS
- 622  4FAD
- 623  4FAD
- 624  4FAD              TYPE_MISMATCH:
- 625  4FAD 1E 0D            LD E, 13 ; Type mismatch
- 626  4FAF 18 02            JR THROW_ERROR
- 627  4FB1
- 628  4FB1              SYNTAX_ERROR:
- 629  4FB1 1E 02            LD E, 2 ; Syntax error
- 630  4FB3              THROW_ERROR:
- 631  4FB3 DD 21 6F 40  	LD	IX,ERRHAND	; Call the Basic error handler
- 632  4FB7 C3 59 01     	JP	CALBAS
- 633  4FBA
- 634  4FBA              ;---------------------------
- 635  4FBA
- 636  4FBA              ; *******************************************************************************************************
- 637  4FBA              ; function to handle CALL MEMCPY basic extension
- 638  4FBA              ; _MEMCPY ( INT source,
- 639  4FBA              ;			INT destination,
- 640  4FBA              ;			INT count,
- 641  4FBA              ;			BYTE enable_ram, >0 = true
- 642  4FBA              ;			BYTE wait_vsync) >0 = treu
- 643  4FBA              ; enable_ram will put ram in page 0 also, page 1 is already there
- 644  4FBA              ; wait_vsync will issue HALT before copying
- 645  4FBA              MEMCPY:
- 646  4FBA              	; opening (
- 647  4FBA CD 9B 4F     	CALL CHKCHAR
- 648  4FBD 28           	DB '('
- 649  4FBE              	; get source address
- 650  4FBE DD 21 2F 54  	LD IX, FRMQNT
- 651  4FC2 CD 59 01     	CALL CALBAS
- 652  4FC5 D5           	PUSH DE
- 653  4FC6              	; comma
- 654  4FC6 CD 9B 4F     	CALL CHKCHAR
- 655  4FC9 2C           	DB ','
- 656  4FCA              	; get destination address
- 657  4FCA DD 21 2F 54  	LD IX, FRMQNT
- 658  4FCE CD 59 01     	CALL CALBAS
- 659  4FD1 D5           	PUSH DE
- 660  4FD2              	; comma
- 661  4FD2 CD 9B 4F     	CALL CHKCHAR
- 662  4FD5 2C           	DB ','
- 663  4FD6              	; get length
- 664  4FD6 DD 21 2F 54  	LD IX, FRMQNT
- 665  4FDA CD 59 01     	CALL CALBAS
- 666  4FDD D5           	PUSH DE
- 667  4FDE              	; comma
- 668  4FDE CD 9B 4F     	CALL CHKCHAR
- 669  4FE1 2C           	DB ','
- 670  4FE2              	; get ROM/RAM
- 671  4FE2 DD 21 1C 52  	LD IX, GETBYT
- 672  4FE6 CD 59 01     	CALL CALBAS
- 673  4FE9 F5           	PUSH AF
- 674  4FEA              	; comma
- 675  4FEA CD 9B 4F     	CALL CHKCHAR
- 676  4FED 2C           	DB ','
- 677  4FEE              	; get vsync wait
- 678  4FEE DD 21 1C 52  	LD IX, GETBYT
- 679  4FF2 CD 59 01     	CALL CALBAS
- 680  4FF5 F5           	PUSH AF
- 681  4FF6              	; ending )
- 682  4FF6 CD 9B 4F     	CALL CHKCHAR
- 683  4FF9 29           	DB ')'
- 684  4FFA
- 685  4FFA FB               EI
- 686  4FFB              	; save position
- 687  4FFB E5           	PUSH HL
- 688  4FFC DD E1        	POP IX
- 689  4FFE
- 690  4FFE              	; syntax ok
- 691  4FFE              	; wait for vsync if needed
- 692  4FFE F1           	POP AF
- 693  4FFF B7           	OR A
- 694  5000 28 01        	JR Z, .L1
- 695  5002 76           	HALT
- 696  5003
- 697  5003              .L1:
- 698  5003              	; enable RAM in page 0 if needed
- 699  5003 F1           	POP AF
- 700  5004 B7           	OR A
- 701  5005              	; pop LDIR parameters and store away for later
- 702  5005 C1           	POP BC
- 703  5006 D1           	POP DE
- 704  5007 E1           	POP HL
- 705  5008 28 1A        	JR Z, .L2
- 706  500A D9           	EXX
- 707  500B AF               XOR A
- 708  500C CD B8 4D         CALL GET_PAGE_INFO
- 709  500F C5               PUSH BC
- 710  5010 D5               PUSH DE
- 711  5011 3A 41 F3         LD A, (RAMAD0)
- 712  5014 26 00            LD H, 0
- 713  5016 F3           	DI
- 714  5017 CD FE 4D         CALL LOCAL_ENASLT
- 715  501A D9           	EXX
- 716  501B ED B0        	LDIR
- 717  501D D1               POP DE
- 718  501E C1               POP BC
- 719  501F CD EF 4D         CALL RESTORE_PAGE_INFO
- 720  5022 18 02        	JR .L3
- 721  5024
- 722  5024              .L2:
- 723  5024 ED B0        	LDIR
- 724  5026
- 725  5026              .L3:
- 726  5026 DD E5        	PUSH IX
- 727  5028 E1           	POP HL
- 728  5029 C9           	RET
- 729  502A              ; *******************************************************************************************************
- 730  502A
- 731  502A              ; *******************************************************************************************************
- 732  502A              ; function to handle CALL FILVRM basic extension
- 733  502A              ; FILVRM ( INT offset,
- 734  502A              ;		   INT count,
- 735  502A              ;		   BYTE value,
- 736  502A              ;		   BYTE wait_vsync) >0 = true
- 737  502A              ; wait_vsync will issue HALT before copying
- 738  502A              FILVRM:
- 739  502A              	; opening (
- 740  502A CD 9B 4F     	CALL CHKCHAR
- 741  502D 28           	DB '('
- 742  502E              	; get offset address
- 743  502E DD 21 2F 54  	LD IX, FRMQNT
- 744  5032 CD 59 01     	CALL CALBAS
- 745  5035 D5           	PUSH DE
- 746  5036              	; comma
- 747  5036 CD 9B 4F     	CALL CHKCHAR
- 748  5039 2C           	DB ','
- 749  503A              	; get count
- 750  503A DD 21 2F 54  	LD IX, FRMQNT
- 751  503E CD 59 01     	CALL CALBAS
- 752  5041 D5           	PUSH DE
- 753  5042              	; comma
- 754  5042 CD 9B 4F     	CALL CHKCHAR
- 755  5045 2C           	DB ','
- 756  5046              	; get value
- 757  5046 DD 21 1C 52  	LD IX, GETBYT
- 758  504A CD 59 01     	CALL CALBAS
- 759  504D F5           	PUSH AF
- 760  504E              	; comma
- 761  504E CD 9B 4F     	CALL CHKCHAR
- 762  5051 2C           	DB ','
- 763  5052              	; get vsync wait
- 764  5052 DD 21 1C 52  	LD IX, GETBYT
- 765  5056 CD 59 01     	CALL CALBAS
- 766  5059 F5           	PUSH AF
- 767  505A              	; ending )
- 768  505A CD 9B 4F     	CALL CHKCHAR
- 769  505D 29           	DB ')'
- 770  505E
- 771  505E FB               EI
- 772  505F              	; save position
- 773  505F E5           	PUSH HL
- 774  5060 DD E1        	POP IX
- 775  5062
- 776  5062              	; syntax ok
- 777  5062              	; wait for vsync if needed
- 778  5062 F1           	POP AF
- 779  5063 B7           	OR A
- 780  5064 28 01        	JR Z, .L1
- 781  5066 76           	HALT
- 782  5067
- 783  5067              .L1:
- 784  5067 F1               POP AF ; value
- 785  5068 C1               POP BC ; count
- 786  5069 E1               POP HL ; offset
- 787  506A CD 56 00         CALL BIOS_FILVRM
- 788  506D
- 789  506D              .L3:
- 790  506D DD E5        	PUSH IX
- 791  506F E1           	POP HL
- 792  5070 C9           	RET
- 793  5071              ; *******************************************************************************************************
- 794  5071
- 795  5071              ; *******************************************************************************************************
- 796  5071              ; function to handle CALL FILRAM basic extension
- 797  5071              ; FILRAM ( INT start address,
- 798  5071              ;		   INT count,
- 799  5071              ;		   BYTE value,
- 800  5071              ;	   	   BYTE enable_ram, >0 = true
- 801  5071              ;		   BYTE wait_vsync) >0 = true
- 802  5071              ; enable_ram will put ram in page 0 also, page 1 is already there
- 803  5071              ; wait_vsync will issue HALT before copying
- 804  5071              FILRAM:
- 805  5071              	; opening (
- 806  5071 CD 9B 4F     	CALL CHKCHAR
- 807  5074 28           	DB '('
- 808  5075              	; get start address
- 809  5075 DD 21 2F 54  	LD IX, FRMQNT
- 810  5079 CD 59 01     	CALL CALBAS
- 811  507C D5           	PUSH DE
- 812  507D              	; comma
- 813  507D CD 9B 4F     	CALL CHKCHAR
- 814  5080 2C           	DB ','
- 815  5081              	; get count
- 816  5081 DD 21 2F 54  	LD IX, FRMQNT
- 817  5085 CD 59 01     	CALL CALBAS
- 818  5088 D5           	PUSH DE
- 819  5089              	; comma
- 820  5089 CD 9B 4F     	CALL CHKCHAR
- 821  508C 2C           	DB ','
- 822  508D              	; get value
- 823  508D DD 21 1C 52  	LD IX, GETBYT
- 824  5091 CD 59 01     	CALL CALBAS
- 825  5094 F5           	PUSH AF
- 826  5095              	; comma
- 827  5095 CD 9B 4F     	CALL CHKCHAR
- 828  5098 2C           	DB ','
- 829  5099              	; get ROM/RAM
- 830  5099 DD 21 1C 52  	LD IX, GETBYT
- 831  509D CD 59 01     	CALL CALBAS
- 832  50A0 F5           	PUSH AF
- 833  50A1              	; comma
- 834  50A1 CD 9B 4F     	CALL CHKCHAR
- 835  50A4 2C           	DB ','
- 836  50A5              	; get vsync wait
- 837  50A5 DD 21 1C 52  	LD IX, GETBYT
- 838  50A9 CD 59 01     	CALL CALBAS
- 839  50AC F5           	PUSH AF
- 840  50AD              	; ending )
- 841  50AD CD 9B 4F     	CALL CHKCHAR
- 842  50B0 29           	DB ')'
- 843  50B1
- 844  50B1 FB               EI
- 845  50B2              	; save position
- 846  50B2 E5           	PUSH HL
- 847  50B3 DD E1        	POP IX
- 848  50B5
- 849  50B5              	; syntax ok
- 850  50B5              	; wait for vsync if needed
- 851  50B5 F1           	POP AF
- 852  50B6 B7           	OR A
- 853  50B7 28 01        	JR Z, .L1
- 854  50B9 76           	HALT
- 855  50BA
- 856  50BA              .L1:
- 857  50BA              	; enable RAM in page 0 if needed
- 858  50BA F1           	POP AF
- 859  50BB B7           	OR A
- 860  50BC              	; pop LDIR parameters and store away for later
- 861  50BC D1           	POP DE ; actually AF
- 862  50BD C1           	POP BC ; count
- 863  50BE E1           	POP HL ; start address
- 864  50BF 28 1B        	JR Z, .L2
- 865  50C1 D9           	EXX
- 866  50C2 AF               XOR A
- 867  50C3 CD B8 4D         CALL GET_PAGE_INFO
- 868  50C6 C5               PUSH BC
- 869  50C7 D5               PUSH DE
- 870  50C8 3A 41 F3         LD A, (RAMAD0)
- 871  50CB 26 00            LD H, 0
- 872  50CD F3           	DI
- 873  50CE CD FE 4D         CALL LOCAL_ENASLT
- 874  50D1 D9           	EXX
- 875  50D2 CD E3 50     	CALL .FILLVALUE
- 876  50D5 D1               POP DE
- 877  50D6 C1               POP BC
- 878  50D7 CD EF 4D         CALL RESTORE_PAGE_INFO
- 879  50DA 18 03        	JR .L3
- 880  50DC
- 881  50DC              .L2:
- 882  50DC CD E3 50     	CALL .FILLVALUE
- 883  50DF
- 884  50DF              .L3:
- 885  50DF DD E5        	PUSH IX
- 886  50E1 E1           	POP HL
- 887  50E2 C9           	RET
- 888  50E3
- 889  50E3              .FILLVALUE:
- 890  50E3 72               LD (HL), D
- 891  50E4 54               LD D, H
- 892  50E5 5D               LD E, L
- 893  50E6 13               INC DE
- 894  50E7 0B               DEC BC
- 895  50E8 ED B0            LDIR
- 896  50EA C9               RET
- 897  50EB              ; *******************************************************************************************************
- 898  50EB
- 899  50EB              ; *******************************************************************************************************
- 900  50EB              ; function to handle CALL GENCAL basic extension
- 901  50EB              ; GENCAL ( INT fn_addr, = address of the function to call
- 902  50EB              ;		   INT reg_list_ptr, = pointer to array holding register values (AF,BC,DE,HL,IX,IY)
- 903  50EB              ; output values of reristers will also be stored at reg_list_ptr
- 904  50EB              GENCAL_VAR_SP:
- 905  50EB 00 00            DW 0
- 906  50ED              GENCAL_VAR_SP2:
- 907  50ED 00 00            DW 0
- 908  50EF              GENCAL:
- 909  50EF              	; opening (
- 910  50EF CD 9B 4F     	CALL CHKCHAR
- 911  50F2 28           	DB '('
- 912  50F3              	; get function address
- 913  50F3 DD 21 2F 54  	LD IX, FRMQNT
- 914  50F7 CD 59 01     	CALL CALBAS
- 915  50FA D5           	PUSH DE
- 916  50FB              	; comma
- 917  50FB CD 9B 4F     	CALL CHKCHAR
- 918  50FE 2C           	DB ','
- 919  50FF              	; get pointer to register list
- 920  50FF DD 21 2F 54  	LD IX, FRMQNT
- 921  5103 CD 59 01     	CALL CALBAS
- 922  5106 D5           	PUSH DE
- 923  5107              	; ending )
- 924  5107 CD 9B 4F     	CALL CHKCHAR
- 925  510A 29           	DB ')'
- 926  510B
- 927  510B              	; save BASIC token position
- 928  510B E5           	PUSH HL
- 929  510C D9               EXX
- 930  510D E1           	POP HL ; HL'=next basic token
- 931  510E D9               EXX
- 932  510F
- 933  510F E1               POP HL ; get pointer to register values
- 934  5110 ED 73 EB 50      LD (GENCAL_VAR_SP), SP
- 935  5114 F3               DI
- 936  5115 F9               LD SP, HL
- 937  5116 F1               POP AF
- 938  5117 C1               POP BC
- 939  5118 D1               POP DE
- 940  5119 E1               POP HL
- 941  511A DD E1            POP IX
- 942  511C FD E1            POP IY
- 943  511E D9               EXX
- 944  511F ED 73 ED 50      LD (GENCAL_VAR_SP2), SP
- 945  5123 ED 7B EB 50      LD SP, (GENCAL_VAR_SP)
- 946  5127 FB               EI
- 947  5128 D1               POP DE ; get function to call
- 948  5129 E5               PUSH HL
- 949  512A CD 45 51         CALL .EXXDECALL
- 950  512D F3               DI
- 951  512E ED 73 EB 50      LD (GENCAL_VAR_SP), SP
- 952  5132 ED 7B ED 50      LD SP, (GENCAL_VAR_SP2)
- 953  5136 FD E5            PUSH IY
- 954  5138 DD E5            PUSH IX
- 955  513A E5               PUSH HL
- 956  513B D5               PUSH DE
- 957  513C C5               PUSH BC
- 958  513D F5               PUSH AF
- 959  513E ED 7B EB 50      LD SP, (GENCAL_VAR_SP)
- 960  5142 FB               EI
- 961  5143 E1               POP HL
- 962  5144 C9           	RET
- 963  5145
- 964  5145              .EXXDECALL:
- 965  5145 D5               PUSH DE
- 966  5146 D9               EXX
- 967  5147 C9               RET
- 968  5148              ; *******************************************************************************************************
- 969  5148
- 970  5148              ; *******************************************************************************************************
- 971  5148              ; function to handle CALL MEMVRM basic extension
- 972  5148              ; copies from RAM to VRAM
- 973  5148              ; _MEMVRM ( INT source,
- 974  5148              ;			INT destination,
- 975  5148              ;			INT count,
- 976  5148              ;			BYTE enable_ram, >0 = true
- 977  5148              ;			BYTE wait_vsync) >0 = treu
- 978  5148              ; enable_ram will put ram in page 0 also, page 1 is already there
- 979  5148              ; wait_vsync will issue HALT before copying
- 980  5148              MEMVRM:
- 981  5148              	; opening (
- 982  5148 CD 9B 4F     	CALL CHKCHAR
- 983  514B 28           	DB '('
- 984  514C              	; get source address
- 985  514C DD 21 2F 54  	LD IX, FRMQNT
- 986  5150 CD 59 01     	CALL CALBAS
- 987  5153 D5           	PUSH DE
- 988  5154              	; comma
- 989  5154 CD 9B 4F     	CALL CHKCHAR
- 990  5157 2C           	DB ','
- 991  5158              	; get destination address
- 992  5158 DD 21 2F 54  	LD IX, FRMQNT
- 993  515C CD 59 01     	CALL CALBAS
- 994  515F D5           	PUSH DE
- 995  5160              	; comma
- 996  5160 CD 9B 4F     	CALL CHKCHAR
- 997  5163 2C           	DB ','
- 998  5164              	; get length
- 999  5164 DD 21 2F 54  	LD IX, FRMQNT
-1000  5168 CD 59 01     	CALL CALBAS
-1001  516B D5           	PUSH DE
-1002  516C              	; comma
-1003  516C CD 9B 4F     	CALL CHKCHAR
-1004  516F 2C           	DB ','
-1005  5170              	; get ROM/RAM
-1006  5170 DD 21 1C 52  	LD IX, GETBYT
-1007  5174 CD 59 01     	CALL CALBAS
-1008  5177 F5           	PUSH AF
-1009  5178              	; comma
-1010  5178 CD 9B 4F     	CALL CHKCHAR
-1011  517B 2C           	DB ','
-1012  517C              	; get vsync wait
-1013  517C DD 21 1C 52  	LD IX, GETBYT
-1014  5180 CD 59 01     	CALL CALBAS
-1015  5183 F5           	PUSH AF
-1016  5184              	; ending )
-1017  5184 CD 9B 4F     	CALL CHKCHAR
-1018  5187 29           	DB ')'
-1019  5188
-1020  5188                  ; save position in BASIC text
-1021  5188 E5           	PUSH HL
-1022  5189 DD E1        	POP IX
-1023  518B
-1024  518B              	; syntax ok
-1025  518B              	; wait for vsync if needed
-1026  518B F1           	POP AF
-1027  518C B7           	OR A
-1028  518D 28 03        	JR Z, .L1
-1029  518F FB               EI
-1030  5190 76           	HALT
-1031  5191 F3               DI ; since interrupt can modify vram address
-1032  5192
-1033  5192              .L1:
-1034  5192              	; enable RAM in page 0 if needed
-1035  5192 F1           	POP AF
-1036  5193 B7           	OR A
-1037  5194              	; pop LDIR parameters and store away for later
-1038  5194 C1           	POP BC
-1039  5195 D1           	POP DE
-1040  5196 E1           	POP HL
-1041  5197 28 1A        	JR Z, .L2
-1042  5199 D9           	EXX
-1043  519A AF               XOR A
-1044  519B CD B8 4D         CALL GET_PAGE_INFO
-1045  519E C5               PUSH BC
-1046  519F D5               PUSH DE
-1047  51A0 3A 41 F3         LD A, (RAMAD0)
-1048  51A3 26 00            LD H, 0
-1049  51A5 CD FE 4D         CALL LOCAL_ENASLT
-1050  51A8 D9           	EXX
-1051  51A9 CD BA 51     	CALL .LDIRVM
-1052  51AC D1               POP DE
-1053  51AD C1               POP BC
-1054  51AE CD EF 4D         CALL RESTORE_PAGE_INFO
-1055  51B1 18 03        	JR .L3
-1056  51B3
-1057  51B3              .L2:
-1058  51B3 CD BA 51     	CALL .LDIRVM
-1059  51B6
-1060  51B6              .L3:
-1061  51B6 DD E5        	PUSH IX
-1062  51B8 E1           	POP HL
-1063  51B9 C9           	RET
-1064  51BA
-1065  51BA              .LDIRVM:
-1066  51BA EB           	EX DE, HL
-1067  51BB CD AD 4D     	CALL SETWRT_LOCAL
-1068  51BE EB           	EX DE, HL
-1069  51BF
-1070  51BF              .L4:
-1071  51BF 7E               LD A, (HL)
-1072  51C0 D3 98            OUT (#98), A
-1073  51C2 23               INC HL
-1074  51C3 0B               DEC BC
-1075  51C4 79               LD A, C
-1076  51C5 B0               OR B
-1077  51C6 C2 BF 51         JP NZ, .L4
-1078  51C9 C9               RET
-1079  51CA              ; *******************************************************************************************************
-1080  51CA
-1081  51CA              ; *******************************************************************************************************
-1082  51CA              ; function to handle CALL VRMMEM basic extension
-1083  51CA              ; copies from RAM to VRAM
-1084  51CA              ; _VRMMEM ( INT source,
-1085  51CA              ;			INT destination,
-1086  51CA              ;			INT count,
-1087  51CA              ;			BYTE enable_ram, >0 = true
-1088  51CA              ;			BYTE wait_vsync) >0 = true
-1089  51CA              ; enable_ram will put ram in page 0 also, page 1 is already there
-1090  51CA              ; wait_vsync will issue HALT before copying
-1091  51CA              VRMMEM:
-1092  51CA              	; opening (
-1093  51CA CD 9B 4F     	CALL CHKCHAR
-1094  51CD 28           	DB '('
-1095  51CE              	; get source address
-1096  51CE DD 21 2F 54  	LD IX, FRMQNT
-1097  51D2 CD 59 01     	CALL CALBAS
-1098  51D5 D5           	PUSH DE
-1099  51D6              	; comma
-1100  51D6 CD 9B 4F     	CALL CHKCHAR
-1101  51D9 2C           	DB ','
-1102  51DA              	; get destination address
-1103  51DA DD 21 2F 54  	LD IX, FRMQNT
-1104  51DE CD 59 01     	CALL CALBAS
-1105  51E1 D5           	PUSH DE
-1106  51E2              	; comma
-1107  51E2 CD 9B 4F     	CALL CHKCHAR
-1108  51E5 2C           	DB ','
-1109  51E6              	; get length
-1110  51E6 DD 21 2F 54  	LD IX, FRMQNT
-1111  51EA CD 59 01     	CALL CALBAS
-1112  51ED D5           	PUSH DE
-1113  51EE              	; comma
-1114  51EE CD 9B 4F     	CALL CHKCHAR
-1115  51F1 2C           	DB ','
-1116  51F2              	; get ROM/RAM
-1117  51F2 DD 21 1C 52  	LD IX, GETBYT
-1118  51F6 CD 59 01     	CALL CALBAS
-1119  51F9 F5           	PUSH AF
-1120  51FA              	; comma
-1121  51FA CD 9B 4F     	CALL CHKCHAR
-1122  51FD 2C           	DB ','
-1123  51FE              	; get vsync wait
-1124  51FE DD 21 1C 52  	LD IX, GETBYT
-1125  5202 CD 59 01     	CALL CALBAS
-1126  5205 F5           	PUSH AF
-1127  5206              	; ending )
-1128  5206 CD 9B 4F     	CALL CHKCHAR
-1129  5209 29           	DB ')'
-1130  520A
-1131  520A                  ; save position in BASIC text
-1132  520A E5           	PUSH HL
-1133  520B DD E1        	POP IX
-1134  520D
-1135  520D              	; syntax ok
-1136  520D              	; wait for vsync if needed
-1137  520D F1           	POP AF
-1138  520E B7           	OR A
-1139  520F 28 03        	JR Z, .L1
-1140  5211 FB               EI
-1141  5212 76           	HALT
-1142  5213 F3               DI ; since interrupt can modify vram address
-1143  5214
-1144  5214              .L1:
-1145  5214              	; enable RAM in page 0 if needed
-1146  5214 F1           	POP AF
-1147  5215 B7           	OR A
-1148  5216              	; pop LDIR parameters and store away for later
-1149  5216 C1           	POP BC
-1150  5217 D1           	POP DE
-1151  5218 E1           	POP HL
-1152  5219 28 1A        	JR Z, .L2
-1153  521B D9           	EXX
-1154  521C AF               XOR A
-1155  521D CD B8 4D         CALL GET_PAGE_INFO
-1156  5220 C5               PUSH BC
-1157  5221 D5               PUSH DE
-1158  5222 3A 41 F3         LD A, (RAMAD0)
-1159  5225 26 00            LD H, 0
-1160  5227 CD FE 4D         CALL LOCAL_ENASLT
-1161  522A D9           	EXX
-1162  522B CD 3C 52     	CALL .LDIRMV
-1163  522E D1               POP DE
-1164  522F C1               POP BC
-1165  5230 CD EF 4D         CALL RESTORE_PAGE_INFO
-1166  5233 18 03        	JR .L3
-1167  5235
-1168  5235              .L2:
-1169  5235 CD 3C 52     	CALL .LDIRMV
-1170  5238
-1171  5238              .L3:
-1172  5238 DD E5        	PUSH IX
-1173  523A E1           	POP HL
-1174  523B C9           	RET
-1175  523C
-1176  523C              .LDIRMV:
-1177  523C CD AD 4D     	CALL SETWRT_LOCAL
-1178  523F              .L4:
-1179  523F DB 98            IN A, (#98)
-1180  5241 12           	LD (DE), A
-1181  5242 13               INC DE
-1182  5243 0B               DEC BC
-1183  5244 79               LD A, C
-1184  5245 B0               OR B
-1185  5246 C2 3F 52         JP NZ, .L4
-1186  5249 C9               RET
-1187  524A              ; *******************************************************************************************************
-1188  524A
-1189  524A              ; *******************************************************************************************************
-1190  524A              ; H.TIMI function
-1191  524A              MBGE_HTIMI:
-1192  524A               EXPORT MBGE_HTIMI
-1193  524A F5           	PUSH AF
-1194  524B
-1195  524B CD 77 4E     	CALL SPRATR_UPDATE
-1196  524E
-1197  524E 3A F5 4C     	LD A, (SOUND_ENABLED)
-1198  5251 B7           	OR A
-1199  5252 28 2A        	JR Z, .EXIT
-1200  5254
-1201  5254              	; enable page 2
-1202  5254 3E 02            LD A, 2
-1203  5256 CD B8 4D         CALL GET_PAGE_INFO
-1204  5259 C5               PUSH BC
-1205  525A D5               PUSH DE
-1206  525B 3A 43 F3         LD A, (RAMAD2)
-1207  525E 26 80            LD H, 080H
-1208  5260 CD FE 4D         CALL LOCAL_ENASLT
-1209  5263              	; enable page 0
-1210  5263 AF               XOR A
-1211  5264 CD B8 4D         CALL GET_PAGE_INFO
-1212  5267 C5               PUSH BC
-1213  5268 D5               PUSH DE
-1214  5269 3A 41 F3         LD A, (RAMAD0)
-1215  526C 26 00            LD H, 0
-1216  526E CD FE 4D         CALL LOCAL_ENASLT
-1217  5271
-1218  5271 CD 31 42     	CALL PLY_AKG_PLAY
-1219  5274
-1220  5274              	; restore page 0
-1221  5274 D1               POP DE
-1222  5275 C1               POP BC
-1223  5276 CD EF 4D         CALL RESTORE_PAGE_INFO
-1224  5279              	; restore page 2
-1225  5279 D1               POP DE
-1226  527A C1               POP BC
-1227  527B CD EF 4D         CALL RESTORE_PAGE_INFO
-1228  527E
-1229  527E              .EXIT:
-1230  527E F1           	POP AF
-1231  527F C3 EE 4C     	JP ORIG.HTIMI
-1232  5282              ; *******************************************************************************************************
-1233  5282
-1234  5282              ; *******************************************************************************************************
-1235  5282              ; function to handle CALL SNDPLYINIT basic extension
-1236  5282              ; initializes sound player
-1237  5282              ; _SNDPLYINIT ( INT music_offset,
-1238  5282              ;				INT sfx_offset, can be -1 if no SFX
-1239  5282              ; will put ram in page 0 also, page 1 is already there
-1240  5282              ; sets variables MUSIC_INIT_STATUS and SFX_INIT_STATUS
-1241  5282              SNDPLYINIT:
-1242  5282              	; opening (
-1243  5282 CD 9B 4F     	CALL CHKCHAR
-1244  5285 28           	DB '('
-1245  5286              	; get music address
-1246  5286 DD 21 2F 54  	LD IX, FRMQNT
-1247  528A CD 59 01     	CALL CALBAS
-1248  528D D5           	PUSH DE
-1249  528E              	; comma
-1250  528E CD 9B 4F     	CALL CHKCHAR
-1251  5291 2C           	DB ','
-1252  5292              	; get sfx address
-1253  5292 DD 21 2F 54  	LD IX, FRMQNT
-1254  5296 CD 59 01     	CALL CALBAS
-1255  5299 D5           	PUSH DE
-1256  529A              	; ending )
-1257  529A CD 9B 4F     	CALL CHKCHAR
-1258  529D 29           	DB ')'
-1259  529E
-1260  529E                  ; save position in BASIC text
-1261  529E 44           	LD B, H
-1262  529F 4D           	LD C, L
-1263  52A0
-1264  52A0              	; pop LDIR parameters and store away for later
-1265  52A0 D1           	POP DE ; sfx address
-1266  52A1 E1           	POP HL ; music address
-1267  52A2 C5           	PUSH BC ; basic text location
-1268  52A3 D9           	EXX
-1269  52A4 AF               XOR A
-1270  52A5 CD B8 4D         CALL GET_PAGE_INFO
-1271  52A8 C5               PUSH BC
-1272  52A9 D5               PUSH DE
-1273  52AA 3A 41 F3         LD A, (RAMAD0)
-1274  52AD 26 00            LD H, 0
-1275  52AF CD FE 4D         CALL LOCAL_ENASLT
-1276  52B2 D9           	EXX
-1277  52B3
-1278  52B3 D5           	PUSH DE
-1279  52B4 AF           	XOR A
-1280  52B5              	; HL = music location
-1281  52B5 CD 60 41     	CALL PLY_AKG_INIT
-1282  52B8 3E 01        	LD A, 1
-1283  52BA 32 F3 4C     	LD (MUSIC_INIT_STATUS), A
-1284  52BD
-1285  52BD E1           	POP HL
-1286  52BE 23           	INC HL
-1287  52BF 7D           	LD A, L
-1288  52C0 B4           	OR H
-1289  52C1 28 09        	JR Z,.L1
-1290  52C3 2B           	DEC HL
-1291  52C4 CD 1B 40     	CALL PLY_AKG_INITSOUNDEFFECTS
-1292  52C7 3E 01        	LD A, 1
-1293  52C9 32 F4 4C     	LD (SFX_INIT_STATUS), A
-1294  52CC              .L1:
-1295  52CC D1               POP DE
-1296  52CD C1               POP BC
-1297  52CE CD EF 4D         CALL RESTORE_PAGE_INFO
-1298  52D1
-1299  52D1 E1           	POP HL
-1300  52D2 C9           	RET
-1301  52D3              ; *******************************************************************************************************
-1302  52D3
-1303  52D3              ; *******************************************************************************************************
-1304  52D3              ; function to handle CALL SNDPLYON basic extension
-1305  52D3              ; enables sound player
-1306  52D3              ; _SNDPLYON
-1307  52D3              ; sets SOUND_ENABLED variable to 1 if init call was done
-1308  52D3              ; if not throws out of data error
-1309  52D3              SNDPLYON:
-1310  52D3 3A F3 4C     	LD A, (MUSIC_INIT_STATUS)
-1311  52D6 B7           	OR A
-1312  52D7 20 05        	JR NZ, .L1
-1313  52D9              	; player not initialized, throw error
-1314  52D9 1E 04        	LD E, 04 ; Out of DATA
-1315  52DB C3 B3 4F     	JP THROW_ERROR
-1316  52DE              .L1:
-1317  52DE 32 F5 4C     	LD (SOUND_ENABLED), A
-1318  52E1              	; disable key click
-1319  52E1 AF           	XOR A
-1320  52E2 32 DB F3     	LD (CLIKSW), A
-1321  52E5 C9           	RET
-1322  52E6              ; *******************************************************************************************************
-1323  52E6
-1324  52E6              ; *******************************************************************************************************
-1325  52E6              ; function to handle CALL SNDPLYOFF basic extension
-1326  52E6              ; disables sound player
-1327  52E6              ; _SNDPLYOFF
-1328  52E6              ; sets SOUND_ENABLED variable to 0
-1329  52E6              ; calls AKG to stop music and SFX on all channels if initialized
-1330  52E6              SNDPLYOFF:
-1331  52E6 3A F5 4C     	LD A, (SOUND_ENABLED)
-1332  52E9 B7           	OR A
-1333  52EA C8           	RET Z ; already stopped
-1334  52EB AF           	XOR A
-1335  52EC 32 F5 4C     	LD (SOUND_ENABLED), A
-1336  52EF E5           	PUSH HL
-1337  52F0 CD 1F 42     	CALL PLY_AKG_STOP
-1338  52F3 3A F4 4C     	LD A, (SFX_INIT_STATUS)
-1339  52F6 B7           	OR A
-1340  52F7 28 0E        	JR Z, .EXIT ; SFX not in use
-1341  52F9 AF           	XOR A
-1342  52FA CD 47 40     	CALL PLY_AKG_STOPSOUNDEFFECTFROMCHANNEL
-1343  52FD 3E 01        	LD A, 1
-1344  52FF CD 47 40     	CALL PLY_AKG_STOPSOUNDEFFECTFROMCHANNEL
-1345  5302 3E 02        	LD A, 2
-1346  5304 CD 47 40     	CALL PLY_AKG_STOPSOUNDEFFECTFROMCHANNEL
-1347  5307              .EXIT:
-1348  5307 E1           	POP HL
-1349  5308 C9           	RET
-1350  5309              ; *******************************************************************************************************
-1351  5309
-1352  5309              ; *******************************************************************************************************
-1353  5309              ; function to handle CALL SNDSFX basic extension
-1354  5309              ; plays a sound effect
-1355  5309              ; _SNDSFX ( BYTE sfx_number, >0
-1356  5309              ;			BYTE channel, = 0,1 or 2
-1357  5309              ;			BYTE inverted_volume = 0-16, 0 being full volume
-1358  5309              ; will put ram in page 0 also, page 1 is already there
-1359  5309              ; if sound off throws illegal function call
-1360  5309              ; if sfx not initialized, throws out of data
-1361  5309              SNDSFX:
-1362  5309              	; opening (
-1363  5309 CD 9B 4F     	CALL CHKCHAR
-1364  530C 28           	DB '('
-1365  530D              	; get sfx_number
-1366  530D DD 21 1C 52  	LD IX, GETBYT
-1367  5311 CD 59 01     	CALL CALBAS
-1368  5314 D5           	PUSH DE
-1369  5315              	; comma
-1370  5315 CD 9B 4F     	CALL CHKCHAR
-1371  5318 2C           	DB ','
-1372  5319              	; get sfx address
-1373  5319 DD 21 1C 52  	LD IX, GETBYT
-1374  531D CD 59 01     	CALL CALBAS
-1375  5320 D5           	PUSH DE
-1376  5321              	; comma
-1377  5321 CD 9B 4F     	CALL CHKCHAR
-1378  5324 2C           	DB ','
-1379  5325              	; get inverted volume
-1380  5325 DD 21 1C 52  	LD IX, GETBYT
-1381  5329 CD 59 01     	CALL CALBAS
-1382  532C D5           	PUSH DE
-1383  532D              	; ending )
-1384  532D CD 9B 4F     	CALL CHKCHAR
-1385  5330 29           	DB ')'
-1386  5331
-1387  5331 3A F5 4C     	LD A, (SOUND_ENABLED)
-1388  5334 B7           	OR A
-1389  5335 20 05        	JR NZ, .L1
-1390  5337              	; sound disabled, throw illegal function call
-1391  5337 1E 05        	LD E, 5
-1392  5339 C3 B3 4F     	JP THROW_ERROR
-1393  533C              .L1:
-1394  533C 3A F4 4C     	LD A, (SFX_INIT_STATUS)
-1395  533F B7           	OR A
-1396  5340 20 05        	JR NZ, .L2
-1397  5342              	; sfx data not initialized, throw out of data
-1398  5342 1E 04        	LD E, 4
-1399  5344 C3 B3 4F     	JP THROW_ERROR
-1400  5347              .L2:
-1401  5347              	; pop  parameters and store away for later
-1402  5347 D1           	POP DE ; inverted volume
-1403  5348 43           	LD B, E
-1404  5349 D1           	POP DE ; channel
-1405  534A 4B           	LD C, E
-1406  534B D1           	POP DE
-1407  534C 7B           	LD A, E
-1408  534D 08           	EX AF, AF'
-1409  534E E5           	PUSH HL ; basic text location
-1410  534F D9           	EXX
-1411  5350 AF               XOR A
-1412  5351 CD B8 4D         CALL GET_PAGE_INFO
-1413  5354 C5               PUSH BC
-1414  5355 D5               PUSH DE
-1415  5356 3A 41 F3         LD A, (RAMAD0)
-1416  5359 26 00            LD H, 0
-1417  535B CD FE 4D         CALL LOCAL_ENASLT
-1418  535E D9           	EXX
-1419  535F 08           	EX AF, AF'
-1420  5360 CD 1F 40     	CALL PLY_AKG_PLAYSOUNDEFFECT
-1421  5363
-1422  5363 D1               POP DE
-1423  5364 C1               POP BC
-1424  5365 CD EF 4D         CALL RESTORE_PAGE_INFO
-1425  5368
-1426  5368 E1           	POP HL
-1427  5369 C9           	RET
-1428  536A              ; *******************************************************************************************************
-1429  536A
-1430  536A              EXT_END:
-1431  536A
+ 104  4CFB
+ 105  4CFB              ; to temporarily store stack pointer
+ 106  4CFB              TMPSP:
+ 107  4CFB 00 00         DW 0
+ 108  4CFD              ; to support sprite flicker
+ 109  4CFD              FLICKER:
+ 110  4CFD 00            DB 0
+ 111  4CFE
+ 112  4CFE              ; List of pointers to available instructions (as ASCIIZ) and execute address (as word)
+ 113  4CFE              ; per starting letter, if no commands with this letter, NULL value
+ 114  4CFE              CMDS:
+ 115  4CFE 00 00            DW 0 ; A
+ 116  4D00 00 00            DW 0 ; B
+ 117  4D02 00 00            DW 0 ; C
+ 118  4D04 00 00            DW 0 ; D
+ 119  4D06 00 00            DW 0 ; E
+ 120  4D08 59 4D            DW CMDS_F; F
+ 121  4D0A 6C 4D            DW CMDS_G; G
+ 122  4D0C 00 00            DW 0 ; H
+ 123  4D0E 00 00            DW 0 ; I
+ 124  4D10 00 00            DW 0 ; J
+ 125  4D12 00 00            DW 0 ; K
+ 126  4D14 3C 4D            DW CMDS_L ; L
+ 127  4D16 46 4D            DW CMDS_M ; M
+ 128  4D18 00 00            DW 0 ; N
+ 129  4D1A 00 00            DW 0 ; O
+ 130  4D1C 00 00            DW 0 ; P
+ 131  4D1E 00 00            DW 0 ; Q
+ 132  4D20 00 00            DW 0 ; R
+ 133  4D22 80 4D            DW CMDS_S ; S
+ 134  4D24 00 00            DW 0 ; T
+ 135  4D26 32 4D            DW CMDS_U ; U
+ 136  4D28 76 4D            DW CMDS_V ; V
+ 137  4D2A 00 00            DW 0 ; W
+ 138  4D2C 00 00            DW 0 ; X
+ 139  4D2E 00 00            DW 0 ; Y
+ 140  4D30 00 00            DW 0 ; Z
+ 141  4D32
+ 142  4D32              CMDS_U:
+ 143  4D32 55 50 52 49  	DEFB	"UPRINT",0      ; Print upper case string
+ 143  4D36 4E 54 00
+ 144  4D39 64 4F        	DEFW	UPRINT
+ 145  4D3B 00               DB 0
+ 146  4D3C              CMDS_L:
+ 147  4D3C 4C 50 52 49  	DEFB	"LPRINT",0      ; Print lower case string
+ 147  4D40 4E 54 00
+ 148  4D43 81 4F        	DEFW	LPRINT
+ 149  4D45 00               DB 0
+ 150  4D46              CMDS_M:
+ 151  4D46 4D 45 4D 56      DB "MEMVRM", 0
+ 151  4D4A 52 4D 00
+ 152  4D4D 76 51            DW MEMVRM
+ 153  4D4F 4D 45 4D 43  	DB "MEMCPY", 0
+ 153  4D53 50 59 00
+ 154  4D56 E8 4F        	DW MEMCPY
+ 155  4D58 00               DB 0
+ 156  4D59              CMDS_F:
+ 157  4D59 46 49 4C 56      DB "FILVRM", 0
+ 157  4D5D 52 4D 00
+ 158  4D60 58 50            DW FILVRM
+ 159  4D62 46 49 4C 52      DB "FILRAM", 0
+ 159  4D66 41 4D 00
+ 160  4D69 9F 50            DW FILRAM
+ 161  4D6B 00               DB 0
+ 162  4D6C              CMDS_G:
+ 163  4D6C 47 45 4E 43      DB "GENCAL", 0
+ 163  4D70 41 4C 00
+ 164  4D73 1D 51            DW GENCAL
+ 165  4D75 00           	DB	0
+ 166  4D76              CMDS_V:
+ 167  4D76 56 52 4D 4D  	DB "VRMMEM", 0
+ 167  4D7A 45 4D 00
+ 168  4D7D F8 51        	DW VRMMEM
+ 169  4D7F 00           	DB 0
+ 170  4D80              CMDS_S:
+ 171  4D80 53 4E 44 53  	DB "SNDSFX", 0
+ 171  4D84 46 58 00
+ 172  4D87 37 53        	DW SNDSFX
+ 173  4D89 53 4E 44 50  	DB "SNDPLYON", 0
+ 173  4D8D 4C 59 4F 4E
+ 173  4D91 00
+ 174  4D92 01 53        	DW SNDPLYON
+ 175  4D94 53 4E 44 50  	DB "SNDPLYOFF", 0
+ 175  4D98 4C 59 4F 46
+ 175  4D9C 46 00
+ 176  4D9E 14 53        	DW SNDPLYOFF
+ 177  4DA0 53 4E 44 50  	DB "SNDPLYINI", 0
+ 177  4DA4 4C 59 49 4E
+ 177  4DA8 49 00
+ 178  4DAA B0 52        	DW SNDPLYINIT
+ 179  4DAC 53 50 52 41  	DB "SPRATRINI", 0
+ 179  4DB0 54 52 49 4E
+ 179  4DB4 49 00
+ 180  4DB6 98 53        	DW SPRATRINI
+ 181  4DB8 00           	DB 0
+ 182  4DB9
+ 183  4DB9              ; ****************************************************************************************************
+ 184  4DB9              ; function sets VRAM address
+ 185  4DB9              ; input HL=address
+ 186  4DB9              ; modifies AF
+ 187  4DB9              SETWRT_LOCAL:
+ 188  4DB9 7D           	LD	A, L
+ 189  4DBA D3 99        	OUT	(099H), A
+ 190  4DBC 7C           	LD	A, H
+ 191  4DBD E6 3F        	AND	03FH
+ 192  4DBF F6 40        	OR	040H
+ 193  4DC1 D3 99        	OUT	(099H), A
+ 194  4DC3 C9           	RET
+ 195  4DC4              ; ****************************************************************************************************
+ 196  4DC4
+ 197  4DC4              ; ****************************************************************************************************
+ 198  4DC4              ; function gets slot and subslot data for specific page
+ 199  4DC4              ; input A=page (0, 1 or 2)
+ 200  4DC4              ; output B = 0A8H register value
+ 201  4DC4              ; output D = 0 is no subslots, 1 if yes
+ 202  4DC4              ; output C = 0A8H value when page 3 slot equals to requested page slot
+ 203  4DC4              ; output E = subslot value if present
+ 204  4DC4              ; modifies AF, BC, DE, HL
+ 205  4DC4              GET_PAGE_INFO:
+ 206  4DC4 6F               LD L, A
+ 207  4DC5 C6 C1            ADD A, low (EXPTBL)
+ 208  4DC7 32 D1 4D         LD (GET_PAGE_INFO_L1+1), A
+ 209  4DCA DB A8            IN A, (0A8H)
+ 210  4DCC 47               LD B, A
+ 211  4DCD E6 3F            AND 03FH
+ 212  4DCF 4F               LD C, A
+ 213  4DD0              GET_PAGE_INFO_L1:
+ 214  4DD0 3A C1 FC         LD A, (EXPTBL) ; modified by code above
+ 215  4DD3 E6 80            AND 080H
+ 216  4DD5 28 1B            JR Z, GET_PAGE_INFO_L2
+ 217  4DD7                  ; expanded
+ 218  4DD7 2D               DEC L
+ 219  4DD8 FA F7 4D         JP M, GET_PAGE_INFO_L3
+ 220  4DDB 2D               DEC L
+ 221  4DDC FA F5 4D         JP M, GET_PAGE_INFO_L4
+ 222  4DDF                  ; page 2
+ 223  4DDF 07               RLCA
+ 224  4DE0 07               RLCA
+ 225  4DE1              GET_PAGE_INFO_L5:
+ 226  4DE1 E6 C0            AND 0C0H
+ 227  4DE3 B1               OR C
+ 228  4DE4 D3 A8            OUT (0A8H), A ; slot 3 = slot of page requested
+ 229  4DE6 4F               LD C, A
+ 230  4DE7 3A FF FF         LD A, (0FFFFH)
+ 231  4DEA 2F               CPL
+ 232  4DEB 5F               LD E, A
+ 233  4DEC 16 01            LD D, 1
+ 234  4DEE 78               LD A, B ; return stack
+ 235  4DEF D3 A8            OUT (0A8H), A
+ 236  4DF1 C9               RET
+ 237  4DF2              GET_PAGE_INFO_L2:
+ 238  4DF2                  ; not expanded
+ 239  4DF2 16 00            LD D, 0
+ 240  4DF4 C9               RET
+ 241  4DF5              GET_PAGE_INFO_L4:
+ 242  4DF5                  ; page 1
+ 243  4DF5 0F               RRCA
+ 244  4DF6 0F               RRCA
+ 245  4DF7              GET_PAGE_INFO_L3:
+ 246  4DF7                  ; page 0
+ 247  4DF7 0F               RRCA
+ 248  4DF8 0F               RRCA
+ 249  4DF9 18 E6            JR GET_PAGE_INFO_L5
+ 250  4DFB              ; ****************************************************************************************************
+ 251  4DFB
+ 252  4DFB              ; ****************************************************************************************************
+ 253  4DFB              ; function returns original slot and subslot info
+ 254  4DFB              ; input B = 0A8H register value
+ 255  4DFB              ; input D = 0 is no subslots, 1 if yes
+ 256  4DFB              ; input C = 0A8H value when page 3 slot equals to requested page slot
+ 257  4DFB              ; input E = subslot value if present
+ 258  4DFB              ; modifies AF
+ 259  4DFB              RESTORE_PAGE_INFO:
+ 260  4DFB 7A               LD A, D
+ 261  4DFC B7               OR A
+ 262  4DFD 28 07            JR Z, RESTORE_PAGE_INFO_L1
+ 263  4DFF 79               LD A, C
+ 264  4E00 D3 A8            OUT (0A8H), A
+ 265  4E02 7B               LD A, E
+ 266  4E03 32 FF FF         LD (0FFFFH), A
+ 267  4E06              RESTORE_PAGE_INFO_L1:
+ 268  4E06 78               LD A, B
+ 269  4E07 D3 A8            OUT (0A8H), A
+ 270  4E09 C9               RET
+ 271  4E0A              ; ****************************************************************************************************
+ 272  4E0A
+ 273  4E0A              ; *******************************************************************************************************
+ 274  4E0A              ; SELECTS A SLOT IN THE PAGE SPECIFIED BY AN ADDRESS.
+ 275  4E0A              ; INPUT:  A = SLOT ID: EXXXSSPP
+ 276  4E0A              ; E = EXPANDED FLAG
+ 277  4E0A              ; SS = SECONDARY SLOT NUMBER (ONLY IF EXPANDED)
+ 278  4E0A              ; PP = PRIMARY SLOT NUMBER
+ 279  4E0A              ;     HL = ADDRESS INSIDE THE PAGE TO CHANGE
+ 280  4E0A              ; CHANGES: AF, BC, DE
+ 281  4E0A
+ 282  4E0A              LOCAL_ENASLT:
+ 283  4E0A CD 2A 4E         CALL L0353
+ 284  4E0D FA 17 4E         JP M, L0340
+ 285  4E10 DB A8            IN A, (0A8H)
+ 286  4E12 A1               AND C
+ 287  4E13 B0               OR B
+ 288  4E14 D3 A8            OUT (0A8H), A
+ 289  4E16 C9               RET
+ 290  4E17              L0340:
+ 291  4E17 E5               PUSH HL
+ 292  4E18 CD 4F 4E         CALL L0378
+ 293  4E1B 4F               LD C, A
+ 294  4E1C 06 00            LD B, 0
+ 295  4E1E 7D               LD A, L
+ 296  4E1F A4               AND H
+ 297  4E20 B2               OR D
+ 298  4E21 21 C5 FC         LD HL, 0FCC5H
+ 299  4E24 09               ADD HL, BC
+ 300  4E25 77               LD (HL), A
+ 301  4E26 E1               POP HL
+ 302  4E27 79               LD A, C
+ 303  4E28 18 E0            JR LOCAL_ENASLT
+ 304  4E2A              L0353:
+ 305  4E2A F3               DI
+ 306  4E2B F5               PUSH AF
+ 307  4E2C 7C               LD A, H
+ 308  4E2D 07               RLCA
+ 309  4E2E 07               RLCA
+ 310  4E2F E6 03            AND 3
+ 311  4E31 5F               LD E, A
+ 312  4E32 3E C0            LD A, 0C0H
+ 313  4E34              L035D:
+ 314  4E34 07               RLCA
+ 315  4E35 07               RLCA
+ 316  4E36 1D               DEC E
+ 317  4E37 F2 34 4E         JP P, L035D
+ 318  4E3A 5F               LD E, A
+ 319  4E3B 2F               CPL
+ 320  4E3C 4F               LD C, A
+ 321  4E3D F1               POP AF
+ 322  4E3E F5               PUSH AF
+ 323  4E3F E6 03            AND 3
+ 324  4E41 3C               INC A
+ 325  4E42 47               LD B, A
+ 326  4E43 3E AB            LD A, 0ABH
+ 327  4E45              L036E:
+ 328  4E45 C6 55            ADD A, 055H
+ 329  4E47 10 FC            DJNZ L036E
+ 330  4E49 57               LD D, A
+ 331  4E4A A3               AND E
+ 332  4E4B 47               LD B, A
+ 333  4E4C F1               POP AF
+ 334  4E4D A7               AND A
+ 335  4E4E C9               RET
+ 336  4E4F              L0378:
+ 337  4E4F F5               PUSH AF
+ 338  4E50 7A               LD A, D
+ 339  4E51 E6 C0            AND 0C0H
+ 340  4E53 4F               LD C, A
+ 341  4E54 F1               POP AF
+ 342  4E55 F5               PUSH AF
+ 343  4E56 57               LD D, A
+ 344  4E57 DB A8            IN A, (0A8H)
+ 345  4E59 47               LD B, A
+ 346  4E5A E6 3F            AND 03FH
+ 347  4E5C B1               OR C
+ 348  4E5D D3 A8            OUT (0A8H), A
+ 349  4E5F 7A               LD A, D
+ 350  4E60 0F               RRCA
+ 351  4E61 0F               RRCA
+ 352  4E62 E6 03            AND 3
+ 353  4E64 57               LD D, A
+ 354  4E65 3E AB            LD A, 0ABH
+ 355  4E67              L0390:
+ 356  4E67 C6 55            ADD A, 055H
+ 357  4E69 15               DEC D
+ 358  4E6A F2 67 4E         JP P, L0390
+ 359  4E6D A3               AND E
+ 360  4E6E 57               LD D, A
+ 361  4E6F 7B               LD A, E
+ 362  4E70 2F               CPL
+ 363  4E71 67               LD H, A
+ 364  4E72 3A FF FF         LD A, (0FFFFH)
+ 365  4E75 2F               CPL
+ 366  4E76 6F               LD L, A
+ 367  4E77 A4               AND H
+ 368  4E78 B2               OR D
+ 369  4E79 32 FF FF         LD (0FFFFH), A
+ 370  4E7C 78               LD A, B
+ 371  4E7D D3 A8            OUT (0A8H), A
+ 372  4E7F F1               POP AF
+ 373  4E80 E6 03            AND 3
+ 374  4E82 C9               RET
+ 375  4E83              ; *******************************************************************************************************
+ 376  4E83
+ 377  4E83              ; *******************************************************************************************************
+ 378  4E83              ; function updates sprite attribute table in VRAM based on buffer of the form with rotating for flicker
+ 379  4E83              ; struct {
+ 380  4E83              ; DW y
+ 381  4E83              ; DW x
+ 382  4E83              ; DW pattern (0-31)
+ 383  4E83              ; DW color
+ 384  4E83              ; } [32]
+ 385  4E83              ; will hide sprites whose location is outside of visible area
+ 386  4E83              ; works in screen 1 and 2
+ 387  4E83              ; triggered by value in (SPRATR_UPDATE_FLAG) != 0 and after being done resets it to 0
+ 388  4E83              ; modifies AF, AF', BC, DE, HL
+ 389  4E83              SPRATR_UPDATE:
+ 390  4E83              	; check if initialized
+ 391  4E83 3A F6 4C     	LD A, (SPRATR_INIT_STATUS)
+ 392  4E86 B7           	OR A
+ 393  4E87 C8           	RET Z
+ 394  4E88              	; check if update requested
+ 395  4E88 2A F7 4C     	LD HL, (SPRATR_UPDATE_FLAG)
+ 396  4E8B 7E           	LD A, (HL)
+ 397  4E8C B7           	OR A
+ 398  4E8D C8           	RET Z
+ 399  4E8E              	; check screen mode
+ 400  4E8E 3A AF FC     	LD A, (SCRMOD)
+ 401  4E91 3D           	DEC A
+ 402  4E92 28 02        	JR Z, .L0 ; screen 1
+ 403  4E94 3D           	DEC A
+ 404  4E95 C0           	RET NZ ; not screen 2
+ 405  4E96              .L0:
+ 406  4E96 06 20        	LD B, 32 ; sprite number
+ 407  4E98 0E 98        	LD C, #98 ; register for vpd data output
+ 408  4E9A              	; set VDP address
+ 409  4E9A 2A 28 F9     	LD HL, (ATRBAS)
+ 410  4E9D 3A FD 4C     	LD A, (FLICKER)
+ 411  4EA0 5F           	LD E, A
+ 412  4EA1 08           	EX AF, AF'
+ 413  4EA2 7B           	LD A, E
+ 414  4EA3 87           	ADD A, A
+ 415  4EA4 87           	ADD A, A
+ 416  4EA5 16 00        	LD D, 0
+ 417  4EA7 5F           	LD E, A
+ 418  4EA8 19           	ADD HL, DE
+ 419  4EA9 CD B9 4D     	CALL SETWRT_LOCAL
+ 420  4EAC ED 73 FB 4C  	LD (TMPSP), SP
+ 421  4EB0 ED 7B F9 4C  	LD SP, (SPRATR_DATA)
+ 422  4EB4
+ 423  4EB4              .LOOP:
+ 424  4EB4 E1           	POP HL
+ 425  4EB5 24           	INC H
+ 426  4EB6 28 0D        	JR Z, .L1 ; negative number above -256
+ 427  4EB8 25           	DEC H
+ 428  4EB9 20 15        	JR NZ, .OUT3 ; sprite verticall can't be visible
+ 429  4EBB 7D           	LD A, L
+ 430  4EBC FE C0        	CP 192
+ 431  4EBE 30 10        	JR NC, .OUT3
+ 432  4EC0 3D           	DEC A ; due to VDP rule that top of screen is -1
+ 433  4EC1 57           	LD D, A
+ 434  4EC2 C3 E0 4E     	JP .X
+ 435  4EC5              .L1:
+ 436  4EC5 7D           	LD A, L
+ 437  4EC6 C6 10        	ADD 16
+ 438  4EC8 FA D0 4E     	JP M, .OUT3 ; below -16
+ 439  4ECB 2D           	DEC L ; due to VDP rule that top of screen is -1
+ 440  4ECC 55           	LD D, L
+ 441  4ECD C3 E0 4E     	JP .X
+ 442  4ED0              .OUT3:
+ 443  4ED0 E1           	POP HL ; skip x value
+ 444  4ED1              .OUT2:
+ 445  4ED1 E1           	POP HL ; skip pattern
+ 446  4ED2 E1           	POP HL ; skip color
+ 447  4ED3 3E D1        	LD A, #D1
+ 448  4ED5 D3 98        	OUT (#98), A ; sprite hidden
+ 449  4ED7 D3 98        	OUT (#98), A ; value unimportant
+ 450  4ED9 D3 98        	OUT (#98), A ; value unimportant
+ 451  4EDB D3 98        	OUT (#98), A ; value unimportant
+ 452  4EDD C3 04 4F     	JP .NEXT
+ 453  4EE0              .X:
+ 454  4EE0 E1           	POP HL
+ 455  4EE1 24           	INC H
+ 456  4EE2 28 08        	JR Z, .L2
+ 457  4EE4 25           	DEC H
+ 458  4EE5 20 EA        	JR NZ, .OUT2
+ 459  4EE7 1E 00        	LD E, 0 ; EC bit
+ 460  4EE9 C3 F5 4E     	JP .XY
+ 461  4EEC              .L2:
+ 462  4EEC 7D           	LD A, L
+ 463  4EED C6 20        	ADD 32
+ 464  4EEF FA D1 4E     	JP M, .OUT2
+ 465  4EF2 6F           	LD L, A
+ 466  4EF3 1E 80        	LD E, #80
+ 467  4EF5              .XY:
+ 468  4EF5 ED 51        	OUT (C), D
+ 469  4EF7 ED 69        	OUT (C), L
+ 470  4EF9 E1           	POP HL ; pattern
+ 471  4EFA 7D           	LD A, L
+ 472  4EFB 87           	ADD A, A
+ 473  4EFC 87           	ADD A, A ; needs to go at 4x
+ 474  4EFD D3 98        	OUT (#98), A
+ 475  4EFF E1           	POP HL ; color
+ 476  4F00 7D           	LD A, L
+ 477  4F01 B3           	OR E
+ 478  4F02 D3 98        	OUT (#98), A
+ 479  4F04              .NEXT:
+ 480  4F04 08           	EX AF, AF'
+ 481  4F05 3C           	INC A
+ 482  4F06 E6 1F        	AND 31
+ 483  4F08 C2 15 4F     	JP NZ, .NEXT2
+ 484  4F0B 08           	EX AF, AF'
+ 485  4F0C 2A 28 F9     	LD HL, (ATRBAS)
+ 486  4F0F CD B9 4D     	CALL SETWRT_LOCAL
+ 487  4F12 C3 16 4F     	JP .NEXT3
+ 488  4F15              .NEXT2:
+ 489  4F15 08           	EX AF, AF'
+ 490  4F16              .NEXT3:
+ 491  4F16 10 9C        	DJNZ .LOOP
+ 492  4F18 08           	EX AF, AF'
+ 493  4F19 3C           	INC A
+ 494  4F1A 32 FD 4C     	LD (FLICKER), A
+ 495  4F1D
+ 496  4F1D ED 7B FB 4C  	LD SP, (TMPSP)
+ 497  4F21 2A F7 4C     	LD HL, (SPRATR_UPDATE_FLAG)
+ 498  4F24 36 00        	LD (HL), 0 ; zero out update flag
+ 499  4F26 C9           	RET
+ 500  4F27              ; *******************************************************************************************************
+ 501  4F27
+ 502  4F27              ; General BASIC CALL-instruction handler
+ 503  4F27              CALLHAND:
+ 504  4F27 E5           	PUSH HL
+ 505  4F28 21 FE 4C     	LD	HL, CMDS ; pointer table based on starting letter
+ 506  4F2B 3A 89 FD         LD A, (PROCNM)
+ 507  4F2E D6 41            SUB 'A'
+ 508  4F30 87               ADD A, A
+ 509  4F31 16 00            LD D, 0
+ 510  4F33 5F               LD E, A
+ 511  4F34 19               ADD HL, DE
+ 512  4F35 5E               LD E, (HL)
+ 513  4F36 23               INC HL
+ 514  4F37 56               LD D, (HL)
+ 515  4F38 7A               LD A, D
+ 516  4F39 B3               OR E
+ 517  4F3A 28 24            JR Z, .CMDNOTRECOGNIZED
+ 518  4F3C EB               EX DE, HL
+ 519  4F3D              .CHKCMD:
+ 520  4F3D 11 89 FD     	LD	DE, PROCNM
+ 521  4F40 1A           .LOOP:	LD	A,(DE)
+ 522  4F41 BE           	CP	(HL)
+ 523  4F42 20 11        	JR	NZ,.TONEXTCMD	; Not equal
+ 524  4F44 13           	INC	DE
+ 525  4F45 23           	INC	HL
+ 526  4F46 A7           	AND	A
+ 527  4F47 20 F7        	JR	NZ,.LOOP	; No end of instruction name, go checking
+ 528  4F49 5E           	LD	E,(HL)
+ 529  4F4A 23           	INC	HL
+ 530  4F4B 56           	LD	D,(HL)
+ 531  4F4C E1           	POP	HL		; routine address
+ 532  4F4D CD D3 4F     	CALL	GETPREVCHAR
+ 533  4F50 CD 62 4F     	CALL	.CALLDE		; Call routine
+ 534  4F53 A7           	AND	A
+ 535  4F54 C9           	RET
+ 536  4F55
+ 537  4F55              .TONEXTCMD:
+ 538  4F55 0E FF        	LD	C,0FFH
+ 539  4F57 AF           	XOR	A
+ 540  4F58 ED B1        	CPIR			; Skip to end of instruction name
+ 541  4F5A 23           	INC	HL
+ 542  4F5B 23           	INC	HL		; Skip address
+ 543  4F5C BE           	CP	(HL)
+ 544  4F5D 20 DE        	JR	NZ,.CHKCMD	; Not end of table, go checking
+ 545  4F5F E1           	POP	HL
+ 546  4F60              .CMDNOTRECOGNIZED:
+ 547  4F60 37               SCF
+ 548  4F61 C9           	RET
+ 549  4F62
+ 550  4F62              .CALLDE:
+ 551  4F62 D5           	PUSH	DE
+ 552  4F63 C9           	RET
+ 553  4F64
+ 554  4F64              ;---------------------------
+ 555  4F64
+ 556  4F64              ;---------------------------
+ 557  4F64              UPRINT:
+ 558  4F64 CD A8 4F     	CALL	EVALTXTPARAM	; Evaluate text parameter
+ 559  4F67 E5           	PUSH	HL
+ 560  4F68 CD 9E 4F             CALL    GETSTRPNT
+ 561  4F6B              .LOOP
+ 562  4F6B 7E                   LD      A,(HL)
+ 563  4F6C CD 78 4F             CALL    .UCASE
+ 564  4F6F CD A2 00             CALL    CHPUT  ;Print
+ 565  4F72 23                   INC     HL
+ 566  4F73 10 F6                DJNZ    .LOOP
+ 567  4F75
+ 568  4F75 E1           	POP	HL
+ 569  4F76 B7           	OR      A
+ 570  4F77 C9           	RET
+ 571  4F78
+ 572  4F78              .UCASE:
+ 573  4F78 FE 61                CP      "a"
+ 574  4F7A D8                   RET     C
+ 575  4F7B FE 7B                CP      "z"+1
+ 576  4F7D D0                   RET     NC
+ 577  4F7E E6 DF                AND     %11011111
+ 578  4F80 C9                   RET
+ 579  4F81              ;---------------------------
+ 580  4F81              LPRINT:
+ 581  4F81 CD A8 4F     	CALL	EVALTXTPARAM	; Evaluate text parameter
+ 582  4F84 E5           	PUSH	HL
+ 583  4F85 CD 9E 4F             CALL    GETSTRPNT
+ 584  4F88              .LOOP
+ 585  4F88 7E                   LD      A,(HL)
+ 586  4F89 CD 95 4F             CALL    .LCASE
+ 587  4F8C CD A2 00             CALL    CHPUT  ;Print
+ 588  4F8F 23                   INC     HL
+ 589  4F90 10 F6                DJNZ    .LOOP
+ 590  4F92
+ 591  4F92 E1           	POP	HL
+ 592  4F93 B7           	OR      A
+ 593  4F94 C9           	RET
+ 594  4F95
+ 595  4F95              .LCASE:
+ 596  4F95 FE 41                CP      "A"
+ 597  4F97 D8                   RET     C
+ 598  4F98 FE 5B                CP      "Z"+1
+ 599  4F9A D0                   RET     NC
+ 600  4F9B F6 20                OR      %00100000
+ 601  4F9D C9                   RET
+ 602  4F9E              ;---------------------------
+ 603  4F9E
+ 604  4F9E              GETSTRPNT:
+ 605  4F9E              ; OUT:
+ 606  4F9E              ; HL = String Address
+ 607  4F9E              ; B  = Lenght
+ 608  4F9E
+ 609  4F9E 2A F8 F7             LD      HL,(USR)
+ 610  4FA1 46                   LD      B,(HL)
+ 611  4FA2 23                   INC     HL
+ 612  4FA3 5E                   LD      E,(HL)
+ 613  4FA4 23                   INC     HL
+ 614  4FA5 56                   LD      D,(HL)
+ 615  4FA6 EB                   EX      DE,HL
+ 616  4FA7 C9                   RET
+ 617  4FA8
+ 618  4FA8              EVALTXTPARAM:
+ 619  4FA8 CD C9 4F     	CALL	CHKCHAR
+ 620  4FAB 28           	DEFB	"("             ; Check for (
+ 621  4FAC DD 21 64 4C  	LD	IX,FRMEVL
+ 622  4FB0 CD 59 01     	CALL	CALBAS		; Evaluate expression
+ 623  4FB3 3A 63 F6             LD      A,(VALTYP)
+ 624  4FB6 FE 03                CP      3               ; Text type?
+ 625  4FB8 C2 DB 4F             JP      NZ,TYPE_MISMATCH
+ 626  4FBB E5                   PUSH	HL
+ 627  4FBC DD 21 D0 67          LD	IX,FRESTR         ; Free the temporary string
+ 628  4FC0 CD 59 01             CALL	CALBAS
+ 629  4FC3 E1                   POP	HL
+ 630  4FC4 CD C9 4F     	CALL	CHKCHAR
+ 631  4FC7 29           	DEFB	")"             ; Check for )
+ 632  4FC8 C9                   RET
+ 633  4FC9
+ 634  4FC9
+ 635  4FC9              CHKCHAR:
+ 636  4FC9 CD D3 4F     	CALL	GETPREVCHAR	; Get previous basic char
+ 637  4FCC E3           	EX	(SP),HL
+ 638  4FCD BE           	CP	(HL) 	        ; Check if good char
+ 639  4FCE 20 0F        	JR	NZ,SYNTAX_ERROR	; No, Syntax error
+ 640  4FD0 23           	INC	HL
+ 641  4FD1 E3           	EX	(SP),HL
+ 642  4FD2 23           	INC	HL		; Get next basic char
+ 643  4FD3
+ 644  4FD3              GETPREVCHAR:
+ 645  4FD3 2B           	DEC	HL
+ 646  4FD4 DD 21 66 46  	LD	IX,CHRGTR
+ 647  4FD8 C3 59 01     	JP      CALBAS
+ 648  4FDB
+ 649  4FDB
+ 650  4FDB              TYPE_MISMATCH:
+ 651  4FDB 1E 0D            LD E, 13 ; Type mismatch
+ 652  4FDD 18 02            JR THROW_ERROR
+ 653  4FDF
+ 654  4FDF              SYNTAX_ERROR:
+ 655  4FDF 1E 02            LD E, 2 ; Syntax error
+ 656  4FE1              THROW_ERROR:
+ 657  4FE1 DD 21 6F 40  	LD	IX,ERRHAND	; Call the Basic error handler
+ 658  4FE5 C3 59 01     	JP	CALBAS
+ 659  4FE8
+ 660  4FE8              ;---------------------------
+ 661  4FE8
+ 662  4FE8              ; *******************************************************************************************************
+ 663  4FE8              ; function to handle CALL MEMCPY basic extension
+ 664  4FE8              ; _MEMCPY ( INT source,
+ 665  4FE8              ;			INT destination,
+ 666  4FE8              ;			INT count,
+ 667  4FE8              ;			BYTE enable_ram, >0 = true
+ 668  4FE8              ;			BYTE wait_vsync) >0 = treu
+ 669  4FE8              ; enable_ram will put ram in page 0 also, page 1 is already there
+ 670  4FE8              ; wait_vsync will issue HALT before copying
+ 671  4FE8              MEMCPY:
+ 672  4FE8              	; opening (
+ 673  4FE8 CD C9 4F     	CALL CHKCHAR
+ 674  4FEB 28           	DB '('
+ 675  4FEC              	; get source address
+ 676  4FEC DD 21 2F 54  	LD IX, FRMQNT
+ 677  4FF0 CD 59 01     	CALL CALBAS
+ 678  4FF3 D5           	PUSH DE
+ 679  4FF4              	; comma
+ 680  4FF4 CD C9 4F     	CALL CHKCHAR
+ 681  4FF7 2C           	DB ','
+ 682  4FF8              	; get destination address
+ 683  4FF8 DD 21 2F 54  	LD IX, FRMQNT
+ 684  4FFC CD 59 01     	CALL CALBAS
+ 685  4FFF D5           	PUSH DE
+ 686  5000              	; comma
+ 687  5000 CD C9 4F     	CALL CHKCHAR
+ 688  5003 2C           	DB ','
+ 689  5004              	; get length
+ 690  5004 DD 21 2F 54  	LD IX, FRMQNT
+ 691  5008 CD 59 01     	CALL CALBAS
+ 692  500B D5           	PUSH DE
+ 693  500C              	; comma
+ 694  500C CD C9 4F     	CALL CHKCHAR
+ 695  500F 2C           	DB ','
+ 696  5010              	; get ROM/RAM
+ 697  5010 DD 21 1C 52  	LD IX, GETBYT
+ 698  5014 CD 59 01     	CALL CALBAS
+ 699  5017 F5           	PUSH AF
+ 700  5018              	; comma
+ 701  5018 CD C9 4F     	CALL CHKCHAR
+ 702  501B 2C           	DB ','
+ 703  501C              	; get vsync wait
+ 704  501C DD 21 1C 52  	LD IX, GETBYT
+ 705  5020 CD 59 01     	CALL CALBAS
+ 706  5023 F5           	PUSH AF
+ 707  5024              	; ending )
+ 708  5024 CD C9 4F     	CALL CHKCHAR
+ 709  5027 29           	DB ')'
+ 710  5028
+ 711  5028 FB               EI
+ 712  5029              	; save position
+ 713  5029 E5           	PUSH HL
+ 714  502A DD E1        	POP IX
+ 715  502C
+ 716  502C              	; syntax ok
+ 717  502C              	; wait for vsync if needed
+ 718  502C F1           	POP AF
+ 719  502D B7           	OR A
+ 720  502E 28 01        	JR Z, .L1
+ 721  5030 76           	HALT
+ 722  5031
+ 723  5031              .L1:
+ 724  5031              	; enable RAM in page 0 if needed
+ 725  5031 F1           	POP AF
+ 726  5032 B7           	OR A
+ 727  5033              	; pop LDIR parameters and store away for later
+ 728  5033 C1           	POP BC
+ 729  5034 D1           	POP DE
+ 730  5035 E1           	POP HL
+ 731  5036 28 1A        	JR Z, .L2
+ 732  5038 D9           	EXX
+ 733  5039 AF               XOR A
+ 734  503A CD C4 4D         CALL GET_PAGE_INFO
+ 735  503D C5               PUSH BC
+ 736  503E D5               PUSH DE
+ 737  503F 3A 41 F3         LD A, (RAMAD0)
+ 738  5042 26 00            LD H, 0
+ 739  5044 F3           	DI
+ 740  5045 CD 0A 4E         CALL LOCAL_ENASLT
+ 741  5048 D9           	EXX
+ 742  5049 ED B0        	LDIR
+ 743  504B D1               POP DE
+ 744  504C C1               POP BC
+ 745  504D CD FB 4D         CALL RESTORE_PAGE_INFO
+ 746  5050 18 02        	JR .L3
+ 747  5052
+ 748  5052              .L2:
+ 749  5052 ED B0        	LDIR
+ 750  5054
+ 751  5054              .L3:
+ 752  5054 DD E5        	PUSH IX
+ 753  5056 E1           	POP HL
+ 754  5057 C9           	RET
+ 755  5058              ; *******************************************************************************************************
+ 756  5058
+ 757  5058              ; *******************************************************************************************************
+ 758  5058              ; function to handle CALL FILVRM basic extension
+ 759  5058              ; FILVRM ( INT offset,
+ 760  5058              ;		   INT count,
+ 761  5058              ;		   BYTE value,
+ 762  5058              ;		   BYTE wait_vsync) >0 = true
+ 763  5058              ; wait_vsync will issue HALT before copying
+ 764  5058              FILVRM:
+ 765  5058              	; opening (
+ 766  5058 CD C9 4F     	CALL CHKCHAR
+ 767  505B 28           	DB '('
+ 768  505C              	; get offset address
+ 769  505C DD 21 2F 54  	LD IX, FRMQNT
+ 770  5060 CD 59 01     	CALL CALBAS
+ 771  5063 D5           	PUSH DE
+ 772  5064              	; comma
+ 773  5064 CD C9 4F     	CALL CHKCHAR
+ 774  5067 2C           	DB ','
+ 775  5068              	; get count
+ 776  5068 DD 21 2F 54  	LD IX, FRMQNT
+ 777  506C CD 59 01     	CALL CALBAS
+ 778  506F D5           	PUSH DE
+ 779  5070              	; comma
+ 780  5070 CD C9 4F     	CALL CHKCHAR
+ 781  5073 2C           	DB ','
+ 782  5074              	; get value
+ 783  5074 DD 21 1C 52  	LD IX, GETBYT
+ 784  5078 CD 59 01     	CALL CALBAS
+ 785  507B F5           	PUSH AF
+ 786  507C              	; comma
+ 787  507C CD C9 4F     	CALL CHKCHAR
+ 788  507F 2C           	DB ','
+ 789  5080              	; get vsync wait
+ 790  5080 DD 21 1C 52  	LD IX, GETBYT
+ 791  5084 CD 59 01     	CALL CALBAS
+ 792  5087 F5           	PUSH AF
+ 793  5088              	; ending )
+ 794  5088 CD C9 4F     	CALL CHKCHAR
+ 795  508B 29           	DB ')'
+ 796  508C
+ 797  508C FB               EI
+ 798  508D              	; save position
+ 799  508D E5           	PUSH HL
+ 800  508E DD E1        	POP IX
+ 801  5090
+ 802  5090              	; syntax ok
+ 803  5090              	; wait for vsync if needed
+ 804  5090 F1           	POP AF
+ 805  5091 B7           	OR A
+ 806  5092 28 01        	JR Z, .L1
+ 807  5094 76           	HALT
+ 808  5095
+ 809  5095              .L1:
+ 810  5095 F1               POP AF ; value
+ 811  5096 C1               POP BC ; count
+ 812  5097 E1               POP HL ; offset
+ 813  5098 CD 56 00         CALL BIOS_FILVRM
+ 814  509B
+ 815  509B              .L3:
+ 816  509B DD E5        	PUSH IX
+ 817  509D E1           	POP HL
+ 818  509E C9           	RET
+ 819  509F              ; *******************************************************************************************************
+ 820  509F
+ 821  509F              ; *******************************************************************************************************
+ 822  509F              ; function to handle CALL FILRAM basic extension
+ 823  509F              ; FILRAM ( INT start address,
+ 824  509F              ;		   INT count,
+ 825  509F              ;		   BYTE value,
+ 826  509F              ;	   	   BYTE enable_ram, >0 = true
+ 827  509F              ;		   BYTE wait_vsync) >0 = true
+ 828  509F              ; enable_ram will put ram in page 0 also, page 1 is already there
+ 829  509F              ; wait_vsync will issue HALT before copying
+ 830  509F              FILRAM:
+ 831  509F              	; opening (
+ 832  509F CD C9 4F     	CALL CHKCHAR
+ 833  50A2 28           	DB '('
+ 834  50A3              	; get start address
+ 835  50A3 DD 21 2F 54  	LD IX, FRMQNT
+ 836  50A7 CD 59 01     	CALL CALBAS
+ 837  50AA D5           	PUSH DE
+ 838  50AB              	; comma
+ 839  50AB CD C9 4F     	CALL CHKCHAR
+ 840  50AE 2C           	DB ','
+ 841  50AF              	; get count
+ 842  50AF DD 21 2F 54  	LD IX, FRMQNT
+ 843  50B3 CD 59 01     	CALL CALBAS
+ 844  50B6 D5           	PUSH DE
+ 845  50B7              	; comma
+ 846  50B7 CD C9 4F     	CALL CHKCHAR
+ 847  50BA 2C           	DB ','
+ 848  50BB              	; get value
+ 849  50BB DD 21 1C 52  	LD IX, GETBYT
+ 850  50BF CD 59 01     	CALL CALBAS
+ 851  50C2 F5           	PUSH AF
+ 852  50C3              	; comma
+ 853  50C3 CD C9 4F     	CALL CHKCHAR
+ 854  50C6 2C           	DB ','
+ 855  50C7              	; get ROM/RAM
+ 856  50C7 DD 21 1C 52  	LD IX, GETBYT
+ 857  50CB CD 59 01     	CALL CALBAS
+ 858  50CE F5           	PUSH AF
+ 859  50CF              	; comma
+ 860  50CF CD C9 4F     	CALL CHKCHAR
+ 861  50D2 2C           	DB ','
+ 862  50D3              	; get vsync wait
+ 863  50D3 DD 21 1C 52  	LD IX, GETBYT
+ 864  50D7 CD 59 01     	CALL CALBAS
+ 865  50DA F5           	PUSH AF
+ 866  50DB              	; ending )
+ 867  50DB CD C9 4F     	CALL CHKCHAR
+ 868  50DE 29           	DB ')'
+ 869  50DF
+ 870  50DF FB               EI
+ 871  50E0              	; save position
+ 872  50E0 E5           	PUSH HL
+ 873  50E1 DD E1        	POP IX
+ 874  50E3
+ 875  50E3              	; syntax ok
+ 876  50E3              	; wait for vsync if needed
+ 877  50E3 F1           	POP AF
+ 878  50E4 B7           	OR A
+ 879  50E5 28 01        	JR Z, .L1
+ 880  50E7 76           	HALT
+ 881  50E8
+ 882  50E8              .L1:
+ 883  50E8              	; enable RAM in page 0 if needed
+ 884  50E8 F1           	POP AF
+ 885  50E9 B7           	OR A
+ 886  50EA              	; pop LDIR parameters and store away for later
+ 887  50EA D1           	POP DE ; actually AF
+ 888  50EB C1           	POP BC ; count
+ 889  50EC E1           	POP HL ; start address
+ 890  50ED 28 1B        	JR Z, .L2
+ 891  50EF D9           	EXX
+ 892  50F0 AF               XOR A
+ 893  50F1 CD C4 4D         CALL GET_PAGE_INFO
+ 894  50F4 C5               PUSH BC
+ 895  50F5 D5               PUSH DE
+ 896  50F6 3A 41 F3         LD A, (RAMAD0)
+ 897  50F9 26 00            LD H, 0
+ 898  50FB F3           	DI
+ 899  50FC CD 0A 4E         CALL LOCAL_ENASLT
+ 900  50FF D9           	EXX
+ 901  5100 CD 11 51     	CALL .FILLVALUE
+ 902  5103 D1               POP DE
+ 903  5104 C1               POP BC
+ 904  5105 CD FB 4D         CALL RESTORE_PAGE_INFO
+ 905  5108 18 03        	JR .L3
+ 906  510A
+ 907  510A              .L2:
+ 908  510A CD 11 51     	CALL .FILLVALUE
+ 909  510D
+ 910  510D              .L3:
+ 911  510D DD E5        	PUSH IX
+ 912  510F E1           	POP HL
+ 913  5110 C9           	RET
+ 914  5111
+ 915  5111              .FILLVALUE:
+ 916  5111 72               LD (HL), D
+ 917  5112 54               LD D, H
+ 918  5113 5D               LD E, L
+ 919  5114 13               INC DE
+ 920  5115 0B               DEC BC
+ 921  5116 ED B0            LDIR
+ 922  5118 C9               RET
+ 923  5119              ; *******************************************************************************************************
+ 924  5119
+ 925  5119              ; *******************************************************************************************************
+ 926  5119              ; function to handle CALL GENCAL basic extension
+ 927  5119              ; GENCAL ( INT fn_addr, = address of the function to call
+ 928  5119              ;		   INT reg_list_ptr, = pointer to array holding register values (AF,BC,DE,HL,IX,IY)
+ 929  5119              ; output values of reristers will also be stored at reg_list_ptr
+ 930  5119              GENCAL_VAR_SP:
+ 931  5119 00 00            DW 0
+ 932  511B              GENCAL_VAR_SP2:
+ 933  511B 00 00            DW 0
+ 934  511D              GENCAL:
+ 935  511D              	; opening (
+ 936  511D CD C9 4F     	CALL CHKCHAR
+ 937  5120 28           	DB '('
+ 938  5121              	; get function address
+ 939  5121 DD 21 2F 54  	LD IX, FRMQNT
+ 940  5125 CD 59 01     	CALL CALBAS
+ 941  5128 D5           	PUSH DE
+ 942  5129              	; comma
+ 943  5129 CD C9 4F     	CALL CHKCHAR
+ 944  512C 2C           	DB ','
+ 945  512D              	; get pointer to register list
+ 946  512D DD 21 2F 54  	LD IX, FRMQNT
+ 947  5131 CD 59 01     	CALL CALBAS
+ 948  5134 D5           	PUSH DE
+ 949  5135              	; ending )
+ 950  5135 CD C9 4F     	CALL CHKCHAR
+ 951  5138 29           	DB ')'
+ 952  5139
+ 953  5139              	; save BASIC token position
+ 954  5139 E5           	PUSH HL
+ 955  513A D9               EXX
+ 956  513B E1           	POP HL ; HL'=next basic token
+ 957  513C D9               EXX
+ 958  513D
+ 959  513D E1               POP HL ; get pointer to register values
+ 960  513E ED 73 19 51      LD (GENCAL_VAR_SP), SP
+ 961  5142 F3               DI
+ 962  5143 F9               LD SP, HL
+ 963  5144 F1               POP AF
+ 964  5145 C1               POP BC
+ 965  5146 D1               POP DE
+ 966  5147 E1               POP HL
+ 967  5148 DD E1            POP IX
+ 968  514A FD E1            POP IY
+ 969  514C D9               EXX
+ 970  514D ED 73 1B 51      LD (GENCAL_VAR_SP2), SP
+ 971  5151 ED 7B 19 51      LD SP, (GENCAL_VAR_SP)
+ 972  5155 FB               EI
+ 973  5156 D1               POP DE ; get function to call
+ 974  5157 E5               PUSH HL
+ 975  5158 CD 73 51         CALL .EXXDECALL
+ 976  515B F3               DI
+ 977  515C ED 73 19 51      LD (GENCAL_VAR_SP), SP
+ 978  5160 ED 7B 1B 51      LD SP, (GENCAL_VAR_SP2)
+ 979  5164 FD E5            PUSH IY
+ 980  5166 DD E5            PUSH IX
+ 981  5168 E5               PUSH HL
+ 982  5169 D5               PUSH DE
+ 983  516A C5               PUSH BC
+ 984  516B F5               PUSH AF
+ 985  516C ED 7B 19 51      LD SP, (GENCAL_VAR_SP)
+ 986  5170 FB               EI
+ 987  5171 E1               POP HL
+ 988  5172 C9           	RET
+ 989  5173
+ 990  5173              .EXXDECALL:
+ 991  5173 D5               PUSH DE
+ 992  5174 D9               EXX
+ 993  5175 C9               RET
+ 994  5176              ; *******************************************************************************************************
+ 995  5176
+ 996  5176              ; *******************************************************************************************************
+ 997  5176              ; function to handle CALL MEMVRM basic extension
+ 998  5176              ; copies from RAM to VRAM
+ 999  5176              ; _MEMVRM ( INT source,
+1000  5176              ;			INT destination,
+1001  5176              ;			INT count,
+1002  5176              ;			BYTE enable_ram, >0 = true
+1003  5176              ;			BYTE wait_vsync) >0 = treu
+1004  5176              ; enable_ram will put ram in page 0 also, page 1 is already there
+1005  5176              ; wait_vsync will issue HALT before copying
+1006  5176              MEMVRM:
+1007  5176              	; opening (
+1008  5176 CD C9 4F     	CALL CHKCHAR
+1009  5179 28           	DB '('
+1010  517A              	; get source address
+1011  517A DD 21 2F 54  	LD IX, FRMQNT
+1012  517E CD 59 01     	CALL CALBAS
+1013  5181 D5           	PUSH DE
+1014  5182              	; comma
+1015  5182 CD C9 4F     	CALL CHKCHAR
+1016  5185 2C           	DB ','
+1017  5186              	; get destination address
+1018  5186 DD 21 2F 54  	LD IX, FRMQNT
+1019  518A CD 59 01     	CALL CALBAS
+1020  518D D5           	PUSH DE
+1021  518E              	; comma
+1022  518E CD C9 4F     	CALL CHKCHAR
+1023  5191 2C           	DB ','
+1024  5192              	; get length
+1025  5192 DD 21 2F 54  	LD IX, FRMQNT
+1026  5196 CD 59 01     	CALL CALBAS
+1027  5199 D5           	PUSH DE
+1028  519A              	; comma
+1029  519A CD C9 4F     	CALL CHKCHAR
+1030  519D 2C           	DB ','
+1031  519E              	; get ROM/RAM
+1032  519E DD 21 1C 52  	LD IX, GETBYT
+1033  51A2 CD 59 01     	CALL CALBAS
+1034  51A5 F5           	PUSH AF
+1035  51A6              	; comma
+1036  51A6 CD C9 4F     	CALL CHKCHAR
+1037  51A9 2C           	DB ','
+1038  51AA              	; get vsync wait
+1039  51AA DD 21 1C 52  	LD IX, GETBYT
+1040  51AE CD 59 01     	CALL CALBAS
+1041  51B1 F5           	PUSH AF
+1042  51B2              	; ending )
+1043  51B2 CD C9 4F     	CALL CHKCHAR
+1044  51B5 29           	DB ')'
+1045  51B6
+1046  51B6                  ; save position in BASIC text
+1047  51B6 E5           	PUSH HL
+1048  51B7 DD E1        	POP IX
+1049  51B9
+1050  51B9              	; syntax ok
+1051  51B9              	; wait for vsync if needed
+1052  51B9 F1           	POP AF
+1053  51BA B7           	OR A
+1054  51BB 28 03        	JR Z, .L1
+1055  51BD FB               EI
+1056  51BE 76           	HALT
+1057  51BF F3               DI ; since interrupt can modify vram address
+1058  51C0
+1059  51C0              .L1:
+1060  51C0              	; enable RAM in page 0 if needed
+1061  51C0 F1           	POP AF
+1062  51C1 B7           	OR A
+1063  51C2              	; pop LDIR parameters and store away for later
+1064  51C2 C1           	POP BC
+1065  51C3 D1           	POP DE
+1066  51C4 E1           	POP HL
+1067  51C5 28 1A        	JR Z, .L2
+1068  51C7 D9           	EXX
+1069  51C8 AF               XOR A
+1070  51C9 CD C4 4D         CALL GET_PAGE_INFO
+1071  51CC C5               PUSH BC
+1072  51CD D5               PUSH DE
+1073  51CE 3A 41 F3         LD A, (RAMAD0)
+1074  51D1 26 00            LD H, 0
+1075  51D3 CD 0A 4E         CALL LOCAL_ENASLT
+1076  51D6 D9           	EXX
+1077  51D7 CD E8 51     	CALL .LDIRVM
+1078  51DA D1               POP DE
+1079  51DB C1               POP BC
+1080  51DC CD FB 4D         CALL RESTORE_PAGE_INFO
+1081  51DF 18 03        	JR .L3
+1082  51E1
+1083  51E1              .L2:
+1084  51E1 CD E8 51     	CALL .LDIRVM
+1085  51E4
+1086  51E4              .L3:
+1087  51E4 DD E5        	PUSH IX
+1088  51E6 E1           	POP HL
+1089  51E7 C9           	RET
+1090  51E8
+1091  51E8              .LDIRVM:
+1092  51E8 EB           	EX DE, HL
+1093  51E9 CD B9 4D     	CALL SETWRT_LOCAL
+1094  51EC EB           	EX DE, HL
+1095  51ED
+1096  51ED              .L4:
+1097  51ED 7E               LD A, (HL)
+1098  51EE D3 98            OUT (#98), A
+1099  51F0 23               INC HL
+1100  51F1 0B               DEC BC
+1101  51F2 79               LD A, C
+1102  51F3 B0               OR B
+1103  51F4 C2 ED 51         JP NZ, .L4
+1104  51F7 C9               RET
+1105  51F8              ; *******************************************************************************************************
+1106  51F8
+1107  51F8              ; *******************************************************************************************************
+1108  51F8              ; function to handle CALL VRMMEM basic extension
+1109  51F8              ; copies from RAM to VRAM
+1110  51F8              ; _VRMMEM ( INT source,
+1111  51F8              ;			INT destination,
+1112  51F8              ;			INT count,
+1113  51F8              ;			BYTE enable_ram, >0 = true
+1114  51F8              ;			BYTE wait_vsync) >0 = true
+1115  51F8              ; enable_ram will put ram in page 0 also, page 1 is already there
+1116  51F8              ; wait_vsync will issue HALT before copying
+1117  51F8              VRMMEM:
+1118  51F8              	; opening (
+1119  51F8 CD C9 4F     	CALL CHKCHAR
+1120  51FB 28           	DB '('
+1121  51FC              	; get source address
+1122  51FC DD 21 2F 54  	LD IX, FRMQNT
+1123  5200 CD 59 01     	CALL CALBAS
+1124  5203 D5           	PUSH DE
+1125  5204              	; comma
+1126  5204 CD C9 4F     	CALL CHKCHAR
+1127  5207 2C           	DB ','
+1128  5208              	; get destination address
+1129  5208 DD 21 2F 54  	LD IX, FRMQNT
+1130  520C CD 59 01     	CALL CALBAS
+1131  520F D5           	PUSH DE
+1132  5210              	; comma
+1133  5210 CD C9 4F     	CALL CHKCHAR
+1134  5213 2C           	DB ','
+1135  5214              	; get length
+1136  5214 DD 21 2F 54  	LD IX, FRMQNT
+1137  5218 CD 59 01     	CALL CALBAS
+1138  521B D5           	PUSH DE
+1139  521C              	; comma
+1140  521C CD C9 4F     	CALL CHKCHAR
+1141  521F 2C           	DB ','
+1142  5220              	; get ROM/RAM
+1143  5220 DD 21 1C 52  	LD IX, GETBYT
+1144  5224 CD 59 01     	CALL CALBAS
+1145  5227 F5           	PUSH AF
+1146  5228              	; comma
+1147  5228 CD C9 4F     	CALL CHKCHAR
+1148  522B 2C           	DB ','
+1149  522C              	; get vsync wait
+1150  522C DD 21 1C 52  	LD IX, GETBYT
+1151  5230 CD 59 01     	CALL CALBAS
+1152  5233 F5           	PUSH AF
+1153  5234              	; ending )
+1154  5234 CD C9 4F     	CALL CHKCHAR
+1155  5237 29           	DB ')'
+1156  5238
+1157  5238                  ; save position in BASIC text
+1158  5238 E5           	PUSH HL
+1159  5239 DD E1        	POP IX
+1160  523B
+1161  523B              	; syntax ok
+1162  523B              	; wait for vsync if needed
+1163  523B F1           	POP AF
+1164  523C B7           	OR A
+1165  523D 28 03        	JR Z, .L1
+1166  523F FB               EI
+1167  5240 76           	HALT
+1168  5241 F3               DI ; since interrupt can modify vram address
+1169  5242
+1170  5242              .L1:
+1171  5242              	; enable RAM in page 0 if needed
+1172  5242 F1           	POP AF
+1173  5243 B7           	OR A
+1174  5244              	; pop LDIR parameters and store away for later
+1175  5244 C1           	POP BC
+1176  5245 D1           	POP DE
+1177  5246 E1           	POP HL
+1178  5247 28 1A        	JR Z, .L2
+1179  5249 D9           	EXX
+1180  524A AF               XOR A
+1181  524B CD C4 4D         CALL GET_PAGE_INFO
+1182  524E C5               PUSH BC
+1183  524F D5               PUSH DE
+1184  5250 3A 41 F3         LD A, (RAMAD0)
+1185  5253 26 00            LD H, 0
+1186  5255 CD 0A 4E         CALL LOCAL_ENASLT
+1187  5258 D9           	EXX
+1188  5259 CD 6A 52     	CALL .LDIRMV
+1189  525C D1               POP DE
+1190  525D C1               POP BC
+1191  525E CD FB 4D         CALL RESTORE_PAGE_INFO
+1192  5261 18 03        	JR .L3
+1193  5263
+1194  5263              .L2:
+1195  5263 CD 6A 52     	CALL .LDIRMV
+1196  5266
+1197  5266              .L3:
+1198  5266 DD E5        	PUSH IX
+1199  5268 E1           	POP HL
+1200  5269 C9           	RET
+1201  526A
+1202  526A              .LDIRMV:
+1203  526A CD B9 4D     	CALL SETWRT_LOCAL
+1204  526D              .L4:
+1205  526D DB 98            IN A, (#98)
+1206  526F 12           	LD (DE), A
+1207  5270 13               INC DE
+1208  5271 0B               DEC BC
+1209  5272 79               LD A, C
+1210  5273 B0               OR B
+1211  5274 C2 6D 52         JP NZ, .L4
+1212  5277 C9               RET
+1213  5278              ; *******************************************************************************************************
+1214  5278
+1215  5278              ; *******************************************************************************************************
+1216  5278              ; H.TIMI function
+1217  5278              MBGE_HTIMI:
+1218  5278               EXPORT MBGE_HTIMI
+1219  5278 F5           	PUSH AF
+1220  5279
+1221  5279 CD 83 4E     	CALL SPRATR_UPDATE
+1222  527C
+1223  527C 3A F5 4C     	LD A, (SOUND_ENABLED)
+1224  527F B7           	OR A
+1225  5280 28 2A        	JR Z, .EXIT
+1226  5282
+1227  5282              	; enable page 2
+1228  5282 3E 02            LD A, 2
+1229  5284 CD C4 4D         CALL GET_PAGE_INFO
+1230  5287 C5               PUSH BC
+1231  5288 D5               PUSH DE
+1232  5289 3A 43 F3         LD A, (RAMAD2)
+1233  528C 26 80            LD H, 080H
+1234  528E CD 0A 4E         CALL LOCAL_ENASLT
+1235  5291              	; enable page 0
+1236  5291 AF               XOR A
+1237  5292 CD C4 4D         CALL GET_PAGE_INFO
+1238  5295 C5               PUSH BC
+1239  5296 D5               PUSH DE
+1240  5297 3A 41 F3         LD A, (RAMAD0)
+1241  529A 26 00            LD H, 0
+1242  529C CD 0A 4E         CALL LOCAL_ENASLT
+1243  529F
+1244  529F CD 31 42     	CALL PLY_AKG_PLAY
+1245  52A2
+1246  52A2              	; restore page 0
+1247  52A2 D1               POP DE
+1248  52A3 C1               POP BC
+1249  52A4 CD FB 4D         CALL RESTORE_PAGE_INFO
+1250  52A7              	; restore page 2
+1251  52A7 D1               POP DE
+1252  52A8 C1               POP BC
+1253  52A9 CD FB 4D         CALL RESTORE_PAGE_INFO
+1254  52AC
+1255  52AC              .EXIT:
+1256  52AC F1           	POP AF
+1257  52AD C3 EE 4C     	JP ORIG.HTIMI
+1258  52B0              ; *******************************************************************************************************
+1259  52B0
+1260  52B0              ; *******************************************************************************************************
+1261  52B0              ; function to handle CALL SNDPLYINIT basic extension
+1262  52B0              ; initializes sound player
+1263  52B0              ; _SNDPLYINIT ( INT music_offset,
+1264  52B0              ;				INT sfx_offset, can be -1 if no SFX
+1265  52B0              ; will put ram in page 0 also, page 1 is already there
+1266  52B0              ; sets variables MUSIC_INIT_STATUS and SFX_INIT_STATUS
+1267  52B0              SNDPLYINIT:
+1268  52B0              	; opening (
+1269  52B0 CD C9 4F     	CALL CHKCHAR
+1270  52B3 28           	DB '('
+1271  52B4              	; get music address
+1272  52B4 DD 21 2F 54  	LD IX, FRMQNT
+1273  52B8 CD 59 01     	CALL CALBAS
+1274  52BB D5           	PUSH DE
+1275  52BC              	; comma
+1276  52BC CD C9 4F     	CALL CHKCHAR
+1277  52BF 2C           	DB ','
+1278  52C0              	; get sfx address
+1279  52C0 DD 21 2F 54  	LD IX, FRMQNT
+1280  52C4 CD 59 01     	CALL CALBAS
+1281  52C7 D5           	PUSH DE
+1282  52C8              	; ending )
+1283  52C8 CD C9 4F     	CALL CHKCHAR
+1284  52CB 29           	DB ')'
+1285  52CC
+1286  52CC                  ; save position in BASIC text
+1287  52CC 44           	LD B, H
+1288  52CD 4D           	LD C, L
+1289  52CE
+1290  52CE              	; pop LDIR parameters and store away for later
+1291  52CE D1           	POP DE ; sfx address
+1292  52CF E1           	POP HL ; music address
+1293  52D0 C5           	PUSH BC ; basic text location
+1294  52D1 D9           	EXX
+1295  52D2 AF               XOR A
+1296  52D3 CD C4 4D         CALL GET_PAGE_INFO
+1297  52D6 C5               PUSH BC
+1298  52D7 D5               PUSH DE
+1299  52D8 3A 41 F3         LD A, (RAMAD0)
+1300  52DB 26 00            LD H, 0
+1301  52DD CD 0A 4E         CALL LOCAL_ENASLT
+1302  52E0 D9           	EXX
+1303  52E1
+1304  52E1 D5           	PUSH DE
+1305  52E2 AF           	XOR A
+1306  52E3              	; HL = music location
+1307  52E3 CD 60 41     	CALL PLY_AKG_INIT
+1308  52E6 3E 01        	LD A, 1
+1309  52E8 32 F3 4C     	LD (MUSIC_INIT_STATUS), A
+1310  52EB
+1311  52EB E1           	POP HL
+1312  52EC 23           	INC HL
+1313  52ED 7D           	LD A, L
+1314  52EE B4           	OR H
+1315  52EF 28 09        	JR Z,.L1
+1316  52F1 2B           	DEC HL
+1317  52F2 CD 1B 40     	CALL PLY_AKG_INITSOUNDEFFECTS
+1318  52F5 3E 01        	LD A, 1
+1319  52F7 32 F4 4C     	LD (SFX_INIT_STATUS), A
+1320  52FA              .L1:
+1321  52FA D1               POP DE
+1322  52FB C1               POP BC
+1323  52FC CD FB 4D         CALL RESTORE_PAGE_INFO
+1324  52FF
+1325  52FF E1           	POP HL
+1326  5300 C9           	RET
+1327  5301              ; *******************************************************************************************************
+1328  5301
+1329  5301              ; *******************************************************************************************************
+1330  5301              ; function to handle CALL SNDPLYON basic extension
+1331  5301              ; enables sound player
+1332  5301              ; _SNDPLYON
+1333  5301              ; sets SOUND_ENABLED variable to 1 if init call was done
+1334  5301              ; if not throws out of data error
+1335  5301              SNDPLYON:
+1336  5301 3A F3 4C     	LD A, (MUSIC_INIT_STATUS)
+1337  5304 B7           	OR A
+1338  5305 20 05        	JR NZ, .L1
+1339  5307              	; player not initialized, throw error
+1340  5307 1E 04        	LD E, 04 ; Out of DATA
+1341  5309 C3 E1 4F     	JP THROW_ERROR
+1342  530C              .L1:
+1343  530C 32 F5 4C     	LD (SOUND_ENABLED), A
+1344  530F              	; disable key click
+1345  530F AF           	XOR A
+1346  5310 32 DB F3     	LD (CLIKSW), A
+1347  5313 C9           	RET
+1348  5314              ; *******************************************************************************************************
+1349  5314
+1350  5314              ; *******************************************************************************************************
+1351  5314              ; function to handle CALL SNDPLYOFF basic extension
+1352  5314              ; disables sound player
+1353  5314              ; _SNDPLYOFF
+1354  5314              ; sets SOUND_ENABLED variable to 0
+1355  5314              ; calls AKG to stop music and SFX on all channels if initialized
+1356  5314              SNDPLYOFF:
+1357  5314 3A F5 4C     	LD A, (SOUND_ENABLED)
+1358  5317 B7           	OR A
+1359  5318 C8           	RET Z ; already stopped
+1360  5319 AF           	XOR A
+1361  531A 32 F5 4C     	LD (SOUND_ENABLED), A
+1362  531D E5           	PUSH HL
+1363  531E CD 1F 42     	CALL PLY_AKG_STOP
+1364  5321 3A F4 4C     	LD A, (SFX_INIT_STATUS)
+1365  5324 B7           	OR A
+1366  5325 28 0E        	JR Z, .EXIT ; SFX not in use
+1367  5327 AF           	XOR A
+1368  5328 CD 47 40     	CALL PLY_AKG_STOPSOUNDEFFECTFROMCHANNEL
+1369  532B 3E 01        	LD A, 1
+1370  532D CD 47 40     	CALL PLY_AKG_STOPSOUNDEFFECTFROMCHANNEL
+1371  5330 3E 02        	LD A, 2
+1372  5332 CD 47 40     	CALL PLY_AKG_STOPSOUNDEFFECTFROMCHANNEL
+1373  5335              .EXIT:
+1374  5335 E1           	POP HL
+1375  5336 C9           	RET
+1376  5337              ; *******************************************************************************************************
+1377  5337
+1378  5337              ; *******************************************************************************************************
+1379  5337              ; function to handle CALL SNDSFX basic extension
+1380  5337              ; plays a sound effect
+1381  5337              ; _SNDSFX ( BYTE sfx_number, >0
+1382  5337              ;			BYTE channel, = 0,1 or 2
+1383  5337              ;			BYTE inverted_volume = 0-16, 0 being full volume
+1384  5337              ; will put ram in page 0 also, page 1 is already there
+1385  5337              ; if sound off throws illegal function call
+1386  5337              ; if sfx not initialized, throws out of data
+1387  5337              SNDSFX:
+1388  5337              	; opening (
+1389  5337 CD C9 4F     	CALL CHKCHAR
+1390  533A 28           	DB '('
+1391  533B              	; get sfx_number
+1392  533B DD 21 1C 52  	LD IX, GETBYT
+1393  533F CD 59 01     	CALL CALBAS
+1394  5342 D5           	PUSH DE
+1395  5343              	; comma
+1396  5343 CD C9 4F     	CALL CHKCHAR
+1397  5346 2C           	DB ','
+1398  5347              	; get sfx address
+1399  5347 DD 21 1C 52  	LD IX, GETBYT
+1400  534B CD 59 01     	CALL CALBAS
+1401  534E D5           	PUSH DE
+1402  534F              	; comma
+1403  534F CD C9 4F     	CALL CHKCHAR
+1404  5352 2C           	DB ','
+1405  5353              	; get inverted volume
+1406  5353 DD 21 1C 52  	LD IX, GETBYT
+1407  5357 CD 59 01     	CALL CALBAS
+1408  535A D5           	PUSH DE
+1409  535B              	; ending )
+1410  535B CD C9 4F     	CALL CHKCHAR
+1411  535E 29           	DB ')'
+1412  535F
+1413  535F 3A F5 4C     	LD A, (SOUND_ENABLED)
+1414  5362 B7           	OR A
+1415  5363 20 05        	JR NZ, .L1
+1416  5365              	; sound disabled, throw illegal function call
+1417  5365 1E 05        	LD E, 5
+1418  5367 C3 E1 4F     	JP THROW_ERROR
+1419  536A              .L1:
+1420  536A 3A F4 4C     	LD A, (SFX_INIT_STATUS)
+1421  536D B7           	OR A
+1422  536E 20 05        	JR NZ, .L2
+1423  5370              	; sfx data not initialized, throw out of data
+1424  5370 1E 04        	LD E, 4
+1425  5372 C3 E1 4F     	JP THROW_ERROR
+1426  5375              .L2:
+1427  5375              	; pop  parameters and store away for later
+1428  5375 D1           	POP DE ; inverted volume
+1429  5376 43           	LD B, E
+1430  5377 D1           	POP DE ; channel
+1431  5378 4B           	LD C, E
+1432  5379 D1           	POP DE
+1433  537A 7B           	LD A, E
+1434  537B 08           	EX AF, AF'
+1435  537C E5           	PUSH HL ; basic text location
+1436  537D D9           	EXX
+1437  537E AF               XOR A
+1438  537F CD C4 4D         CALL GET_PAGE_INFO
+1439  5382 C5               PUSH BC
+1440  5383 D5               PUSH DE
+1441  5384 3A 41 F3         LD A, (RAMAD0)
+1442  5387 26 00            LD H, 0
+1443  5389 CD 0A 4E         CALL LOCAL_ENASLT
+1444  538C D9           	EXX
+1445  538D 08           	EX AF, AF'
+1446  538E CD 1F 40     	CALL PLY_AKG_PLAYSOUNDEFFECT
+1447  5391
+1448  5391 D1               POP DE
+1449  5392 C1               POP BC
+1450  5393 CD FB 4D         CALL RESTORE_PAGE_INFO
+1451  5396
+1452  5396 E1           	POP HL
+1453  5397 C9           	RET
+1454  5398              ; *******************************************************************************************************
+1455  5398
+1456  5398              ; *******************************************************************************************************
+1457  5398              ; function to handle CALL SPRATRINI basic extension
+1458  5398              ; initializes sprites handler
+1459  5398              ; _SPRATRINI ( INT sprites_attributes_data,
+1460  5398              ;			   INT update_variable_location )
+1461  5398              ; expects both locations to be in range #8000+ or throws an error
+1462  5398              ; since these should be BASIC variables
+1463  5398              ; sets variables SPRATR_INIT_STATUS, SPRATR_UPDATE_FLAG, SPRATR_DATA
+1464  5398              SPRATRINI:
+1465  5398              	; opening (
+1466  5398 CD C9 4F     	CALL CHKCHAR
+1467  539B 28           	DB '('
+1468  539C              	; get address of sprite attribute table DIM SA%(31,4)
+1469  539C DD 21 2F 54  	LD IX, FRMQNT
+1470  53A0 CD 59 01     	CALL CALBAS
+1471  53A3 D5           	PUSH DE
+1472  53A4              	; comma
+1473  53A4 CD C9 4F     	CALL CHKCHAR
+1474  53A7 2C           	DB ','
+1475  53A8              	; get update variable location SU%
+1476  53A8 DD 21 2F 54  	LD IX, FRMQNT
+1477  53AC CD 59 01     	CALL CALBAS
+1478  53AF D5           	PUSH DE
+1479  53B0              	; ending )
+1480  53B0 CD C9 4F     	CALL CHKCHAR
+1481  53B3 29           	DB ')'
+1482  53B4
+1483  53B4 D1           	POP DE ; update variable location
+1484  53B5 CB 7A        	BIT 7, D ; is address >= &h8000
+1485  53B7 20 05        	JR NZ, .L1
+1486  53B9 1E 05        	LD E, 5 ; illegal function call
+1487  53BB C3 E1 4F     	JP THROW_ERROR
+1488  53BE              .L1:
+1489  53BE ED 53 F7 4C  	LD (SPRATR_UPDATE_FLAG), DE
+1490  53C2 D1           	POP DE ; address of sprite attribute table
+1491  53C3 CB 7A        	BIT 7, D ; is address >= &h8000
+1492  53C5 20 05        	JR NZ, .L2
+1493  53C7 1E 05        	LD E, 5 ; illegal function call
+1494  53C9 C3 E1 4F     	JP THROW_ERROR
+1495  53CC              .L2:
+1496  53CC ED 53 F9 4C  	LD (SPRATR_DATA), DE
+1497  53D0 3E 01        	LD A, 1
+1498  53D2 32 F6 4C     	LD (SPRATR_INIT_STATUS), A
+1499  53D5 C9           	RET
+1500  53D6              ; *******************************************************************************************************
+1501  53D6
+1502  53D6              EXT_END:
+1503  53D6
 # file closed: asm\main.asm
