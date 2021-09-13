@@ -170,6 +170,8 @@ CMDS_V:
 CMDS_S:
 	DB "SPRSET", 0
 	DW SPRSET
+	DB "SPRGRPMOV", 0
+	DW SPRGRPMOV
 	DB "SNDSFX", 0
 	DW SNDSFX
 	DB "SNDPLYON", 0
@@ -1629,6 +1631,154 @@ SPRSET:
 .L5:
 	PUSH IX
 	POP HL
+	RET
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function sets sprite location based on initial coordinates and offset provided
+; input A=sprite number in SPRATR_DATA , 0-31
+; input DE=initial x
+; input BC=initial y
+; input IY=location where delta y,x are located
+; modifies AF, HL, IX
+SPRSET_DELTA_POS:
+	.3 ADD A, A
+	PUSH DE
+	LD D, 0
+	LD E, A
+	LD IX, (SPRATR_DATA)
+	ADD IX, DE
+	POP DE
+	; IX=sprite's y location
+	LD L, (IY)
+	LD H, (IY+1)
+	ADD HL, BC
+	LD (IX), L
+	LD (IX+1), H
+	LD L, (IY+2)
+	LD H, (IY+3)
+	ADD HL, DE
+	LD (IX+2), L
+	LD (IX+3), H
+	RET
+; *******************************************************************************************************	
+
+; *******************************************************************************************************
+; function to handle CALL SPRGRPMOV basic extension
+; sets position of a group of sprites described with
+; { int sprite_num, int delta_y, int delta_x } [count]
+; _SPRGRPMOV ( INT x, 
+;			   INT y, 
+;			   INT data_ptr, 
+;			   BYTE count, 
+;			   BYTE enable_ram) >0 = true
+; enable_ram will put ram in page 0 also, page 1 is already there
+SPRGRPMOV:
+	LD A, (SPRATR_INIT_STATUS)
+	OR A
+	JR NZ, .L1
+	LD E, 5 ; illegal function call
+	JP THROW_ERROR
+.L1:
+	; opening (
+	CALL CHKCHAR
+	DB '('
+	; get x
+	LD IX, FRMQNT
+	CALL CALBAS
+	PUSH DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get y
+	LD IX, FRMQNT
+	CALL CALBAS
+	PUSH DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get data pointer
+	LD IX, FRMQNT
+	CALL CALBAS
+	PUSH DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get count
+	LD IX, GETBYT
+	CALL CALBAS
+	PUSH AF
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get enable RAM
+	LD IX, GETBYT
+	CALL CALBAS
+	PUSH AF
+	; ending )
+	CALL CHKCHAR
+	DB ')'
+
+	PUSH HL
+	POP IX
+
+	POP AF ; enable RAM
+	OR A
+	POP BC ; count
+	POP HL ; data pointer
+	EXX
+	POP BC ; y
+	POP DE ; x
+	EXX
+	
+	PUSH IX ; save position in BASIC buffer
+
+	JR Z, .L2
+	PUSH BC
+	PUSH HL
+    XOR A
+    CALL GET_PAGE_INFO
+	EXX
+	POP HL
+	POP AF
+	EXX
+    PUSH BC
+    PUSH DE
+	EXX
+	PUSH AF
+	PUSH HL
+	EXX
+    LD A, (RAMAD0)
+    LD H, 0
+    CALL LOCAL_ENASLT
+	POP HL
+	POP BC
+	CALL .UPDATE_LOC
+    POP DE
+    POP BC
+    CALL RESTORE_PAGE_INFO
+	JR .L3
+
+.L2:
+	EI
+	CALL .UPDATE_LOC
+
+.L3:
+	POP HL
+	RET
+
+.UPDATE_LOC:
+.L4:
+	LD A, (HL)
+	INC HL
+	INC HL
+	PUSH HL
+	POP IY
+	EXX
+	CALL SPRSET_DELTA_POS
+	EXX
+	.4 INC HL
+	DJNZ .L4
 	RET
 ; *******************************************************************************************************
 
