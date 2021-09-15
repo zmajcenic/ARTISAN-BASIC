@@ -1782,4 +1782,86 @@ SPRGRPMOV:
 	RET
 ; *******************************************************************************************************
 
+; *******************************************************************************************************
+; function rotates mask and data of several characters and applies to background data
+; this handles x-shift from 0 to 4
+; contains self-modifying code that is set-up from external function
+; input HL=pointer to mask data
+; input HL'=pointer to character data
+; input DE=output buffer containing background data
+; input A=number of characters to process
+; modifies AF, AF', HL, HL', DE, DE', BC, BC'
+SHIFT04:
+	PUSH HL
+	LD H, D
+	LD L, E
+	LD BC, 8
+	ADD HL, BC
+	LD B, H
+	LD C, L
+	POP HL
+.L0:
+	PUSH AF
+	LD A, 8
+	EX AF, AF'
+.L1:
+	LD A, (HL) ; get mask
+	EXX
+	LD D, A
+	LD E, #FF
+	SCF
+.M1:
+	JR .M1 ; this is self-modifying part
+	RR D
+	RR E
+	RR D
+	RR E
+	RR D
+	RR E
+	RR D
+	RR E
+
+	LD B, (HL)
+	LD C, 0
+.M2:
+	JR .M2 ; also self-modifying part
+	SRL B
+	RR C
+	SRL B
+	RR C
+	SRL B
+	RR C
+	SRL B
+	RR C
+
+	EXX
+	LD A, (DE) ; background
+	EXX
+	AND D
+	OR B
+	EXX
+	LD (DE), A
+	
+	LD A, (BC)
+	EXX
+	AND E
+	OR C
+	INC HL
+	EXX
+	LD (BC), A
+	
+	INC HL
+	INC DE
+	INC BC
+	
+	EX AF, AF'
+	DEC A
+	JP NZ, .L1
+	POP AF
+	DEC A
+	JP NZ, .L0
+	RET
+; *******************************************************************************************************
+
+
 EXT_END:

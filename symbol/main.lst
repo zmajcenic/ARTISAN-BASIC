@@ -82,7 +82,7 @@
   78  4010
   79  4010              ; this location #400A stores last location used by basic extension
   80  4010              ; free memory after that point
-  81  4010 46 55         DW EXT_END
+  81  4010 9D 55         DW EXT_END
   82  4012
   83  4012              ; binary included AKG player compiled at #4012
   84  4012               INCBIN "bin/AKG.bin"
@@ -2265,6 +2265,87 @@
 1782  5545 C9           	RET
 1783  5546              ; *******************************************************************************************************
 1784  5546
-1785  5546              EXT_END:
-1786  5546
+1785  5546              ; *******************************************************************************************************
+1786  5546              ; function rotates mask and data of several characters and applies to background data
+1787  5546              ; this handles x-shift from 0 to 4
+1788  5546              ; contains self-modifying code that is set-up from external function
+1789  5546              ; input HL=pointer to mask data
+1790  5546              ; input HL'=pointer to character data
+1791  5546              ; input DE=output buffer containing background data
+1792  5546              ; input A=number of characters to process
+1793  5546              SHIFT04:
+1794  5546 E5           	PUSH HL
+1795  5547 62           	LD H, D
+1796  5548 6B           	LD L, E
+1797  5549 01 08 00     	LD BC, 8
+1798  554C 09           	ADD HL, BC
+1799  554D 44           	LD B, H
+1800  554E 4D           	LD C, L
+1801  554F E1           	POP HL
+1802  5550              .L0:
+1803  5550 F5           	PUSH AF
+1804  5551 3E 08        	LD A, 8
+1805  5553 08           	EX AF, AF'
+1806  5554              .L1:
+1807  5554 7E           	LD A, (HL) ; get mask
+1808  5555 D9           	EXX
+1809  5556 57           	LD D, A
+1810  5557 1E FF        	LD E, #FF
+1811  5559 37           	SCF
+1812  555A              .M1:
+1813  555A 18 FE        	JR .M1 ; this is self-modifying part
+1814  555C CB 1A        	RR D
+1815  555E CB 1B        	RR E
+1816  5560 CB 1A        	RR D
+1817  5562 CB 1B        	RR E
+1818  5564 CB 1A        	RR D
+1819  5566 CB 1B        	RR E
+1820  5568 CB 1A        	RR D
+1821  556A CB 1B        	RR E
+1822  556C
+1823  556C 46           	LD B, (HL)
+1824  556D 0E 00        	LD C, 0
+1825  556F              .M2:
+1826  556F 18 FE        	JR .M2 ; also self-modifying part
+1827  5571 CB 38        	SRL B
+1828  5573 CB 19        	RR C
+1829  5575 CB 38        	SRL B
+1830  5577 CB 19        	RR C
+1831  5579 CB 38        	SRL B
+1832  557B CB 19        	RR C
+1833  557D CB 38        	SRL B
+1834  557F CB 19        	RR C
+1835  5581
+1836  5581 D9           	EXX
+1837  5582 1A           	LD A, (DE) ; background
+1838  5583 D9           	EXX
+1839  5584 A2           	AND D
+1840  5585 B0           	OR B
+1841  5586 D9           	EXX
+1842  5587 12           	LD (DE), A
+1843  5588
+1844  5588 0A           	LD A, (BC)
+1845  5589 D9           	EXX
+1846  558A A3           	AND E
+1847  558B B1           	OR C
+1848  558C 23           	INC HL
+1849  558D D9           	EXX
+1850  558E 02           	LD (BC), A
+1851  558F
+1852  558F 23           	INC HL
+1853  5590 13           	INC DE
+1854  5591 03           	INC BC
+1855  5592
+1856  5592 08           	EX AF, AF'
+1857  5593 3D           	DEC A
+1858  5594 C2 54 55     	JP NZ, .L1
+1859  5597 F1           	POP AF
+1860  5598 3D           	DEC A
+1861  5599 C2 50 55     	JP NZ, .L0
+1862  559C C9           	RET
+1863  559D              ; *******************************************************************************************************
+1864  559D
+1865  559D
+1866  559D              EXT_END:
+1867  559D
 # file closed: asm\main.asm
