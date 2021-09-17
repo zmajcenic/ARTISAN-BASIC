@@ -152,7 +152,9 @@ CMDS_M:
     DW MEMVRM
 	DB "MEMCPY", 0
 	DW MEMCPY
-    DB 0
+	DB "MELDGRP", 0
+	DW MELDGRP
+	DB 0
 CMDS_F:
     DB "FILVRM", 0
     DW FILVRM
@@ -1860,6 +1862,233 @@ SHIFT04:
 	POP AF
 	DEC A
 	JP NZ, .L0
+	RET
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function rotates mask and data of several characters and applies to background data
+; this handles x-shift from 5 to 8
+; contains self-modifying code that is set-up from external function
+; input HL=pointer to mask data
+; input HL'=pointer to character data
+; input DE=output buffer containing background data
+; input A=number of characters to process
+; modifies AF, AF', HL, HL', DE, DE', BC, BC'
+SHIFT58:
+	PUSH HL
+	LD H, D
+	LD L, E
+	LD BC, 8
+	ADD HL, BC
+	LD B, H
+	LD C, L
+	POP HL
+.L0:
+	PUSH AF
+	LD A, 8
+	EX AF, AF'
+.L1:
+	LD A, (HL) ; get mask
+	EXX
+	LD D, A
+	LD E, #FF
+	SCF
+.M1:
+	JR .M1 ; this is self-modifying part
+	RL D
+	RL E
+	RL D
+	RL E
+	RL D
+	RL E
+
+	LD B, (HL)
+	LD C, 0
+.M2:
+	JR .M2 ; also self-modifying part
+	SLA B
+	RL C
+	SRA B
+	RL C
+	SLA B
+	RL C
+
+	EXX
+	LD A, (DE) ; background
+	EXX
+	AND E
+	OR C
+	EXX
+	LD (DE), A
+	
+	LD A, (BC)
+	EXX
+	AND D
+	OR B
+	INC HL
+	EXX
+	LD (BC), A
+	
+	INC HL
+	INC DE
+	INC BC
+	
+	EX AF, AF'
+	DEC A
+	JP NZ, .L1
+	POP AF
+	DEC A
+	JP NZ, .L0
+	RET
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function rotates mask and character data and applies it to background
+; input A=x shift (0-7)
+; input IX=pointer to structure describing input data
+; +0  DW shift count 0-7
+; +2  DW background data start;
+; +4  DW background add to value to next row of background data
+; +6  DW mask data start;
+; +8  DW character data start;
+; +10 DW character&mask add to value to next row of data
+; +12 DW columns (low byte used)
+; +14 DW rows (low byte used)
+SHIFT_MERGE_CHARACTER:
+	LD A, (IX) ; shift
+	CP 5
+	JR C, .RIGHT
+	; shifts 5-7, use rotate towards left 1-3
+	LD HL, SHIFT58
+	LD (.CALL+1), HL ; modify fn used
+	SUB 5
+	JR Z, .L1
+	ADD A, A
+	ADD A, A
+	LD H, A
+	LD L, #18 ; JR opcode
+	LD (SHIFT58.M1), HL
+	LD (SHIFT58.M2), HL
+	JR .DO
+.L1:
+	LD HL, 0 ; 2xNOP opcode
+	LD (SHIFT58.M1), HL
+	LD (SHIFT58.M2), HL
+	JR .DO
+.RIGHT:
+	; shifts 0-4, rotate towards right
+	LD HL, SHIFT04
+	LD (.CALL+1), HL ; modify fn used
+	CP 4
+	JR Z, .R1
+	SUB 4
+	NEG
+	ADD A, A
+	ADD A, A
+	LD H, A
+	LD L, #18 ; JR opcode
+	LD (SHIFT04.M1), HL
+	LD (SHIFT04.M2), HL
+	JR .DO
+.R1:
+	LD HL, 0 ; 2xNOP opcode
+	LD (SHIFT04.M1), HL
+	LD (SHIFT04.M2), HL
+.DO:
+	LD B, (IX+14) ; rows
+	LD L, (IX+6)
+	LD H, (IX+7) ; mask data
+	LD E, (IX+2)
+	LD D, (IX+3) ; background data
+	EXX
+	LD L, (IX+8)
+	LD H, (IX+9) ; character data
+	EXX
+.LOOP:
+	PUSH BC
+	PUSH DE
+	PUSH HL
+	EXX
+	PUSH HL
+	EXX
+	LD A, (IX+12) ; columns
+.CALL:
+	CALL 0
+	POP HL
+	LD E, (IX+10)
+	LD D, (IX+11) ; char data to next row
+	ADD HL, DE
+	EXX
+	POP HL
+	LD E, (IX+4)
+	LD D, (IX+5) ; background to next row
+	ADD HL, DE
+	EX DE, HL
+	POP HL
+	LD C, (IX+10)
+	LD B, (IX+11) ; char data to next row
+	ADD HL, BC
+	POP BC
+	DJNZ .LOOP
+	RET	
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function to handle CALL MELDGRP basic extension
+; rotates 1-bit character drawing horizontally with mask and character data and
+; fuses with background data
+; _MELDGRP ( INT request_data_ptr, 
+;			 BYTE enable_ram) >0 = true
+; request_data_ptr described in SHIFT_MERGE_CHARACTER
+; enable_ram will put ram in page 0 also, page 1 is already there
+MELDGRP:
+	; opening (
+	CALL CHKCHAR
+	DB '('
+	; get pointer to request struct
+	LD IX, FRMQNT
+	CALL CALBAS
+	PUSH DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get enable RAM
+	LD IX, GETBYT
+	CALL CALBAS
+	PUSH AF
+	; ending )
+	CALL CHKCHAR
+	DB ')'
+
+	PUSH HL
+	POP IY
+
+	POP AF ; enable RAM
+	OR A
+	POP IX ; pointer to request struct
+
+	PUSH IY ; save position in BASIC buffer
+
+	JR Z, .L2
+    XOR A
+    CALL GET_PAGE_INFO
+    PUSH BC
+    PUSH DE
+    LD A, (RAMAD0)
+    LD H, 0
+    CALL LOCAL_ENASLT
+	CALL SHIFT_MERGE_CHARACTER
+    POP DE
+    POP BC
+    CALL RESTORE_PAGE_INFO
+	JR .L3
+
+.L2:
+	EI
+	CALL SHIFT_MERGE_CHARACTER
+
+.L3:
+	POP HL
 	RET
 ; *******************************************************************************************************
 
