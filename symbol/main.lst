@@ -82,7 +82,7 @@
   78  4010
   79  4010              ; this location #400A stores last location used by basic extension
   80  4010              ; free memory after that point
-  81  4010 C9 56         DW EXT_END
+  81  4010 C5 56         DW EXT_END
   82  4012
   83  4012              ; binary included AKG player compiled at #4012
   84  4012               INCBIN "bin/AKG.bin"
@@ -2289,8 +2289,8 @@
 1805  555A              .L0:
 1806  555A F5           	PUSH AF
 1807  555B 3E 08        	LD A, 8
-1808  555D 08           	EX AF, AF'
-1809  555E              .L1:
+1808  555D              .L1:
+1809  555D 08           	EX AF, AF'
 1810  555E 7E           	LD A, (HL) ; get mask
 1811  555F D9           	EXX
 1812  5560 57           	LD D, A
@@ -2342,7 +2342,7 @@
 1858  559C
 1859  559C 08           	EX AF, AF'
 1860  559D 3D           	DEC A
-1861  559E C2 5E 55     	JP NZ, .L1
+1861  559E C2 5D 55     	JP NZ, .L1
 1862  55A1 F1           	POP AF
 1863  55A2 3D           	DEC A
 1864  55A3 C2 5A 55     	JP NZ, .L0
@@ -2370,8 +2370,8 @@
 1886  55B1              .L0:
 1887  55B1 F5           	PUSH AF
 1888  55B2 3E 08        	LD A, 8
-1889  55B4 08           	EX AF, AF'
-1890  55B5              .L1:
+1889  55B4              .L1:
+1890  55B4 08           	EX AF, AF'
 1891  55B5 7E           	LD A, (HL) ; get mask
 1892  55B6 D9           	EXX
 1893  55B7 57           	LD D, A
@@ -2419,7 +2419,7 @@
 1935  55EB
 1936  55EB 08           	EX AF, AF'
 1937  55EC 3D           	DEC A
-1938  55ED C2 B5 55     	JP NZ, .L1
+1938  55ED C2 B4 55     	JP NZ, .L1
 1939  55F0 F1           	POP AF
 1940  55F1 3D           	DEC A
 1941  55F2 C2 B1 55     	JP NZ, .L0
@@ -2490,8 +2490,8 @@
 2006  5659 D9           	EXX
 2007  565A              .LOOP:
 2008  565A C5           	PUSH BC
-2009  565B D5           	PUSH DE
-2010  565C E5           	PUSH HL
+2009  565B E5           	PUSH HL
+2010  565C D5           	PUSH DE
 2011  565D D9           	EXX
 2012  565E E5           	PUSH HL
 2013  565F D9           	EXX
@@ -2544,39 +2544,36 @@
 2060  569C CD EF 4F     	CALL CHKCHAR
 2061  569F 29           	DB ')'
 2062  56A0
-2063  56A0 E5           	PUSH HL
-2064  56A1 FD E1        	POP IY
-2065  56A3
-2066  56A3 F1           	POP AF ; enable RAM
-2067  56A4 B7           	OR A
-2068  56A5 DD E1        	POP IX ; pointer to request struct
-2069  56A7
-2070  56A7 FD E5        	PUSH IY ; save position in BASIC buffer
-2071  56A9
-2072  56A9 28 18        	JR Z, .L2
-2073  56AB AF               XOR A
-2074  56AC CD E3 4D         CALL GET_PAGE_INFO
-2075  56AF C5               PUSH BC
-2076  56B0 D5               PUSH DE
-2077  56B1 3A 41 F3         LD A, (RAMAD0)
-2078  56B4 26 00            LD H, 0
-2079  56B6 CD 29 4E         CALL LOCAL_ENASLT
-2080  56B9 CD F6 55     	CALL SHIFT_MERGE_CHARACTER
-2081  56BC D1               POP DE
-2082  56BD C1               POP BC
-2083  56BE CD 1A 4E         CALL RESTORE_PAGE_INFO
-2084  56C1 18 04        	JR .L3
-2085  56C3
-2086  56C3              .L2:
-2087  56C3 FB           	EI
-2088  56C4 CD F6 55     	CALL SHIFT_MERGE_CHARACTER
-2089  56C7
-2090  56C7              .L3:
-2091  56C7 E1           	POP HL
-2092  56C8 C9           	RET
-2093  56C9              ; *******************************************************************************************************
-2094  56C9
-2095  56C9
-2096  56C9              EXT_END:
-2097  56C9
+2063  56A0 F1           	POP AF ; enable RAM
+2064  56A1 B7           	OR A
+2065  56A2 DD E1        	POP IX ; pointer to request struct
+2066  56A4
+2067  56A4 E5           	PUSH HL ; save position in BASIC buffer
+2068  56A5
+2069  56A5 28 18        	JR Z, .L2
+2070  56A7 AF               XOR A
+2071  56A8 CD E3 4D         CALL GET_PAGE_INFO
+2072  56AB C5               PUSH BC
+2073  56AC D5               PUSH DE
+2074  56AD 3A 41 F3         LD A, (RAMAD0)
+2075  56B0 26 00            LD H, 0
+2076  56B2 CD 29 4E         CALL LOCAL_ENASLT
+2077  56B5 CD F6 55     	CALL SHIFT_MERGE_CHARACTER
+2078  56B8 D1               POP DE
+2079  56B9 C1               POP BC
+2080  56BA CD 1A 4E         CALL RESTORE_PAGE_INFO
+2081  56BD 18 04        	JR .L3
+2082  56BF
+2083  56BF              .L2:
+2084  56BF FB           	EI
+2085  56C0 CD F6 55     	CALL SHIFT_MERGE_CHARACTER
+2086  56C3
+2087  56C3              .L3:
+2088  56C3 E1           	POP HL
+2089  56C4 C9           	RET
+2090  56C5              ; *******************************************************************************************************
+2091  56C5
+2092  56C5
+2093  56C5              EXT_END:
+2094  56C5
 # file closed: asm\main.asm

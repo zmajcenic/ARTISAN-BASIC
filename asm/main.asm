@@ -1805,8 +1805,8 @@ SHIFT04:
 .L0:
 	PUSH AF
 	LD A, 8
-	EX AF, AF'
 .L1:
+	EX AF, AF'
 	LD A, (HL) ; get mask
 	EXX
 	LD D, A
@@ -1886,8 +1886,8 @@ SHIFT58:
 .L0:
 	PUSH AF
 	LD A, 8
-	EX AF, AF'
 .L1:
+	EX AF, AF'
 	LD A, (HL) ; get mask
 	EXX
 	LD D, A
@@ -2006,8 +2006,8 @@ SHIFT_MERGE_CHARACTER:
 	EXX
 .LOOP:
 	PUSH BC
-	PUSH DE
 	PUSH HL
+	PUSH DE
 	EXX
 	PUSH HL
 	EXX
@@ -2060,14 +2060,11 @@ MELDGRP:
 	CALL CHKCHAR
 	DB ')'
 
-	PUSH HL
-	POP IY
-
 	POP AF ; enable RAM
 	OR A
 	POP IX ; pointer to request struct
 
-	PUSH IY ; save position in BASIC buffer
+	PUSH HL ; save position in BASIC buffer
 
 	JR Z, .L2
     XOR A
