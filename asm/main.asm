@@ -1908,7 +1908,7 @@ SHIFT58:
 	JR .M2 ; also self-modifying part
 	SLA B
 	RL C
-	SRA B
+	SLA B
 	RL C
 	SLA B
 	RL C

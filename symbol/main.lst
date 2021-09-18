@@ -2392,7 +2392,7 @@
 1908  55CC 18 FE        	JR .M2 ; also self-modifying part
 1909  55CE CB 20        	SLA B
 1910  55D0 CB 11        	RL C
-1911  55D2 CB 28        	SRA B
+1911  55D2 CB 20        	SLA B
 1912  55D4 CB 11        	RL C
 1913  55D6 CB 20        	SLA B
 1914  55D8 CB 11        	RL C
