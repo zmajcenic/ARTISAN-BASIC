@@ -2,7 +2,7 @@
 20 BLOAD "MBGE.bin",R
 30 A%=0:_MEMCPY(&H4010,VARPTR(A%),2,0,0)
 40 PRINT "Page 1 free bytes =";32768-A%
-50 REM Load music data and copy to address &H0000
+50 REM Load music data and copy to address &H0100
 60 BLOAD "SONG.BIN":_MEMCPY(&HA007,&H100,1932,1,0)
 70 REM Load sfx data and copy to address &H1000
 80 BLOAD "SFX.BIN":_MEMCPY(&HA007,&H1000,218,1,0)

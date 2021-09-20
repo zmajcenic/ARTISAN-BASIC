@@ -1027,9 +1027,8 @@ GENCAL:
 ; _MEMVRM ( INT source, 
 ;			INT destination, 
 ;			INT count, 
-;			BYTE enable_ram, >0 = true
 ;			BYTE wait_vsync) >0 = treu
-; enable_ram will put ram in page 0 also, page 1 is already there
+; will put ram in page 0 also, page 1 is already there
 ; wait_vsync will issue HALT before copying
 MEMVRM:
 	; opening (
@@ -1056,13 +1055,6 @@ MEMVRM:
 	; comma
 	CALL CHKCHAR
 	DB ','
-	; get ROM/RAM
-	LD IX, GETBYT
-	CALL CALBAS
-	PUSH AF
-	; comma
-	CALL CHKCHAR
-	DB ','
 	; get vsync wait
 	LD IX, GETBYT
 	CALL CALBAS
@@ -1075,43 +1067,28 @@ MEMVRM:
 	PUSH HL
 	POP IX
 
-	; syntax ok
-	; wait for vsync if needed
-	POP AF
+	POP AF ; wait vsync
 	OR A
 	JR Z, .L1
     EI
 	HALT
-    DI ; since interrupt can modify vram address
-
+	DI
 .L1:
-	; enable RAM in page 0 if needed
-	POP AF
-	OR A
 	; pop LDIR parameters and store away for later
-	POP BC
-	POP DE
-	POP HL
-	JR Z, .L2
+	POP BC ; count
+	POP DE ; vram destination
+	POP HL ; ram source
 	EXX
-    XOR A
-    CALL GET_PAGE_INFO
-    PUSH BC
-    PUSH DE
-    LD A, (RAMAD0)
-    LD H, 0
-    CALL LOCAL_ENASLT
+ 	LD IY, .RET
+	JP ENABLE_PAGE0
+.RET:
 	EXX
+	EI
 	CALL .LDIRVM
     POP DE
     POP BC
+	DI
     CALL RESTORE_PAGE_INFO
-	JR .L3
-
-.L2:
-	CALL .LDIRVM
-
-.L3:
 	PUSH IX
 	POP HL
 	RET
@@ -1120,16 +1097,28 @@ MEMVRM:
 	EX DE, HL
 	CALL SETWRT_LOCAL
 	EX DE, HL
-    
-.L4:
-    LD A, (HL)
-    OUT (#98), A
-    INC HL
-    DEC BC
-    LD A, C
-    OR B
-    JP NZ, .L4
-    RET
+	LD A, B
+	OR A
+	JR Z, .L3
+	PUSH BC
+	LD C, #98
+.L2:
+	LD D, B
+	LD B, 0
+	CALL .BBYTECOPY
+	LD B, D
+	DJNZ .L2
+	POP BC
+.L3:
+	LD A, C
+	OR A
+	RET Z
+	LD B, C
+	LD C, #98
+.BBYTECOPY:
+	OUTI
+	JP	NZ, .BBYTECOPY
+	RET
 ; *******************************************************************************************************
 
 ; *******************************************************************************************************
@@ -1283,6 +1272,51 @@ MBGE_HTIMI:
 .EXIT:
 	POP AF
 	JP ORIG.HTIMI
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; interrupt handler when page 0 enabled
+VBLANK:
+	EXPORT VBLANK
+
+    PUSH AF
+	; is VDP originator ?
+	IN	A, (099H)
+	AND	A
+	JP P, .EXIT
+	LD A, (SOUND_ENABLED)
+	OR A
+	JR Z, .EXIT
+
+    PUSH BC
+    PUSH DE
+    PUSH HL
+    EX AF, AF'
+    EXX
+    PUSH AF
+    PUSH BC
+    PUSH DE
+    PUSH HL
+    PUSH IX
+    PUSH IY
+
+	CALL PLY_AKG_PLAY
+
+    POP IY
+    POP IX
+    POP HL
+    POP DE
+    POP BC
+    POP AF
+    EX AF, AF'
+    EXX
+    POP HL
+    POP DE
+    POP BC
+.EXIT:
+	POP AF
+	EI
+	RETI
 ; *******************************************************************************************************
 
 ; *******************************************************************************************************

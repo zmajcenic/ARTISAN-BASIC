@@ -256,6 +256,24 @@ LoaderStart:
     POP BC
     CALL RESTORE_PAGE_INFO
 
+    ; enable page 0
+    XOR A
+    CALL GET_PAGE_INFO
+    PUSH BC
+    PUSH DE
+    LD A, (RAMAD0)
+    LD H, 0
+    CALL LOCAL_ENASLT
+    ; set new interrupt vector
+    LD IX, #38
+    LD (IX), #C3 ; JP
+    LD (IX+1), low (VBLANK)
+    LD (IX+2), high (VBLANK)
+	; restore page 0
+    POP DE
+    POP BC
+    CALL RESTORE_PAGE_INFO
+
     EI
     RET
 
