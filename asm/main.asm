@@ -119,7 +119,7 @@ CMDS:
     DW 0 ; E
     DW CMDS_F; F
     DW CMDS_G; G
-    DW 0 ; H
+    DW CMDS_H; H
     DW 0 ; I
     DW 0 ; J
     DW 0 ; K
@@ -152,8 +152,6 @@ CMDS_M:
     DW MEMVRM
 	DB "MEMCPY", 0
 	DW MEMCPY
-	DB "MELDGRP", 0
-	DW MELDGRP
 	DB 0
 CMDS_F:
     DB "FILVRM", 0
@@ -184,6 +182,10 @@ CMDS_S:
 	DW SNDPLYINIT
 	DB "SPRATRINI", 0
 	DW SPRATRINI
+	DB 0
+CMDS_H:
+	DB "HBLIT", 0
+	DW HBLIT
 	DB 0
 
 ; ****************************************************************************************************
@@ -378,6 +380,20 @@ L0390:
     POP AF 
     AND 3 
     RET
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; some common code to activate page 0 and place values needed to restore original page on stack
+; input IY=return address
+ENABLE_PAGE0:
+    XOR A
+    CALL GET_PAGE_INFO
+    PUSH BC
+    PUSH DE
+    LD A, (RAMAD0)
+    LD H, 0
+    CALL LOCAL_ENASLT
+	JP (IY)
 ; *******************************************************************************************************
 
 ; *******************************************************************************************************
@@ -2034,14 +2050,14 @@ SHIFT_MERGE_CHARACTER:
 ; *******************************************************************************************************
 
 ; *******************************************************************************************************
-; function to handle CALL MELDGRP basic extension
+; function to handle CALL HBLIT basic extension
 ; rotates 1-bit character drawing horizontally with mask and character data and
 ; fuses with background data
-; _MELDGRP ( INT request_data_ptr, 
-;			 BYTE enable_ram) >0 = true
+; HBLIT ( INT request_data_ptr, 
+;	      BYTE enable_ram) >0 = true
 ; request_data_ptr described in SHIFT_MERGE_CHARACTER
 ; enable_ram will put ram in page 0 also, page 1 is already there
-MELDGRP:
+HBLIT:
 	; opening (
 	CALL CHKCHAR
 	DB '('
@@ -2065,16 +2081,13 @@ MELDGRP:
 	POP IX ; pointer to request struct
 
 	PUSH HL ; save position in BASIC buffer
-
 	JR Z, .L2
-    XOR A
-    CALL GET_PAGE_INFO
-    PUSH BC
-    PUSH DE
-    LD A, (RAMAD0)
-    LD H, 0
-    CALL LOCAL_ENASLT
+
+	LD IY, .RET
+	JP ENABLE_PAGE0
+.RET:
 	CALL SHIFT_MERGE_CHARACTER
+
     POP DE
     POP BC
     CALL RESTORE_PAGE_INFO
