@@ -263,12 +263,13 @@ GET_PAGE_INFO_L3:
 ; input D = 0 is no subslots, 1 if yes
 ; input C = 0A8H value when page 3 slot equals to requested page slot
 ; input E = subslot value if present
-; modifies AF
+; modifies AF, disables interrupts
 RESTORE_PAGE_INFO:
     LD A, D
     OR A
     JR Z, RESTORE_PAGE_INFO_L1
     LD A, C
+	DI
     OUT (0A8H), A
     LD A, E
     LD (0FFFFH), A
@@ -692,10 +693,7 @@ THROW_ERROR:
 ; _MEMCPY ( INT source, 
 ;			INT destination, 
 ;			INT count, 
-;			BYTE enable_ram, >0 = true
-;			BYTE wait_vsync) >0 = treu
-; enable_ram will put ram in page 0 also, page 1 is already there
-; wait_vsync will issue HALT before copying
+; will put ram in page 0 also, page 1 is already there
 MEMCPY:
 	; opening (
 	CALL CHKCHAR
@@ -718,65 +716,28 @@ MEMCPY:
 	LD IX, FRMQNT
 	CALL CALBAS
 	PUSH DE
-	; comma
-	CALL CHKCHAR
-	DB ','
-	; get ROM/RAM
-	LD IX, GETBYT
-	CALL CALBAS
-	PUSH AF
-	; comma
-	CALL CHKCHAR
-	DB ','
-	; get vsync wait
-	LD IX, GETBYT
-	CALL CALBAS
-	PUSH AF
 	; ending )
 	CALL CHKCHAR
 	DB ')'
 
-    EI
 	; save position
 	PUSH HL
 	POP IX
 
-	; syntax ok
-	; wait for vsync if needed
-	POP AF
-	OR A
-	JR Z, .L1
-	HALT
-
-.L1:
-	; enable RAM in page 0 if needed
-	POP AF
-	OR A
-	; pop LDIR parameters and store away for later
-	POP BC
-	POP DE
-	POP HL
-	JR Z, .L2
+	POP BC ; count
+	POP DE ; destination
+	POP HL ; source
 	EXX
-    XOR A
-    CALL GET_PAGE_INFO
-    PUSH BC
-    PUSH DE
-    LD A, (RAMAD0)
-    LD H, 0
-	DI
-    CALL LOCAL_ENASLT
+	; enable page 0
+	LD IY, .RET
+	JP ENABLE_PAGE0
+.RET:
+	EI
 	EXX
 	LDIR
     POP DE
     POP BC
     CALL RESTORE_PAGE_INFO
-	JR .L3
-
-.L2:
-	LDIR
-
-.L3:
 	PUSH IX
 	POP HL
 	RET
@@ -851,10 +812,7 @@ FILVRM:
 ; FILRAM ( INT start address, 
 ;		   INT count, 
 ;		   BYTE value,
-;	   	   BYTE enable_ram, >0 = true
-;		   BYTE wait_vsync) >0 = true
-; enable_ram will put ram in page 0 also, page 1 is already there
-; wait_vsync will issue HALT before copying
+; will put ram in page 0 also, page 1 is already there
 FILRAM:
 	; opening (
 	CALL CHKCHAR
@@ -877,65 +835,41 @@ FILRAM:
 	LD IX, GETBYT
 	CALL CALBAS
 	PUSH AF
-	; comma
-	CALL CHKCHAR
-	DB ','
-	; get ROM/RAM
-	LD IX, GETBYT
-	CALL CALBAS
-	PUSH AF
-	; comma
-	CALL CHKCHAR
-	DB ','
-	; get vsync wait
-	LD IX, GETBYT
-	CALL CALBAS
-	PUSH AF
 	; ending )
 	CALL CHKCHAR
 	DB ')'
 
-    EI
 	; save position
 	PUSH HL
 	POP IX
 
-	; syntax ok
-	; wait for vsync if needed
-	POP AF
-	OR A
-	JR Z, .L1
-	HALT
-
-.L1:
-	; enable RAM in page 0 if needed
-	POP AF
-	OR A
-	; pop LDIR parameters and store away for later
 	POP DE ; actually AF
 	POP BC ; count
 	POP HL ; start address
-	JR Z, .L2
+	LD A, B
+	OR A
+	JR NZ, .L1 ; >=256 bytes to fill
+	OR C
+	JR Z, .EXIT ; 0 bytes to fill, skip
+	LD A, C
+	DEC A
+	JR NZ, .L1 ; ; >1 byte to fill
+	; one byte to fill
+	LD (HL), D
+	JR .EXIT
+.L1:
 	EXX
-    XOR A
-    CALL GET_PAGE_INFO
-    PUSH BC
-    PUSH DE
-    LD A, (RAMAD0)
-    LD H, 0
-	DI
-    CALL LOCAL_ENASLT
+	; enable page 0
+	LD IY, .RET
+	JP ENABLE_PAGE0
+.RET:
+	EI
 	EXX
 	CALL .FILLVALUE
     POP DE
     POP BC
     CALL RESTORE_PAGE_INFO
-	JR .L3
-
-.L2:
-	CALL .FILLVALUE
-
-.L3:
+.EXIT:
 	PUSH IX
 	POP HL
 	RET
@@ -1082,12 +1016,11 @@ MEMVRM:
  	LD IY, .RET
 	JP ENABLE_PAGE0
 .RET:
-	EXX
 	EI
+	EXX
 	CALL .LDIRVM
     POP DE
     POP BC
-	DI
     CALL RESTORE_PAGE_INFO
 	PUSH IX
 	POP HL
@@ -1126,11 +1059,8 @@ MEMVRM:
 ; copies from RAM to VRAM
 ; _VRMMEM ( INT source, 
 ;			INT destination, 
-;			INT count, 
-;			BYTE enable_ram, >0 = true
-;			BYTE wait_vsync) >0 = true
-; enable_ram will put ram in page 0 also, page 1 is already there
-; wait_vsync will issue HALT before copying
+;			INT count
+; will put ram in page 0 also, page 1 is already there
 VRMMEM:
 	; opening (
 	CALL CHKCHAR
@@ -1153,20 +1083,6 @@ VRMMEM:
 	LD IX, FRMQNT
 	CALL CALBAS
 	PUSH DE
-	; comma
-	CALL CHKCHAR
-	DB ','
-	; get ROM/RAM
-	LD IX, GETBYT
-	CALL CALBAS
-	PUSH AF
-	; comma
-	CALL CHKCHAR
-	DB ','
-	; get vsync wait
-	LD IX, GETBYT
-	CALL CALBAS
-	PUSH AF
 	; ending )
 	CALL CHKCHAR
 	DB ')'
@@ -1175,43 +1091,19 @@ VRMMEM:
 	PUSH HL
 	POP IX
 
-	; syntax ok
-	; wait for vsync if needed
-	POP AF
-	OR A
-	JR Z, .L1
-    EI
-	HALT
-    DI ; since interrupt can modify vram address
-
-.L1:
-	; enable RAM in page 0 if needed
-	POP AF
-	OR A
-	; pop LDIR parameters and store away for later
-	POP BC
-	POP DE
-	POP HL
-	JR Z, .L2
+	POP BC ; count
+	POP DE ; destination
+	POP HL ; source
 	EXX
-    XOR A
-    CALL GET_PAGE_INFO
-    PUSH BC
-    PUSH DE
-    LD A, (RAMAD0)
-    LD H, 0
-    CALL LOCAL_ENASLT
+	LD IY, .RET
+	JP ENABLE_PAGE0
+.RET:	
+	EI
 	EXX
 	CALL .LDIRMV
     POP DE
     POP BC
     CALL RESTORE_PAGE_INFO
-	JR .L3
-
-.L2:
-	CALL .LDIRMV
-
-.L3:
 	PUSH IX
 	POP HL
 	RET
@@ -1354,13 +1246,9 @@ SNDPLYINIT:
 	POP HL ; music address
 	PUSH BC ; basic text location
 	EXX
-    XOR A
-    CALL GET_PAGE_INFO
-    PUSH BC
-    PUSH DE
-    LD A, (RAMAD0)
-    LD H, 0
-    CALL LOCAL_ENASLT
+	LD IY, .RET
+	JP ENABLE_PAGE0
+.RET:
 	EXX
 
 	PUSH DE
@@ -1370,7 +1258,8 @@ SNDPLYINIT:
 	LD A, 1
 	LD (MUSIC_INIT_STATUS), A
 
-	POP HL
+	POP HL ; SFX
+	; check if SFX address -1
 	INC HL
 	LD A, L
 	OR H
@@ -1496,13 +1385,9 @@ SNDSFX:
 	EX AF, AF'
 	PUSH HL ; basic text location
 	EXX
-    XOR A
-    CALL GET_PAGE_INFO
-    PUSH BC
-    PUSH DE
-    LD A, (RAMAD0)
-    LD H, 0
-    CALL LOCAL_ENASLT
+	LD IY, .RET
+	JP ENABLE_PAGE0
+.RET:
 	EXX
 	EX AF, AF'
 	CALL PLY_AKG_PLAYSOUNDEFFECT
@@ -1723,8 +1608,7 @@ SPRSET_DELTA_POS:
 ;			   INT y, 
 ;			   INT data_ptr, 
 ;			   BYTE count, 
-;			   BYTE enable_ram) >0 = true
-; enable_ram will put ram in page 0 also, page 1 is already there
+; will put ram in page 0 also, page 1 is already there
 SPRGRPMOV:
 	LD A, (SPRATR_INIT_STATUS)
 	OR A
@@ -1760,13 +1644,6 @@ SPRGRPMOV:
 	LD IX, GETBYT
 	CALL CALBAS
 	PUSH AF
-	; comma
-	CALL CHKCHAR
-	DB ','
-	; get enable RAM
-	LD IX, GETBYT
-	CALL CALBAS
-	PUSH AF
 	; ending )
 	CALL CHKCHAR
 	DB ')'
@@ -1774,8 +1651,6 @@ SPRGRPMOV:
 	PUSH HL
 	POP IX
 
-	POP AF ; enable RAM
-	OR A
 	POP BC ; count
 	POP HL ; data pointer
 	EXX
@@ -1785,7 +1660,6 @@ SPRGRPMOV:
 	
 	PUSH IX ; save position in BASIC buffer
 
-	JR Z, .L2
 	PUSH BC
 	PUSH HL
     XOR A
@@ -1803,19 +1677,13 @@ SPRGRPMOV:
     LD A, (RAMAD0)
     LD H, 0
     CALL LOCAL_ENASLT
+	EI
 	POP HL
 	POP BC
 	CALL .UPDATE_LOC
     POP DE
     POP BC
     CALL RESTORE_PAGE_INFO
-	JR .L3
-
-.L2:
-	EI
-	CALL .UPDATE_LOC
-
-.L3:
 	POP HL
 	RET
 
@@ -2087,10 +1955,9 @@ SHIFT_MERGE_CHARACTER:
 ; function to handle CALL HBLIT basic extension
 ; rotates 1-bit character drawing horizontally with mask and character data and
 ; fuses with background data
-; HBLIT ( INT request_data_ptr, 
-;	      BYTE enable_ram) >0 = true
+; HBLIT ( INT request_data_ptr )
 ; request_data_ptr described in SHIFT_MERGE_CHARACTER
-; enable_ram will put ram in page 0 also, page 1 is already there
+; will put ram in page 0 also, page 1 is already there
 HBLIT:
 	; opening (
 	CALL CHKCHAR
@@ -2099,39 +1966,24 @@ HBLIT:
 	LD IX, FRMQNT
 	CALL CALBAS
 	PUSH DE
-	; comma
-	CALL CHKCHAR
-	DB ','
-	; get enable RAM
-	LD IX, GETBYT
-	CALL CALBAS
-	PUSH AF
 	; ending )
 	CALL CHKCHAR
 	DB ')'
 
-	POP AF ; enable RAM
-	OR A
 	POP IX ; pointer to request struct
 
 	PUSH HL ; save position in BASIC buffer
-	JR Z, .L2
 
 	LD IY, .RET
 	JP ENABLE_PAGE0
 .RET:
+	EI
 	CALL SHIFT_MERGE_CHARACTER
 
     POP DE
     POP BC
     CALL RESTORE_PAGE_INFO
-	JR .L3
 
-.L2:
-	EI
-	CALL SHIFT_MERGE_CHARACTER
-
-.L3:
 	POP HL
 	RET
 ; *******************************************************************************************************
