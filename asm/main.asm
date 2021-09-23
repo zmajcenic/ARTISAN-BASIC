@@ -109,17 +109,23 @@ TMPSP:
 FLICKER:
  DB 0
 
+; temp variables for BLIT functions
+BLIT_TMP1:
+ DW 0
+BLIT_TMP2:
+ DW 0
+
 ; List of pointers to available instructions (as ASCIIZ) and execute address (as word)
 ; per starting letter, if no commands with this letter, NULL value
 CMDS:
     DW 0 ; A
-    DW 0 ; B
+    DW CMDS_B ; B
     DW 0 ; C
     DW 0 ; D
     DW 0 ; E
     DW CMDS_F; F
     DW CMDS_G; G
-    DW CMDS_H; H
+    DW 0 ; H
     DW 0 ; I
     DW 0 ; J
     DW 0 ; K
@@ -183,9 +189,9 @@ CMDS_S:
 	DB "SPRATRINI", 0
 	DW SPRATRINI
 	DB 0
-CMDS_H:
-	DB "HBLIT", 0
-	DW HBLIT
+CMDS_B:
+	DB "BLIT", 0
+	DW BLIT
 	DB 0
 
 ; ****************************************************************************************************
@@ -1709,21 +1715,10 @@ SPRGRPMOV:
 ; input HL=pointer to mask data
 ; input HL'=pointer to character data
 ; input DE=output buffer containing background data
+; input BC=DE+8
 ; input A=number of characters to process
 ; modifies AF, AF', HL, HL', DE, DE', BC, BC'
 SHIFT04:
-	PUSH HL
-	LD H, D
-	LD L, E
-	LD BC, 8
-	ADD HL, BC
-	LD B, H
-	LD C, L
-	POP HL
-.L0:
-	PUSH AF
-	LD A, 8
-.L1:
 	EX AF, AF'
 	LD A, (HL) ; get mask
 	EXX
@@ -1776,10 +1771,7 @@ SHIFT04:
 	
 	EX AF, AF'
 	DEC A
-	JP NZ, .L1
-	POP AF
-	DEC A
-	JP NZ, .L0
+	JP NZ, SHIFT04
 	RET
 ; *******************************************************************************************************
 
@@ -1790,21 +1782,10 @@ SHIFT04:
 ; input HL=pointer to mask data
 ; input HL'=pointer to character data
 ; input DE=output buffer containing background data
+; input BC=DE+8
 ; input A=number of characters to process
 ; modifies AF, AF', HL, HL', DE, DE', BC, BC'
 SHIFT58:
-	PUSH HL
-	LD H, D
-	LD L, E
-	LD BC, 8
-	ADD HL, BC
-	LD B, H
-	LD C, L
-	POP HL
-.L0:
-	PUSH AF
-	LD A, 8
-.L1:
 	EX AF, AF'
 	LD A, (HL) ; get mask
 	EXX
@@ -1853,32 +1834,96 @@ SHIFT58:
 	
 	EX AF, AF'
 	DEC A
-	JP NZ, .L1
+	JP NZ, SHIFT58
+	RET
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; routine that shifts one row of characters
+; contains self-modifying code that is set-up from external function
+; input HL=pointer to mask data
+; input HL'=pointer to character data
+; input DE=output buffer containing background data
+; input A=number of characters to process
+; modifies AF, AF', HL, HL', DE, DE', BC, BC'
+SHIFT_ROW:
+	PUSH AF
+		LD (BLIT_TMP1), DE
+		PUSH HL
+			CALL .ADDYSHIFT
+		POP HL
+		LD (BLIT_TMP2), DE ; DE+vertical shift
+.L1:
+		LD A, 8
+		SUB (IX+2) ; y shift
+.CALL1:
+		CALL 0
+		LD A, (IX+2); y shift
+		OR A
+		JR Z, .DONE
+		LD DE, (BLIT_TMP1)
+		PUSH HL
+			CALL .DETONEXTROW
+		POP HL
+.CALL2:
+		CALL 0
+		LD DE, (BLIT_TMP1)
+		PUSH HL
+			CALL .ADD8
+		POP HL
+		LD (BLIT_TMP1), DE
+		LD DE, (BLIT_TMP2)
+		PUSH HL
+			CALL .ADD8
+		POP HL
+.DONE:
 	POP AF
 	DEC A
-	JP NZ, .L0
+	RET Z
+	PUSH AF
+	JP .L1
+.ADDYSHIFT:
+	EX DE, HL
+	LD D, 0
+	LD E, (IX+2); y shift
+	JR .MOVDEBC
+.ADD8:
+	LD HL, 8
+	JP .MOVDEBC
+.DETONEXTROW:
+	LD L, (IX+6)
+	LD H, (IX+7) ; bkg add to value
+.MOVDEBC:
+	ADD HL, DE
+	LD D, H
+	LD E, L
+	LD BC, 8
+	ADD HL, BC
+	LD B, H
+	LD C, L
 	RET
 ; *******************************************************************************************************
 
 ; *******************************************************************************************************
 ; function rotates mask and character data and applies it to background
-; input A=x shift (0-7)
 ; input IX=pointer to structure describing input data
-; +0  DW shift count 0-7
-; +2  DW background data start;
-; +4  DW background add to value to next row of background data
-; +6  DW mask data start;
-; +8  DW character data start;
-; +10 DW character&mask add to value to next row of data
-; +12 DW columns (low byte used)
-; +14 DW rows (low byte used)
+; +0  DW horizontal shift count 0-7
+; +2  DW vertical shift count 0-7
+; +4  DW background data start;
+; +6  DW background add to value to next row of background data
+; +8  DW mask data start;
+; +10  DW character data start;
+; +12 DW character&mask add to value to next row of data
+; +14 DW columns (low byte used)
+; +16 DW rows (low byte used)
 SHIFT_MERGE_CHARACTER:
 	LD A, (IX) ; shift
 	CP 5
 	JR C, .RIGHT
 	; shifts 5-7, use rotate towards left 1-3
 	LD HL, SHIFT58
-	LD (.CALL+1), HL ; modify fn used
+	LD (SHIFT_ROW.CALL1+1), HL ; modify fn used
+	LD (SHIFT_ROW.CALL2+1), HL ; modify fn used
 	SUB 5
 	JR Z, .L1
 	ADD A, A
@@ -1896,7 +1941,8 @@ SHIFT_MERGE_CHARACTER:
 .RIGHT:
 	; shifts 0-4, rotate towards right
 	LD HL, SHIFT04
-	LD (.CALL+1), HL ; modify fn used
+	LD (SHIFT_ROW.CALL1+1), HL ; modify fn used
+	LD (SHIFT_ROW.CALL2+1), HL ; modify fn used
 	CP 4
 	JR Z, .R1
 	SUB 4
@@ -1913,52 +1959,52 @@ SHIFT_MERGE_CHARACTER:
 	LD (SHIFT04.M1), HL
 	LD (SHIFT04.M2), HL
 .DO:
-	LD B, (IX+14) ; rows
-	LD L, (IX+6)
-	LD H, (IX+7) ; mask data
-	LD E, (IX+2)
-	LD D, (IX+3) ; background data
-	EXX
+	LD B, (IX+16) ; rows
 	LD L, (IX+8)
-	LD H, (IX+9) ; character data
+	LD H, (IX+9) ; mask data
+	LD E, (IX+4)
+	LD D, (IX+5) ; background data
+	EXX
+	LD L, (IX+10)
+	LD H, (IX+11) ; character data
 	EXX
 .LOOP:
 	PUSH BC
-	PUSH HL
-	PUSH DE
-	EXX
-	PUSH HL
-	EXX
-	LD A, (IX+12) ; columns
+		PUSH HL
+			PUSH DE
+				EXX
+				PUSH HL
+					EXX
+					LD A, (IX+14) ; columns
 .CALL:
-	CALL 0
-	POP HL
-	LD E, (IX+10)
-	LD D, (IX+11) ; char data to next row
-	ADD HL, DE
-	EXX
-	POP HL
-	LD E, (IX+4)
-	LD D, (IX+5) ; background to next row
-	ADD HL, DE
-	EX DE, HL
-	POP HL
-	LD C, (IX+10)
-	LD B, (IX+11) ; char data to next row
-	ADD HL, BC
+					CALL SHIFT_ROW
+				POP HL
+				LD E, (IX+12)
+				LD D, (IX+13) ; char data to next row
+				ADD HL, DE
+				EXX
+			POP HL
+			LD E, (IX+6)
+			LD D, (IX+7) ; background to next row
+			ADD HL, DE
+			EX DE, HL
+		POP HL
+		LD C, (IX+12)
+		LD B, (IX+13) ; char data to next row
+		ADD HL, BC
 	POP BC
 	DJNZ .LOOP
 	RET	
 ; *******************************************************************************************************
 
 ; *******************************************************************************************************
-; function to handle CALL HBLIT basic extension
+; function to handle CALL BLIT basic extension
 ; rotates 1-bit character drawing horizontally with mask and character data and
 ; fuses with background data
-; HBLIT ( INT request_data_ptr )
+; BLIT ( INT request_data_ptr )
 ; request_data_ptr described in SHIFT_MERGE_CHARACTER
 ; will put ram in page 0 also, page 1 is already there
-HBLIT:
+BLIT:
 	; opening (
 	CALL CHKCHAR
 	DB '('
