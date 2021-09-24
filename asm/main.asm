@@ -109,9 +109,11 @@ TMPSP:
 FLICKER:
  DB 0
 
-; temp variables for BLIT functions
+; temp variables for BLIT, TILE functions
+TILETMP1:
 BLIT_TMP1:
  DW 0
+TILETMP2:
 BLIT_TMP2:
  DW 0
 
@@ -2000,7 +2002,7 @@ SHIFT_MERGE_CHARACTER:
 ; *******************************************************************************************************
 ; function to handle CALL BLIT basic extension
 ; rotates 1-bit character drawing horizontally with mask and character data and
-; fuses with background data
+; fuses with background data and applies vertical shift too
 ; BLIT ( INT request_data_ptr )
 ; request_data_ptr described in SHIFT_MERGE_CHARACTER
 ; will put ram in page 0 also, page 1 is already there
@@ -2033,6 +2035,60 @@ BLIT:
 	POP HL
 	RET
 ; *******************************************************************************************************
+
+; *******************************************************************************************************
+; generic function to implement tiling
+; should be modified to call appropriate function for memory or vram
+; input IX=pointer to following structure
+; +00 tile_data_ptr
+; +02 tile_rows
+; +04 tile_columns
+; +06 destination_address
+; +08 dest_to_next_row_add_to_value
+; +10 num_horizontal_tiles
+; +12 num_vertical_tiles
+; modifies AF, BC, DE, HL
+TILE:
+	LD L, (IX+6)
+	LD H, (IX+7) ; destination address
+	LD (TILETMP1), HL
+	LD B, (IX+12) ; vertical tile number
+.L1:
+	PUSH BC
+		LD L, (IX+0)
+		LD H, (IX+1) ; tile address
+		LD (TILETMP2), HL
+		LD B, (IX+2) ; tile rows
+.L2:
+		PUSH BC
+.CALL1:
+			CALL 0
+			LD B, (IX+10) ; horizontal tile num
+.L3:
+			PUSH BC
+				LD HL, (TILETMP2)
+				LD B, (IX+4) ; tile columns
+.L4:
+				PUSH BC
+.CALL2:
+					CALL 0
+				POP BC
+				DJNZ .L4
+			POP BC
+			DJNZ .L3
+			LD (TILETMP2), HL
+			LD HL, (TILETMP1)
+			LD E, (IX+8)
+			LD D, (IX+9) ; add to value for dest next row
+			ADD HL, DE
+			LD (TILETMP1), HL
+		POP BC
+		DJNZ .L2
+	POP BC
+	DJNZ .L1
+	RET
+; *******************************************************************************************************
+
 
 
 EXT_END:
