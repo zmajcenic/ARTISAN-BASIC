@@ -139,7 +139,7 @@ CMDS:
     DW 0 ; Q
     DW 0 ; R
     DW CMDS_S ; S
-    DW 0 ; T
+    DW CMDS_T ; T
     DW CMDS_U ; U
     DW CMDS_V ; V
     DW 0 ; W
@@ -194,6 +194,12 @@ CMDS_S:
 CMDS_B:
 	DB "BLIT", 0
 	DW BLIT
+	DB 0
+CMDS_T:
+	DB "TILERAM", 0
+	DW TILERAM
+	DB "TILEVRM", 0
+	DW TILEVRM
 	DB 0
 
 ; ****************************************************************************************************
@@ -2089,6 +2095,101 @@ TILE:
 	RET
 ; *******************************************************************************************************
 
+; *******************************************************************************************************
+; function to handle CALL TILERAM basic extension
+; rotates 1-bit character drawing horizontally with mask and character data and
+; fuses with background data and applies vertical shift too
+; TILERAM ( INT request_data_ptr )
+; request_data_ptr described in TILE
+; will put ram in page 0 also, page 1 is already there
+TILERAM:
+	; opening (
+	CALL CHKCHAR
+	DB '('
+	; get pointer to request struct
+	LD IX, FRMQNT
+	CALL CALBAS
+	PUSH DE
+	; ending )
+	CALL CHKCHAR
+	DB ')'
+
+	POP IX ; pointer to request struct
+
+	PUSH HL ; save position in BASIC buffer
+
+	LD IY, .RET
+	JP ENABLE_PAGE0
+.RET:
+	EI
+	; set RAM functions to call
+	LD HL, .TILECOPY
+	LD (TILE.CALL2+1), HL
+	LD HL, .SETDESTROW
+	LD (TILE.CALL1+1), HL
+	CALL TILE
+
+    POP DE
+    POP BC
+    CALL RESTORE_PAGE_INFO
+
+	POP HL
+	RET
+.TILECOPY:
+	.8 LDI
+	RET	
+.SETDESTROW:
+	LD DE, (TILETMP1)
+	RET
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function to handle CALL TILEVRM basic extension
+; rotates 1-bit character drawing horizontally with mask and character data and
+; fuses with background data and applies vertical shift too
+; TILEVRM ( INT request_data_ptr )
+; request_data_ptr described in TILE
+; will put ram in page 0 also, page 1 is already there
+TILEVRM:
+	; opening (
+	CALL CHKCHAR
+	DB '('
+	; get pointer to request struct
+	LD IX, FRMQNT
+	CALL CALBAS
+	PUSH DE
+	; ending )
+	CALL CHKCHAR
+	DB ')'
+
+	POP IX ; pointer to request struct
+
+	PUSH HL ; save position in BASIC buffer
+
+	LD IY, .RET
+	JP ENABLE_PAGE0
+.RET:
+	EI
+	; set RAM functions to call
+	LD HL, .TILECOPY
+	LD (TILE.CALL2+1), HL
+	LD HL, .SETDESTROW
+	LD (TILE.CALL1+1), HL
+	CALL TILE
+
+    POP DE
+    POP BC
+    CALL RESTORE_PAGE_INFO
+
+	POP HL
+	RET
+.TILECOPY:
+	LD BC, #0898
+	JP MEMVRM.BBYTECOPY	
+.SETDESTROW:
+	LD HL, (TILETMP1)
+	JP SETWRT_LOCAL
+; *******************************************************************************************************
 
 
 EXT_END:
