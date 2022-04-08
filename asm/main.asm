@@ -979,7 +979,7 @@ GENCAL:
 ; _MEMVRM ( INT source, 
 ;			INT destination, 
 ;			INT count, 
-;			BYTE wait_vsync) >0 = treu
+;			BYTE wait_vsync) >0 = true
 ; will put ram in page 0 also, page 1 is already there
 ; wait_vsync will issue HALT before copying
 MEMVRM:
@@ -1127,7 +1127,18 @@ VRMMEM:
 	RET
 
 .LDIRMV:
-	CALL SETWRT_LOCAL
+	; set VRAM address *exactly* as in ROM, otherwise corruption
+	LD	A, L
+	DI
+	OUT	(099H), A
+	LD	A, H
+	AND	03FH
+	OUT	(099H), A
+	EI
+	;EX (SP), HL
+	;EX (SP), HL
+	;NOP
+	;NOP
 .L4:
     IN A, (#98)
 	LD (DE), A
@@ -1135,7 +1146,7 @@ VRMMEM:
     DEC BC
     LD A, C
     OR B
-    JP NZ, .L4
+    JR NZ, .L4
     RET
 ; *******************************************************************************************************
 
