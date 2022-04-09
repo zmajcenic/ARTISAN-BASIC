@@ -1759,7 +1759,7 @@ SHIFT04:
 	RR D
 	RR E
 
-	LD B, (HL)
+	LD B, (HL) ; get data
 	LD C, 0
 .M2:
 	JR .M2 ; also self-modifying part
