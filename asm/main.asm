@@ -1868,6 +1868,7 @@ SHIFT58:
 ; input HL'=pointer to character data
 ; input DE=output buffer containing background data
 ; input A=number of characters to process
+; input IX=pointer to structure describing input data
 ; modifies AF, AF', HL, HL', DE, DE', BC, BC'
 SHIFT_ROW:
 	PUSH AF
@@ -1899,6 +1900,7 @@ SHIFT_ROW:
 		PUSH HL
 			CALL .ADD8
 		POP HL
+		LD (BLIT_TMP2), DE ; DE+vertical shift
 .DONE:
 	POP AF
 	DEC A
