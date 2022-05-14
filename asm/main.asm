@@ -1,8 +1,6 @@
  ORG 04000h
 
-; INCLUDE "system_variables.inc"
-; INCLUDE "system_hooks.inc"
-; INCLUDE "bios_calls.inc"
+ DEFINE EXCLUDE_SOUND_PLAYER
 
 CHPUT   EQU     #A2
 CALBAS	EQU		#159
@@ -81,19 +79,23 @@ SCRMOD	EQU #FCAF ; current screen mode
  DW EXT_END 
 
 ; binary included AKG player compiled at #4012
- INCBIN "bin/AKG.bin"
- INCLUDE "symbol/AKG.sym"
+ IFNDEF EXCLUDE_SOUND_PLAYER
+	INCBIN "bin/AKG.bin"
+	INCLUDE "symbol/AKG.sym"
+ ENDIF
 
 ORIG.HTIMI:
 	DB 0, 0, 0, 0, 0
  EXPORT ORIG.HTIMI
 
+ IFNDEF EXCLUDE_SOUND_PLAYER
 MUSIC_INIT_STATUS:
  DB 0
 SFX_INIT_STATUS:
  DB 0
 SOUND_ENABLED:
  DB 0
+ ENDIF
 
 SPRATR_INIT_STATUS:
  DB 0
@@ -101,6 +103,8 @@ SPRATR_UPDATE_FLAG:
  DW 0
 SPRATR_DATA:
  DW 0
+SPRFLICKER_ENABLED:
+ DB 0
 
 ; to temporarily store stack pointer
 TMPSP:
@@ -180,6 +184,7 @@ CMDS_S:
 	DW SPRSET
 	DB "SPRGRPMOV", 0
 	DW SPRGRPMOV
+ IFNDEF EXCLUDE_SOUND_PLAYER
 	DB "SNDSFX", 0
 	DW SNDSFX
 	DB "SNDPLYON", 0
@@ -188,6 +193,7 @@ CMDS_S:
 	DW SNDPLYOFF
 	DB "SNDPLYINI", 0
 	DW SNDPLYINIT
+ ENDIF
 	DB "SPRATRINI", 0
 	DW SPRATRINI
 	DB 0
@@ -445,10 +451,14 @@ SPRATR_UPDATE:
 	RET NZ ; not screen 2
 .L0:
 	LD B, 32 ; sprite number
-	LD C, #98 ; register for vpd data output
+	LD C, #98 ; register for vdp data output
 	; set VDP address
 	LD HL, (ATRBAS)
+	LD A, (SPRFLICKER_ENABLED)
+	OR A
+	JR Z, .L3
 	LD A, (FLICKER)
+.L3:
 	LD E, A
 	EX AF, AF'
 	LD A, E
@@ -1158,6 +1168,7 @@ MBGE_HTIMI:
 	
 	CALL SPRATR_UPDATE
 
+ IFNDEF EXCLUDE_SOUND_PLAYER
 	LD A, (SOUND_ENABLED)
 	OR A
 	JR Z, .EXIT
@@ -1189,6 +1200,7 @@ MBGE_HTIMI:
     POP DE
     POP BC
     CALL RESTORE_PAGE_INFO
+ ENDIF
 
 .EXIT:
 	POP AF
@@ -1205,6 +1217,8 @@ VBLANK:
 	IN	A, (099H)
 	AND	A
 	JP P, .EXIT
+
+ IFNDEF EXCLUDE_SOUND_PLAYER
 	LD A, (SOUND_ENABLED)
 	OR A
 	JR Z, .EXIT
@@ -1234,12 +1248,15 @@ VBLANK:
     POP HL
     POP DE
     POP BC
+ ENDIF
+
 .EXIT:
 	POP AF
 	EI
 	RETI
 ; *******************************************************************************************************
 
+ IFNDEF EXCLUDE_SOUND_PLAYER
 ; *******************************************************************************************************
 ; function to handle CALL SNDPLYINIT basic extension
 ; initializes sound player
@@ -1428,15 +1445,17 @@ SNDSFX:
 	POP HL
 	RET
 ; *******************************************************************************************************
+ ENDIF
 
 ; *******************************************************************************************************
 ; function to handle CALL SPRATRINI basic extension
 ; initializes sprites handler
 ; _SPRATRINI ( INT sprites_attributes_data, 
-;			   INT update_variable_location )
+;			   INT update_variable_location,
+;			   INT sprite_flicker_enabled )
 ; expects both locations to be in range #8000+ or throws an error
 ; since these should be BASIC variables
-; sets variables SPRATR_INIT_STATUS, SPRATR_UPDATE_FLAG, SPRATR_DATA
+; sets variables SPRATR_INIT_STATUS, SPRATR_UPDATE_FLAG, SPRATR_DATA and SPRFLICKER_ENABLED
 SPRATRINI:
 	; opening (
 	CALL CHKCHAR
@@ -1448,13 +1467,25 @@ SPRATRINI:
 	; comma
 	CALL CHKCHAR
 	DB ','
-	; get update variable location SU%
+	; get address of sprite attribute table DIM SA%(3,31)
+	LD IX, FRMQNT
+	CALL CALBAS
+	PUSH DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get flicker enabled flag
 	LD IX, FRMQNT
 	CALL CALBAS
 	PUSH DE
 	; ending )
 	CALL CHKCHAR
 	DB ')'
+
+	POP DE ; get flicker flag
+	LD A, D
+	OR E
+	LD (SPRFLICKER_ENABLED), A
 
 	POP DE ; update variable location
 	BIT 7, D ; is address >= &h8000
