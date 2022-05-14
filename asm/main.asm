@@ -1,6 +1,6 @@
  ORG 04000h
 
- DEFINE EXCLUDE_SOUND_PLAYER
+; DEFINE EXCLUDE_SOUND_PLAYER
 
 CHPUT   EQU     #A2
 CALBAS	EQU		#159
@@ -135,7 +135,7 @@ CMDS:
     DW 0 ; I
     DW 0 ; J
     DW 0 ; K
-    DW CMDS_L ; L
+    DW 0 ; L
     DW CMDS_M ; M
     DW 0 ; N
     DW 0 ; O
@@ -144,21 +144,13 @@ CMDS:
     DW 0 ; R
     DW CMDS_S ; S
     DW CMDS_T ; T
-    DW CMDS_U ; U
+    DW 0 ; U
     DW CMDS_V ; V
     DW 0 ; W
     DW 0 ; X
     DW 0 ; Y
     DW 0 ; Z
 
-CMDS_U:
-	DEFB	"UPRINT",0      ; Print upper case string
-	DEFW	UPRINT
-    DB 0
-CMDS_L:
-	DEFB	"LPRINT",0      ; Print lower case string
-	DEFW	LPRINT
-    DB 0
 CMDS_M:
     DB "MEMVRM", 0
     DW MEMVRM
@@ -608,54 +600,6 @@ CALLHAND:
 	PUSH	DE
 	RET
  
-;---------------------------
- 
-;---------------------------
-UPRINT:
-	CALL	EVALTXTPARAM	; Evaluate text parameter
-	PUSH	HL
-        CALL    GETSTRPNT
-.LOOP
-        LD      A,(HL)
-        CALL    .UCASE
-        CALL    CHPUT  ;Print
-        INC     HL
-        DJNZ    .LOOP
- 
-	POP	HL
-	OR      A
-	RET
- 
-.UCASE:
-        CP      "a"
-        RET     C
-        CP      "z"+1
-        RET     NC
-        AND     %11011111
-        RET
-;---------------------------
-LPRINT:
-	CALL	EVALTXTPARAM	; Evaluate text parameter
-	PUSH	HL
-        CALL    GETSTRPNT
-.LOOP
-        LD      A,(HL)
-        CALL    .LCASE
-        CALL    CHPUT  ;Print
-        INC     HL
-        DJNZ    .LOOP
- 
-	POP	HL
-	OR      A
-	RET
- 
-.LCASE:
-        CP      "A"
-        RET     C
-        CP      "Z"+1
-        RET     NC
-        OR      %00100000
-        RET
 ;---------------------------
  
 GETSTRPNT:
