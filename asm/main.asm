@@ -1,6 +1,11 @@
  ORG 04000h
 
 ; DEFINE EXCLUDE_SOUND_PLAYER
+; DEFINE EXCLUDE_RAM_CMDS
+; DEFINE EXCLUDE_VRAM_CMDS
+; DEFINE EXCLUDE_BLIT_CMDS
+; DEFINE EXCLUDE_SPRITE_CMDS
+; DEFINE EXCLUDE_GENCAL
 
 CHPUT   EQU     #A2
 CALBAS	EQU		#159
@@ -97,6 +102,7 @@ SOUND_ENABLED:
  DB 0
  ENDIF
 
+ IFNDEF EXCLUDE_SPRITE_CMDS
 SPRATR_INIT_STATUS:
  DB 0
 SPRATR_UPDATE_FLAG:
@@ -105,21 +111,24 @@ SPRATR_DATA:
  DW 0
 SPRFLICKER_ENABLED:
  DB 0
+; to support sprite flicker
+FLICKER:
+ DB 0
+ ENDIF
 
 ; to temporarily store stack pointer
 TMPSP:
  DW 0
-; to support sprite flicker
-FLICKER:
- DB 0
 
 ; temp variables for BLIT, TILE functions
+ IFNDEF EXCLUDE_BLIT_CMDS
 TILETMP1:
 BLIT_TMP1:
  DW 0
 TILETMP2:
 BLIT_TMP2:
  DW 0
+ ENDIF
 
 ; List of pointers to available instructions (as ASCIIZ) and execute address (as word)
 ; per starting letter, if no commands with this letter, NULL value
@@ -152,30 +161,44 @@ CMDS:
     DW 0 ; Z
 
 CMDS_M:
+ IFNDEF EXCLUDE_VRAM_CMDS
     DB "MEMVRM", 0
     DW MEMVRM
+ ENDIF
+ IFNDEF EXCLUDE_RAM_CMDS
 	DB "MEMCPY", 0
 	DW MEMCPY
+ ENDIF
 	DB 0
 CMDS_F:
+ IFNDEF EXCLUDE_VRAM_CMDS
     DB "FILVRM", 0
     DW FILVRM
+ ENDIF
+ IFNDEF EXCLUDE_RAM_CMDS
     DB "FILRAM", 0
     DW FILRAM
+ ENDIF
     DB 0
 CMDS_G:
+ IFNDEF EXCLUDE_GENCAL
     DB "GENCAL", 0
     DW GENCAL
+ ENDIF
 	DB	0
 CMDS_V:
+ IFNDEF EXCLUDE_VRAM_CMDS
 	DB "VRMMEM", 0
 	DW VRMMEM
+ ENDIF
 	DB 0
 CMDS_S:
+ IFNDEF EXCLUDE_SPRITE_CMDS
 	DB "SPRSET", 0
 	DW SPRSET
 	DB "SPRGRPMOV", 0
 	DW SPRGRPMOV
+ ENDIF
  IFNDEF EXCLUDE_SOUND_PLAYER
 	DB "SNDSFX", 0
 	DW SNDSFX
@@ -186,22 +209,28 @@ CMDS_S:
 	DB "SNDPLYINI", 0
 	DW SNDPLYINIT
  ENDIF
+ IFNDEF EXCLUDE_SPRITE_CMDS
 	DB "SPRATRINI", 0
 	DW SPRATRINI
+ ENDIF	
 	DB 0
 CMDS_B:
+ IFNDEF EXCLUDE_BLIT_CMDS
 	DB "BLIT", 0
 	DW BLIT
 	DB "BOXMEMCPY", 0
 	DW BOXMEMCPY
 	DB "BOXMEMVRM", 0
 	DW BOXMEMVRM
+ ENDIF
 	DB 0
 CMDS_T:
+ IFNDEF EXCLUDE_BLIT_CMDS
 	DB "TILERAM", 0
 	DW TILERAM
 	DB "TILEVRM", 0
 	DW TILEVRM
+ ENDIF
 	DB 0
 
 ; ****************************************************************************************************
@@ -413,6 +442,7 @@ ENABLE_PAGE0:
 	JP (IY)
 ; *******************************************************************************************************
 
+ IFNDEF EXCLUDE_SPRITE_CMDS
 ; *******************************************************************************************************
 ; function updates sprite attribute table in VRAM based on buffer of the form with rotating for flicker
 ; struct {
@@ -547,6 +577,7 @@ SPRATR_UPDATE:
 	LD (HL), 0 ; zero out update flag
 	RET
 ; *******************************************************************************************************
+ ENDIF
 
 ; General BASIC CALL-instruction handler
 CALLHAND:
@@ -660,6 +691,7 @@ THROW_ERROR:
  
 ;---------------------------
  
+ IFNDEF EXCLUDE_RAM_CMDS
 ; *******************************************************************************************************
 ; function to handle CALL MEMCPY basic extension
 ; _MEMCPY ( INT source, 
@@ -714,7 +746,8 @@ MEMCPY:
 	POP HL
 	RET
 ; *******************************************************************************************************
-
+ ENDIF
+ IFNDEF EXCLUDE_VRAM_CMDS
 ; *******************************************************************************************************
 ; function to handle CALL FILVRM basic extension
 ; FILVRM ( INT offset, 
@@ -778,7 +811,9 @@ FILVRM:
 	POP HL
 	RET 
 ; *******************************************************************************************************
+ ENDIF
 
+ IFNDEF EXCLUDE_RAM_CMDS
 ; *******************************************************************************************************
 ; function to handle CALL FILRAM basic extension
 ; FILRAM ( INT start address, 
@@ -855,7 +890,9 @@ FILRAM:
     LDIR
     RET
 ; *******************************************************************************************************
+ ENDIF
 
+ IFNDEF EXCLUDE_GENCAL
 ; *******************************************************************************************************
 ; function to handle CALL GENCAL basic extension
 ; GENCAL ( INT fn_addr, = address of the function to call
@@ -926,7 +963,9 @@ GENCAL:
     EXX
     RET
 ; *******************************************************************************************************
+ ENDIF
 
+ IFNDEF EXCLUDE_VRAM_CMDS
 ; *******************************************************************************************************
 ; function to handle CALL MEMVRM basic extension
 ; copies from RAM to VRAM
@@ -1025,7 +1064,9 @@ MEMVRM:
 	JP	NZ, .BBYTECOPY
 	RET
 ; *******************************************************************************************************
+ ENDIF
 
+ IFNDEF EXCLUDE_VRAM_CMDS
 ; *******************************************************************************************************
 ; function to handle CALL VRMMEM basic extension
 ; copies from RAM to VRAM
@@ -1103,6 +1144,7 @@ VRMMEM:
     JR NZ, .L4
     RET
 ; *******************************************************************************************************
+ ENDIF
 
 ; *******************************************************************************************************
 ; H.TIMI function
@@ -1110,7 +1152,9 @@ MBGE_HTIMI:
  EXPORT MBGE_HTIMI
 	PUSH AF
 	
+ IFNDEF EXCLUDE_SPRITE_CMDS
 	CALL SPRATR_UPDATE
+ ENDIF
 
  IFNDEF EXCLUDE_SOUND_PLAYER
 	LD A, (SOUND_ENABLED)
@@ -1391,6 +1435,7 @@ SNDSFX:
 ; *******************************************************************************************************
  ENDIF
 
+ IFNDEF EXCLUDE_SPRITE_CMDS
 ; *******************************************************************************************************
 ; function to handle CALL SPRATRINI basic extension
 ; initializes sprites handler
@@ -1705,7 +1750,9 @@ SPRGRPMOV:
 	DJNZ .L4
 	RET
 ; *******************************************************************************************************
+ ENDIF
 
+ IFNDEF EXCLUDE_BLIT_CMDS
 ; *******************************************************************************************************
 ; function rotates mask and data of several characters and applies to background data
 ; this handles x-shift from 0 to 4
@@ -2177,7 +2224,14 @@ TILEVRM:
 	RET
 .TILECOPY:
 	LD BC, #0898
+ IFNDEF EXCLUDE_VRAM_CMDS
 	JP MEMVRM.BBYTECOPY	
+ ELSE
+.BBYTECOPY:
+	OUTI
+	JP	NZ, .BBYTECOPY
+	RET
+ ENDIF
 .SETDESTROW:
 	LD HL, (TILETMP1)
 	JP SETWRT_LOCAL
@@ -2316,7 +2370,12 @@ BOXMEMVRM:
 .COPYDATA:
 	LD B, C
 	LD C, #98
+ IFNDEF EXCLUDE_VRAM_CMDS	
 	JP MEMVRM.BBYTECOPY
+ ELSE
+	JP TILEVRM.BBYTECOPY
+ ENDIF
 ; *******************************************************************************************************
+ ENDIF
 
 EXT_END:
