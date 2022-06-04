@@ -633,35 +633,34 @@ CALLHAND:
  
 ;---------------------------
  
-GETSTRPNT:
+;GETSTRPNT:
 ; OUT:
 ; HL = String Address
 ; B  = Lenght
+;        LD      HL,(USR)
+;        LD      B,(HL)
+;        INC     HL
+;        LD      E,(HL)
+;        INC     HL
+;        LD      D,(HL)
+;        EX      DE,HL
+;        RET
  
-        LD      HL,(USR)
-        LD      B,(HL)
-        INC     HL
-        LD      E,(HL)
-        INC     HL
-        LD      D,(HL)
-        EX      DE,HL
-        RET
- 
-EVALTXTPARAM:
-	CALL	CHKCHAR
-	DEFB	"("             ; Check for (
-	LD	IX,FRMEVL
-	CALL	CALBAS		; Evaluate expression
-        LD      A,(VALTYP)
-        CP      3               ; Text type?
-        JP      NZ,TYPE_MISMATCH
-        PUSH	HL
-        LD	IX,FRESTR         ; Free the temporary string
-        CALL	CALBAS
-        POP	HL
-	CALL	CHKCHAR
-	DEFB	")"             ; Check for )
-        RET
+;EVALTXTPARAM:
+;	CALL	CHKCHAR
+;	DEFB	"("             ; Check for (
+;	LD	IX,FRMEVL
+;	CALL	CALBAS		; Evaluate expression
+;       LD      A,(VALTYP)
+;        CP      3               ; Text type?
+;        JP      NZ,TYPE_MISMATCH
+;        PUSH	HL
+;        LD	IX,FRESTR         ; Free the temporary string
+;        CALL	CALBAS
+;        POP	HL
+;	CALL	CHKCHAR
+;	DEFB	")"             ; Check for )
+;        RET
  
  
 CHKCHAR:
