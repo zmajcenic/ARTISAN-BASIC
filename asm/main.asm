@@ -1038,7 +1038,9 @@ MEMVRM:
 
 .LDIRVM:
 	EX DE, HL
+	DI
 	CALL SETWRT_LOCAL
+	EI
 	EX DE, HL
 	LD A, B
 	OR A
@@ -2233,7 +2235,10 @@ TILEVRM:
  ENDIF
 .SETDESTROW:
 	LD HL, (TILETMP1)
-	JP SETWRT_LOCAL
+	DI
+	CALL SETWRT_LOCAL
+	EI
+	RET
 ; *******************************************************************************************************
 
 ; *******************************************************************************************************
@@ -2363,7 +2368,9 @@ BOXMEMVRM:
 	RET
 .SETDEST:
 	EX DE, HL
+	DI
 	CALL SETWRT_LOCAL
+	EI
 	EX DE, HL
 	RET	
 .COPYDATA:
