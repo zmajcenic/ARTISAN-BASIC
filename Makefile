@@ -17,8 +17,8 @@ sound:
 
 bin:
 	sjasmplus --fullpath asm\\main.asm --raw=$(BIN_DIR)\\main.bin --sym=$(SYM_DIR)\\main.sym --lst=$(SYM_DIR)\\main.lst --exp=$(SYM_DIR)\\main.exp -I.
-	sjasmplus --fullpath asm\\MBGE.asm --raw=$(BIN_DIR)\\MBGE.bin --sym=$(SYM_DIR)\\MBGE.sym --lst=$(SYM_DIR)\\MBGE.lst -I.
-	cp bin/MBGE.bin dsk/
+	sjasmplus --fullpath asm\\ARTISAN.asm --raw=$(BIN_DIR)\\ARTISAN.bin --sym=$(SYM_DIR)\\ARTISAN.sym --lst=$(SYM_DIR)\\ARTISAN.lst -I.
+	cp bin/ARTISAN.bin dsk/
 
 compress:
 	sjasmplus --fullpath game\\sprites_permanent_data.asm --raw=$(BIN_DIR)\\sprites_permanent_data.raw --sym=$(SYM_DIR)\\sprites_permanent_data.sym

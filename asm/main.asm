@@ -79,11 +79,15 @@ SCRMOD	EQU #FCAF ; current screen mode
  ; simulate cartridge with BASIC extension
  DW 04241H, 0, CALLHAND, 0, 0, 0, 0, 0
 
-; this location #400A stores last location used by basic extension
+; this location #4010 stores last location used by basic extension
 ; free memory after that point
  DW EXT_END 
 
-; binary included AKG player compiled at #4012
+; this location #4012 stores extension version in DAA format
+; first byte is major version and second minor
+ DB #00, #70
+
+; binary included AKG player compiled at #4014
  IFNDEF EXCLUDE_SOUND_PLAYER
 	INCBIN "bin/AKG.bin"
 	INCLUDE "symbol/AKG.sym"
