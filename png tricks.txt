@@ -1,0 +1,5 @@
+PNG format - upper part is foreground and lower is mask
+----------
+png2msx -v -hl lik.png
+bsave.sh lik.png.chr 0 0 > lik.bin
+cp lik.bin dsk/
