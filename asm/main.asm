@@ -1506,7 +1506,7 @@ SPRATRINI:
 ; _SPRSET ( BYTE sprite_num , valid 0-31
 ;			INT x, 
 ;			INT y, 
-;			INT pattern, valid 0-31, otherwise ignored
+;			INT pattern, valid 0-63, otherwise ignored
 ;			INT color, valid 0-15, otherwise ignored
 SPRSET:
 	LD A, (SPRATR_INIT_STATUS)
@@ -1590,15 +1590,18 @@ SPRSET:
 	PUSH HL
 	EXX
 	POP HL
-	; check if 0<=pattern<32
+	; check if 0<=pattern<64
 	LD A, D
 	OR A
 	JR NZ, .L3
-	LD A, L
-	CP 32
+	LD A, E
+	CP 64
 	JR NC, .L3
 	; set pattern
-	LD (HL), E
+	;ADD A, A
+	ADD A, A
+	ADD A, A
+	LD (HL), A
 	INC HL
 	LD (HL), D
 	INC HL
