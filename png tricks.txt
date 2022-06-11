@@ -3,3 +3,9 @@ PNG format - upper part is foreground and lower is mask
 png2msx -v -hl lik.png
 bsave.sh lik.png.chr 0 0 > lik.bin
 cp lik.bin dsk/
+
+png2spr -v -hl 
+obavezno za background color koristiti boju sa 
+- alpha kanal 0
+- 255,0,255 ljubičastu
+- ili sivu 0x404040

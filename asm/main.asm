@@ -214,8 +214,10 @@ CMDS_S:
 	DW SNDPLYINIT
  ENDIF
  IFNDEF EXCLUDE_SPRITE_CMDS
-	DB "SPRATRINI", 0
-	DW SPRATRINI
+	DB "SPRENABLE", 0
+	DW SPRENABLE
+	DB "SPRDISABLE", 0
+	DW SPRDISABLE
  ENDIF	
 	DB 0
 CMDS_B:
@@ -452,7 +454,7 @@ ENABLE_PAGE0:
 ; struct {
 ; DW y
 ; DW x
-; DW pattern (0-31)
+; DW pattern (0-63)
 ; DW color
 ; } [32]
 ; will hide sprites whose location is outside of visible area
@@ -1442,15 +1444,15 @@ SNDSFX:
 
  IFNDEF EXCLUDE_SPRITE_CMDS
 ; *******************************************************************************************************
-; function to handle CALL SPRATRINI basic extension
+; function to handle CALL SPRENABLE basic extension
 ; initializes sprites handler
-; _SPRATRINI ( INT sprites_attributes_data, 
+; _SPRENABLE ( INT sprites_attributes_data, 
 ;			   INT update_variable_location,
 ;			   INT sprite_flicker_enabled )
 ; expects both locations to be in range #8000+ or throws an error
 ; since these should be BASIC variables
 ; sets variables SPRATR_INIT_STATUS, SPRATR_UPDATE_FLAG, SPRATR_DATA and SPRFLICKER_ENABLED
-SPRATRINI:
+SPRENABLE:
 	; opening (
 	CALL CHKCHAR
 	DB '('
@@ -1461,7 +1463,7 @@ SPRATRINI:
 	; comma
 	CALL CHKCHAR
 	DB ','
-	; get address of sprite attribute table DIM SA%(3,31)
+	; get address of sprite update flag location
 	LD IX, FRMQNT
 	CALL CALBAS
 	PUSH DE
@@ -1496,6 +1498,17 @@ SPRATRINI:
 .L2:
 	LD (SPRATR_DATA), DE
 	LD A, 1
+	LD (SPRATR_INIT_STATUS), A
+	RET
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function to handle CALL SPRDISABLE basic extension
+; disables sprites handling
+; _SPRDISABLE
+; resets variable SPRATR_INIT_STATUS 
+SPRDISABLE:
+	XOR A
 	LD (SPRATR_INIT_STATUS), A
 	RET
 ; *******************************************************************************************************
@@ -1599,8 +1612,8 @@ SPRSET:
 	JR NC, .L3
 	; set pattern
 	;ADD A, A
-	ADD A, A
-	ADD A, A
+	;ADD A, A
+	;ADD A, A
 	LD (HL), A
 	INC HL
 	LD (HL), D
