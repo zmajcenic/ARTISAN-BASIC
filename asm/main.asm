@@ -7,6 +7,8 @@
 ; DEFINE EXCLUDE_SPRITE_CMDS
 ; DEFINE EXCLUDE_GENCAL
 
+ DEFINE BLIT_WITH_STRUCT_POINTER
+
 CHPUT   EQU     #A2
 CALBAS	EQU		#159
 ERRHAND EQU     #406F
@@ -37,6 +39,7 @@ RAMAD2	EQU	0F343h	; Main-RAM Slot (08000h~0BFFFh)
 RAMAD3	EQU	0F344h	; Main-RAM Slot (0C000h~0FFFFh)
 EXPTBL	EQU #FCC1
 SCRMOD	EQU #FCAF ; current screen mode
+REG1SAV EQU #F3E0 ; VDP(1)
 
 ; BASIC error codes
 ;01 NEXT without FOR 
@@ -547,9 +550,13 @@ SPRATR_UPDATE:
 	OUT (C), D
 	OUT (C), L
 	POP HL ; pattern
+	LD A, (REG1SAV)
+	AND 2
 	LD A, L
+	JR Z, .SMALLSPRITES
 	ADD A, A
 	ADD A, A ; needs to go at 4x
+.SMALLSPRITES:
 	OUT (#98), A
 	POP HL ; color
 	LD A, L
@@ -1975,8 +1982,8 @@ SHIFT_ROW:
 ; *******************************************************************************************************
 ; function rotates mask and character data and applies it to background
 ; input IX=pointer to structure describing input data
-; +0  DW horizontal shift count 0-7
-; +2  DW vertical shift count 0-7
+; +0  DW horizontal shift count 0-7 (low byte used)
+; +2  DW vertical shift count 0-7 (low byte used)
 ; +4  DW background data start;
 ; +6  DW background add to value to next row of background data
 ; +8  DW mask data start;
@@ -2065,6 +2072,7 @@ SHIFT_MERGE_CHARACTER:
 	RET	
 ; *******************************************************************************************************
 
+ IFDEF BLIT_WITH_STRUCT_POINTER
 ; *******************************************************************************************************
 ; function to handle CALL BLIT basic extension
 ; rotates 1-bit character drawing horizontally with mask and character data and
@@ -2101,6 +2109,7 @@ BLIT:
 	POP HL
 	RET
 ; *******************************************************************************************************
+ ENDIF
 
 ; *******************************************************************************************************
 ; generic function to implement tiling
