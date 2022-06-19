@@ -1089,7 +1089,7 @@
  607  4FA6 56               LD D, (HL)
  608  4FA7 7A               LD A, D
  609  4FA8 B3               OR E
- 610  4FA9 28 24            JR Z, .CMDNOTRECOGNIZED
+ 610  4FA9 28 23            JR Z, .CMDNOTRECOGNIZED
  611  4FAB EB               EX DE, HL
  612  4FAC              .CHKCMD:
  613  4FAC 11 89 FD     	LD	DE, PROCNM
@@ -1117,8 +1117,8 @@
  635  4FCA 23           	INC	HL		; Skip address
  636  4FCB BE           	CP	(HL)
  637  4FCC 20 DE        	JR	NZ,.CHKCMD	; Not end of table, go checking
- 638  4FCE E1           	POP	HL
- 639  4FCF              .CMDNOTRECOGNIZED:
+ 638  4FCE              .CMDNOTRECOGNIZED:
+ 639  4FCE E1           	POP	HL
  640  4FCF 37               SCF
  641  4FD0 C9           	RET
  642  4FD1

@@ -8,6 +8,7 @@
 ; DEFINE EXCLUDE_GENCAL
 
  DEFINE BLIT_WITH_STRUCT_POINTER
+;DEFINE BLIT_WITH_PARAMETERS
 
 CHPUT   EQU     #A2
 CALBAS	EQU		#159
@@ -128,13 +129,17 @@ TMPSP:
  DW 0
 
 ; temp variables for BLIT, TILE functions
- IFNDEF EXCLUDE_BLIT_CMDS
 TILETMP1:
 BLIT_TMP1:
  DW 0
 TILETMP2:
 BLIT_TMP2:
  DW 0
+ IFDEF BLIT_WITH_PARAMETERS
+BLIT_TMP:
+ DS 4
+BLIT_STRUCT:
+ DS 17
  ENDIF
 
 ; List of pointers to available instructions (as ASCIIZ) and execute address (as word)
@@ -635,8 +640,8 @@ CALLHAND:
 	INC	HL		; Skip address
 	CP	(HL)
 	JR	NZ,.CHKCMD	; Not end of table, go checking
-	POP	HL
 .CMDNOTRECOGNIZED:
+	POP	HL
     SCF
 	RET
  
@@ -2107,6 +2112,158 @@ BLIT:
     CALL RESTORE_PAGE_INFO
 
 	POP HL
+	RET
+; *******************************************************************************************************
+ ENDIF
+
+ IFDEF BLIT_WITH_PARAMETERS
+; *******************************************************************************************************
+; function to handle CALL BLIT basic extension
+; rotates 1-bit character drawing horizontally with mask and character data and
+; fuses with background data and applies vertical shift too
+; in form without pointers
+; BLIT ( INT x,
+;		 INT y,
+;		 INT char_data_pointer,
+;		 INT mask_data_pointer,
+;		 INT width (in characters),
+;		 INT height (in characters),
+;		 INT background_pointer (top left), 
+;		 INT background_width (in characters),
+;		 INT background_height (in characters))
+; will put ram in page 0 also, page 1 is already there
+BLIT:
+	; opening (
+	CALL CHKCHAR
+	DB '('
+	; get x coordinate
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD A, E
+	AND 7
+	LD (BLIT_STRUCT+0), A
+	LD A, E
+	.3 SRL A
+	LD (BLIT_TMP+0),A
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get y coordinate
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD A, E
+	AND 7
+	LD (BLIT_STRUCT+2), A
+	LD A, E
+	.3 SRL A
+	LD (BLIT_TMP+1),A
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get char data pointer
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD (BLIT_STRUCT+10), DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get mask data pointer
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD (BLIT_STRUCT+8), DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get width
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD A, E
+	LD (BLIT_STRUCT+14), A
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get height
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD A, E
+	LD (BLIT_STRUCT+16), A
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get background pointer
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD (BLIT_STRUCT+4), DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get background width
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD A, E
+	LD (BLIT_TMP+2), A
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get background height
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD A, E
+	LD (BLIT_TMP+3), A
+	; ending )
+	CALL CHKCHAR
+	DB ')'
+
+	PUSH HL ; save position in BASIC buffer
+
+	; calculate char&mask add to value
+	LD H, 0
+	LD A, (BLIT_STRUCT+14)
+	LD L, A
+	CALL .HLx8
+	LD (BLIT_STRUCT+12), HL
+	; calculate background add to value
+	LD H, 0
+	LD A, (BLIT_TMP+2)
+	LD L, A
+	CALL .HLx8
+	LD (BLIT_STRUCT+6), HL
+	; calculate pointer to background location
+	LD HL, 0
+	LD A,(BLIT_TMP+1)
+	OR A
+	JR Z, .L1
+	LD B,A
+	LD DE,(BLIT_STRUCT+6)
+.L0:
+	ADD HL, DE
+	DJNZ .L0
+.L1:
+	EX DE,HL
+	LD H,0
+	LD A,(BLIT_TMP+0)
+	LD L,A
+	CALL .HLx8
+	ADD HL,DE
+	LD DE,(BLIT_STRUCT+4)
+	ADD HL,DE
+	LD (BLIT_STRUCT+4),HL
+
+	LD IY, .RET
+	JP ENABLE_PAGE0
+.RET:
+	EI
+	LD IX, BLIT_STRUCT
+	CALL SHIFT_MERGE_CHARACTER
+
+    POP DE
+    POP BC
+    CALL RESTORE_PAGE_INFO
+
+	POP HL
+	RET
+.HLx8:
+	.3 ADD HL, HL
 	RET
 ; *******************************************************************************************************
  ENDIF
