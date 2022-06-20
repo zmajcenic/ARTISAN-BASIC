@@ -7,8 +7,8 @@
 ; DEFINE EXCLUDE_SPRITE_CMDS
 ; DEFINE EXCLUDE_GENCAL
 
- DEFINE BLIT_WITH_STRUCT_POINTER
-;DEFINE BLIT_WITH_PARAMETERS
+ ;DEFINE BLIT_WITH_STRUCT_POINTER
+ DEFINE BLIT_WITH_PARAMETERS
 
 CHPUT   EQU     #A2
 CALBAS	EQU		#159
@@ -2142,8 +2142,7 @@ BLIT:
 	LD A, E
 	AND 7
 	LD (BLIT_STRUCT+0), A
-	LD A, E
-	.3 SRL A
+	CALL .DAdiv8
 	LD (BLIT_TMP+0),A
 	; comma
 	CALL CHKCHAR
@@ -2154,8 +2153,7 @@ BLIT:
 	LD A, E
 	AND 7
 	LD (BLIT_STRUCT+2), A
-	LD A, E
-	.3 SRL A
+	CALL .DAdiv8
 	LD (BLIT_TMP+1),A
 	; comma
 	CALL CHKCHAR
@@ -2264,6 +2262,15 @@ BLIT:
 	RET
 .HLx8:
 	.3 ADD HL, HL
+	RET
+.DAdiv8:
+	LD A,E
+	SRA D 
+    RR  A
+    SRA D 
+    RR  A
+    SRA D 
+    RR  A
 	RET
 ; *******************************************************************************************************
  ENDIF
