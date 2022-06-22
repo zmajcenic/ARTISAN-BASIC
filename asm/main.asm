@@ -1,14 +1,16 @@
  ORG 04000h
 
-; DEFINE EXCLUDE_SOUND_PLAYER
-; DEFINE EXCLUDE_RAM_CMDS
-; DEFINE EXCLUDE_VRAM_CMDS
-; DEFINE EXCLUDE_BLIT_CMDS
-; DEFINE EXCLUDE_SPRITE_CMDS
-; DEFINE EXCLUDE_GENCAL
+; control variables to include/exclude parts of code
+SOUND_CMDS	 	EQU 1
+RAM_CMDS 		EQU 1
+VRAM_CMDS 		EQU 1
+BLIT_CMDS		EQU 1
+SPRITE_CMDS 	EQU 1
+GENCAL_CMD		EQU 1
+TILE_CMDS		EQU 1
+BOX_CMDS		EQU 1
 
- ;DEFINE BLIT_WITH_STRUCT_POINTER
- DEFINE BLIT_WITH_PARAMETERS
+ DEFINE CMDS_WITH_PARAMETERS
 
 CHPUT   EQU     #A2
 CALBAS	EQU		#159
@@ -24,15 +26,16 @@ FRMQNT	EQU		#542F
 ; input HL=pointer to current program expression
 ; output HL=next address
 ; output A=E=byte read
-GETBYT	EQU		#521C
-CHRGTR  EQU     #4666
-SYNCHR	EQU		#558C
-VALTYP  EQU     #F663
-USR     EQU     #F7F8
-PROCNM	EQU		#FD89
-BIOS_FILVRM  EQU     #56
-CLIKSW	EQU		#F3DB
-ATRBAS	EQU		#F928
+GETBYT		EQU		#521C
+CHRGTR  	EQU     #4666
+SYNCHR		EQU		#558C
+VALTYP  	EQU     #F663
+USR     	EQU     #F7F8
+PROCNM		EQU		#FD89
+BIOS_FILVRM EQU     #0056
+CLIKSW		EQU		#F3DB
+ATRBAS		EQU		#F928
+GRPCGP		EQU		#F3CB
 
 RAMAD0	EQU	0F341h	; Main-RAM Slot (00000h~03FFFh)
 RAMAD1	EQU	0F342h	; Main-RAM Slot (04000h~07FFFh)
@@ -92,7 +95,7 @@ REG1SAV EQU #F3E0 ; VDP(1)
  DB #00, #70
 
 ; binary included AKG player compiled at #4014
- IFNDEF EXCLUDE_SOUND_PLAYER
+ IF (SOUND_CMDS == 1)
 	INCBIN "bin/AKG.bin"
 	INCLUDE "symbol/AKG.sym"
  ENDIF
@@ -101,7 +104,7 @@ ORIG.HTIMI:
 	DB 0, 0, 0, 0, 0
  EXPORT ORIG.HTIMI
 
- IFNDEF EXCLUDE_SOUND_PLAYER
+ IF (SOUND_CMDS == 1)
 MUSIC_INIT_STATUS:
  DB 0
 SFX_INIT_STATUS:
@@ -110,7 +113,7 @@ SOUND_ENABLED:
  DB 0
  ENDIF
 
- IFNDEF EXCLUDE_SPRITE_CMDS
+ IF (SPRITE_CMDS == 1)
 SPRATR_INIT_STATUS:
  DB 0
 SPRATR_UPDATE_FLAG:
@@ -129,89 +132,126 @@ TMPSP:
  DW 0
 
 ; temp variables for BLIT, TILE functions
+ IF (BLIT_CMDS + TILE_CMDS > 0)
+BLIT_TMP:
 TILETMP1:
 BLIT_TMP1:
  DW 0
 TILETMP2:
 BLIT_TMP2:
  DW 0
- IFDEF BLIT_WITH_PARAMETERS
-BLIT_TMP:
- DS 4
+  IFDEF CMDS_WITH_PARAMETERS
 BLIT_STRUCT:
  DS 17
+  ENDIF
  ENDIF
 
 ; List of pointers to available instructions (as ASCIIZ) and execute address (as word)
 ; per starting letter, if no commands with this letter, NULL value
 CMDS:
     DW 0 ; A
+ IF (BLIT_CMDS + BOX_CMDS > 0)
     DW CMDS_B ; B
+ ELSE
+	DW 0
+ ENDIF
     DW 0 ; C
     DW 0 ; D
     DW 0 ; E
+ IF (VRAM_CMDS + RAM_CMDS > 0)
     DW CMDS_F; F
+ ELSE
+	DW 0
+ ENDIF
+ IF (GENCAL_CMD > 0)
     DW CMDS_G; G
+ ELSE
+	DW 0
+ ENDIF
     DW 0 ; H
     DW 0 ; I
     DW 0 ; J
     DW 0 ; K
     DW 0 ; L
+ IF (VRAM_CMDS + RAM_CMDS > 0)
     DW CMDS_M ; M
+ ELSE
+	DW 0
+ ENDIF
     DW 0 ; N
     DW 0 ; O
     DW 0 ; P
     DW 0 ; Q
     DW 0 ; R
+ IF (SOUND_CMDS + SPRITE_CMDS > 0)
     DW CMDS_S ; S
+ ELSE
+	DW 0
+ ENDIF
+ IF (TILE_CMDS > 0)
     DW CMDS_T ; T
+ ELSE
+	DW 0
+ ENDIF
     DW 0 ; U
+ IF (VRAM_CMDS > 0)
     DW CMDS_V ; V
+ ELSE
+	DW 0
+ ENDIF
     DW 0 ; W
     DW 0 ; X
     DW 0 ; Y
     DW 0 ; Z
 
 CMDS_M:
- IFNDEF EXCLUDE_VRAM_CMDS
+ IF (VRAM_CMDS == 1)
     DB "MEMVRM", 0
     DW MEMVRM
  ENDIF
- IFNDEF EXCLUDE_RAM_CMDS
+ IF (RAM_CMDS == 1)
 	DB "MEMCPY", 0
 	DW MEMCPY
  ENDIF
+ IF (VRAM_CMDS + RAM_CMDS > 0)
 	DB 0
+ ENDIF
 CMDS_F:
- IFNDEF EXCLUDE_VRAM_CMDS
+ IF (VRAM_CMDS == 1)
     DB "FILVRM", 0
     DW FILVRM
  ENDIF
- IFNDEF EXCLUDE_RAM_CMDS
+ IF (RAM_CMDS == 1)
     DB "FILRAM", 0
     DW FILRAM
  ENDIF
+ IF (VRAM_CMDS + RAM_CMDS > 0)
     DB 0
+ ENDIF
 CMDS_G:
- IFNDEF EXCLUDE_GENCAL
+ IF (GENCAL_CMD == 1)
     DB "GENCAL", 0
     DW GENCAL
  ENDIF
+ IF (GENCAL_CMD > 0)
 	DB	0
+ ENDIF
 CMDS_V:
- IFNDEF EXCLUDE_VRAM_CMDS
+ IF (VRAM_CMDS == 1)
 	DB "VRMMEM", 0
 	DW VRMMEM
  ENDIF
+ IF (VRAM_CMDS > 0)
 	DB 0
+ ENDIF
 CMDS_S:
- IFNDEF EXCLUDE_SPRITE_CMDS
+ IF (SPRITE_CMDS == 1)
 	DB "SPRSET", 0
 	DW SPRSET
 	DB "SPRGRPMOV", 0
 	DW SPRGRPMOV
  ENDIF
- IFNDEF EXCLUDE_SOUND_PLAYER
+ IF (SOUND_CMDS == 1)
 	DB "SNDSFX", 0
 	DW SNDSFX
 	DB "SNDPLYON", 0
@@ -221,32 +261,41 @@ CMDS_S:
 	DB "SNDPLYINI", 0
 	DW SNDPLYINIT
  ENDIF
- IFNDEF EXCLUDE_SPRITE_CMDS
+ IF (SPRITE_CMDS == 1)
 	DB "SPRENABLE", 0
 	DW SPRENABLE
 	DB "SPRDISABLE", 0
 	DW SPRDISABLE
- ENDIF	
+ ENDIF
+ IF (SOUND_CMDS + SPRITE_CMDS > 0)
 	DB 0
+ ENDIF
 CMDS_B:
- IFNDEF EXCLUDE_BLIT_CMDS
+ IF (BLIT_CMDS == 1)
 	DB "BLIT", 0
 	DW BLIT
+ ENDIF
+ IF (BOX_CMDS == 1)
 	DB "BOXMEMCPY", 0
 	DW BOXMEMCPY
 	DB "BOXMEMVRM", 0
 	DW BOXMEMVRM
  ENDIF
+ IF (BLIT_CMDS + BOX_CMDS > 0)
 	DB 0
+ ENDIF
 CMDS_T:
- IFNDEF EXCLUDE_BLIT_CMDS
+ IF (TILE_CMDS == 1)
 	DB "TILERAM", 0
 	DW TILERAM
 	DB "TILEVRM", 0
 	DW TILEVRM
  ENDIF
+ IF (TILE_CMDS > 0)
 	DB 0
+ ENDIF
 
+ IF (VRAM_CMDS + TILE_CMDS + SPRITE_CMDS > 0)
 ; ****************************************************************************************************
 ; function sets VRAM address
 ; input HL=address
@@ -258,6 +307,27 @@ SETWRT_LOCAL:
 	AND	03FH
 	OR	040H
 	OUT	(099H), A
+	RET
+; ****************************************************************************************************
+ ENDIF
+
+ IF (VRAM_CMDS + TILE_CMDS > 0)
+; ****************************************************************************************************
+; function copies data from RAM to VRAM
+; input HL=address in RAM
+; input B=count
+; modifies AF
+BBYTECOPY:
+	OUTI
+	JP	NZ, BBYTECOPY
+	RET
+; ****************************************************************************************************
+ ENDIF
+
+; ****************************************************************************************************
+; function multiplies HL by 8
+HLx8:
+	.3 ADD HL, HL
 	RET
 ; ****************************************************************************************************
 
@@ -456,7 +526,7 @@ ENABLE_PAGE0:
 	JP (IY)
 ; *******************************************************************************************************
 
- IFNDEF EXCLUDE_SPRITE_CMDS
+ IF (SPRITE_CMDS == 1)
 ; *******************************************************************************************************
 ; function updates sprite attribute table in VRAM based on buffer of the form with rotating for flicker
 ; struct {
@@ -708,7 +778,7 @@ THROW_ERROR:
  
 ;---------------------------
  
- IFNDEF EXCLUDE_RAM_CMDS
+ IF (RAM_CMDS == 1)
 ; *******************************************************************************************************
 ; function to handle CALL MEMCPY basic extension
 ; _MEMCPY ( INT source, 
@@ -764,7 +834,8 @@ MEMCPY:
 	RET
 ; *******************************************************************************************************
  ENDIF
- IFNDEF EXCLUDE_VRAM_CMDS
+
+ IF (VRAM_CMDS == 1)
 ; *******************************************************************************************************
 ; function to handle CALL FILVRM basic extension
 ; FILVRM ( INT offset, 
@@ -830,7 +901,7 @@ FILVRM:
 ; *******************************************************************************************************
  ENDIF
 
- IFNDEF EXCLUDE_RAM_CMDS
+ IF (RAM_CMDS == 1)
 ; *******************************************************************************************************
 ; function to handle CALL FILRAM basic extension
 ; FILRAM ( INT start address, 
@@ -909,7 +980,7 @@ FILRAM:
 ; *******************************************************************************************************
  ENDIF
 
- IFNDEF EXCLUDE_GENCAL
+ IF (GENCAL_CMD == 1)
 ; *******************************************************************************************************
 ; function to handle CALL GENCAL basic extension
 ; GENCAL ( INT fn_addr, = address of the function to call
@@ -945,8 +1016,8 @@ GENCAL:
     EXX
 
     POP HL ; get pointer to register values
+	DI
     LD (GENCAL_VAR_SP), SP
-    DI
     LD SP, HL
     POP AF
     POP BC
@@ -982,7 +1053,7 @@ GENCAL:
 ; *******************************************************************************************************
  ENDIF
 
- IFNDEF EXCLUDE_VRAM_CMDS
+ IF (VRAM_CMDS == 1)
 ; *******************************************************************************************************
 ; function to handle CALL MEMVRM basic extension
 ; copies from RAM to VRAM
@@ -1068,7 +1139,7 @@ MEMVRM:
 .L2:
 	LD D, B
 	LD B, 0
-	CALL .BBYTECOPY
+	CALL BBYTECOPY
 	LD B, D
 	DJNZ .L2
 	POP BC
@@ -1078,14 +1149,11 @@ MEMVRM:
 	RET Z
 	LD B, C
 	LD C, #98
-.BBYTECOPY:
-	OUTI
-	JP	NZ, .BBYTECOPY
-	RET
+	JP BBYTECOPY
 ; *******************************************************************************************************
  ENDIF
 
- IFNDEF EXCLUDE_VRAM_CMDS
+ IF (VRAM_CMDS == 1)
 ; *******************************************************************************************************
 ; function to handle CALL VRMMEM basic extension
 ; copies from RAM to VRAM
@@ -1171,11 +1239,11 @@ MBGE_HTIMI:
  EXPORT MBGE_HTIMI
 	PUSH AF
 	
- IFNDEF EXCLUDE_SPRITE_CMDS
+ IF (SPRITE_CMDS == 1)
 	CALL SPRATR_UPDATE
  ENDIF
 
- IFNDEF EXCLUDE_SOUND_PLAYER
+ IF (SOUND_CMDS == 1)
 	LD A, (SOUND_ENABLED)
 	OR A
 	JR Z, .EXIT
@@ -1225,7 +1293,7 @@ VBLANK:
 	AND	A
 	JP P, .EXIT
 
- IFNDEF EXCLUDE_SOUND_PLAYER
+ IF (SOUND_CMDS == 1)
 	LD A, (SOUND_ENABLED)
 	OR A
 	JR Z, .EXIT
@@ -1263,7 +1331,7 @@ VBLANK:
 	RETI
 ; *******************************************************************************************************
 
- IFNDEF EXCLUDE_SOUND_PLAYER
+ IF (SOUND_CMDS == 1)
 ; *******************************************************************************************************
 ; function to handle CALL SNDPLYINIT basic extension
 ; initializes sound player
@@ -1454,7 +1522,7 @@ SNDSFX:
 ; *******************************************************************************************************
  ENDIF
 
- IFNDEF EXCLUDE_SPRITE_CMDS
+ IF (SPRITE_CMDS == 1)
 ; *******************************************************************************************************
 ; function to handle CALL SPRENABLE basic extension
 ; initializes sprites handler
@@ -1785,7 +1853,7 @@ SPRGRPMOV:
 ; *******************************************************************************************************
  ENDIF
 
- IFNDEF EXCLUDE_BLIT_CMDS
+ IF (BLIT_CMDS == 1)
 ; *******************************************************************************************************
 ; function rotates mask and data of several characters and applies to background data
 ; this handles x-shift from 0 to 4
@@ -2077,7 +2145,7 @@ SHIFT_MERGE_CHARACTER:
 	RET	
 ; *******************************************************************************************************
 
- IFDEF BLIT_WITH_STRUCT_POINTER
+ IFNDEF CMDS_WITH_PARAMETERS
 ; *******************************************************************************************************
 ; function to handle CALL BLIT basic extension
 ; rotates 1-bit character drawing horizontally with mask and character data and
@@ -2116,7 +2184,7 @@ BLIT:
 ; *******************************************************************************************************
  ENDIF
 
- IFDEF BLIT_WITH_PARAMETERS
+ IFDEF CMDS_WITH_PARAMETERS
 ; *******************************************************************************************************
 ; function to handle CALL BLIT basic extension
 ; rotates 1-bit character drawing horizontally with mask and character data and
@@ -2218,13 +2286,13 @@ BLIT:
 	LD H, 0
 	LD A, (BLIT_STRUCT+14)
 	LD L, A
-	CALL .HLx8
+	CALL HLx8
 	LD (BLIT_STRUCT+12), HL
 	; calculate background add to value
 	LD H, 0
 	LD A, (BLIT_TMP+2)
 	LD L, A
-	CALL .HLx8
+	CALL HLx8
 	LD (BLIT_STRUCT+6), HL
 	; calculate pointer to background location
 	LD HL, 0
@@ -2241,7 +2309,7 @@ BLIT:
 	LD H,0
 	LD A,(BLIT_TMP+0)
 	LD L,A
-	CALL .HLx8
+	CALL HLx8
 	ADD HL,DE
 	LD DE,(BLIT_STRUCT+4)
 	ADD HL,DE
@@ -2260,9 +2328,6 @@ BLIT:
 
 	POP HL
 	RET
-.HLx8:
-	.3 ADD HL, HL
-	RET
 .DAdiv8:
 	LD A,E
 	SRA D 
@@ -2274,7 +2339,9 @@ BLIT:
 	RET
 ; *******************************************************************************************************
  ENDIF
+ ENDIF
 
+ IF (TILE_CMDS == 1)
 ; *******************************************************************************************************
 ; generic function to implement tiling
 ; should be modified to call appropriate function for memory or vram
@@ -2328,10 +2395,10 @@ TILE:
 	RET
 ; *******************************************************************************************************
 
+ IFNDEF CMDS_WITH_PARAMETERS
 ; *******************************************************************************************************
 ; function to handle CALL TILERAM basic extension
 ; fills memory with tiles
-; fuses with background data and applies vertical shift too
 ; TILERAM ( INT request_data_ptr )
 ; request_data_ptr described in TILE
 ; will put ram in page 0 also, page 1 is already there
@@ -2375,11 +2442,280 @@ TILERAM:
 	LD DE, (TILETMP1)
 	RET
 ; *******************************************************************************************************
+ ENDIF
 
+ IFDEF CMDS_WITH_PARAMETERS
+; *******************************************************************************************************
+; function to handle CALL TILERAM basic extension
+; fills memory with tiles
+; TILERAM ( INT tile_data_pointer,
+;			INT tile_columns,
+;			INT tile_rows,
+;			INT destination_pointer,
+;			INT destination_columns,
+;			INT destination_rows,
+;			INT destination_begin_column,
+;			INT destination_begin_row,
+;			INT number_of_tiles_horizontally,
+;			INT	number_of_tiles_vertically )
+; will put ram in page 0 also, page 1 is already there
+TILERAM:
+	; opening (
+	CALL CHKCHAR
+	DB '('
+	; get tile data pointer coordinate
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD (BLIT_STRUCT+0), DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get tile columns
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD (BLIT_STRUCT+4), DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get tile columns
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD (BLIT_STRUCT+2), DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get destintion pointer
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD (BLIT_STRUCT+6), DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get destination columns
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD A, E
+	LD (BLIT_TMP+0), A
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get destination rows
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD A, E
+	LD (BLIT_TMP+1), A
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get destination begin column
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD A, E
+	LD (BLIT_TMP+2), A
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get destination begin row
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD A, E
+	LD (BLIT_TMP+3), A
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get number of tiles horizontally
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD (BLIT_STRUCT+10), DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get number of tiles vertically
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD (BLIT_STRUCT+12), DE
+	; ending )
+	CALL CHKCHAR
+	DB ')'
+
+	PUSH HL ; save position in BASIC buffer
+
+	; calculate destination add to value
+	LD H, 0
+	LD A, (BLIT_TMP+0)
+	LD L, A
+	CALL HLx8
+	LD (BLIT_STRUCT+8), HL
+	; calculate pointer to background location
+	LD HL, 0
+	LD A,(BLIT_TMP+3)
+	OR A
+	JR Z, .L1
+	LD B,A
+	LD DE,(BLIT_STRUCT+8)
+.L0:
+	ADD HL, DE
+	DJNZ .L0
+.L1:
+	EX DE,HL
+	LD H,0
+	LD A,(BLIT_TMP+2)
+	LD L,A
+	CALL HLx8
+	ADD HL,DE
+	LD DE,(BLIT_STRUCT+6)
+	ADD HL,DE
+	LD (BLIT_STRUCT+6),HL
+
+	LD IY, .RET
+	JP ENABLE_PAGE0
+.RET:
+	EI
+	; set RAM functions to call
+	LD HL, .TILECOPY
+	LD (TILE.CALL2+1), HL
+	LD HL, .SETDESTROW
+	LD (TILE.CALL1+1), HL
+	LD IX,BLIT_STRUCT
+	CALL TILE
+
+    POP DE
+    POP BC
+    CALL RESTORE_PAGE_INFO
+
+	POP HL
+	RET
+.TILECOPY:
+	.8 LDI
+	RET	
+.SETDESTROW:
+	LD DE, (TILETMP1)
+	RET
+; *******************************************************************************************************
+ ENDIF
+
+ IFDEF CMDS_WITH_PARAMETERS
 ; *******************************************************************************************************
 ; function to handle CALL TILEVRM basic extension
 ; fills vram with tiles
-; fuses with background data and applies vertical shift too
+; TILEVRM ( INT tile_data_pointer,
+;			INT tile_columns,
+;			INT tile_rows,
+;			INT destination_begin_column,
+;			INT destination_begin_row,
+;			INT number_of_tiles_horizontally,
+;			INT	number_of_tiles_vertically )
+; will put ram in page 0 also, page 1 is already there
+; for destination uses address of SCREEN 2 pattern buffer and 32x24 size
+TILEVRM:
+	; opening (
+	CALL CHKCHAR
+	DB '('
+	; get tile data pointer coordinate
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD (BLIT_STRUCT+0), DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get tile columns
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD (BLIT_STRUCT+4), DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get tile columns
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD (BLIT_STRUCT+2), DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get destination begin column
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD A, E
+	LD (BLIT_TMP+2), A
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get destination begin row
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD A, E
+	LD (BLIT_TMP+3), A
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get number of tiles horizontally
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD (BLIT_STRUCT+10), DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get number of tiles vertically
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD (BLIT_STRUCT+12), DE
+	; ending )
+	CALL CHKCHAR
+	DB ')'
+
+	PUSH HL ; save position in BASIC buffer
+
+	; calculate destination add to value
+	LD HL, 256
+	LD (BLIT_STRUCT+8), HL
+	; calculate pointer to background location
+	LD A,(BLIT_TMP+3)
+	LD H,A
+	LD L,0
+	EX DE,HL
+	LD H,0
+	LD A,(BLIT_TMP+2)
+	LD L,A
+	CALL HLx8
+	ADD HL,DE
+	LD DE,(GRPCGP)
+	ADD HL,DE
+	LD (BLIT_STRUCT+6),HL
+
+	LD IY, .RET
+	JP ENABLE_PAGE0
+.RET:
+	EI
+	; set RAM functions to call
+	LD HL, .TILECOPY
+	LD (TILE.CALL2+1), HL
+	LD HL, .SETDESTROW
+	LD (TILE.CALL1+1), HL
+	LD IX,BLIT_STRUCT
+	CALL TILE
+
+    POP DE
+    POP BC
+    CALL RESTORE_PAGE_INFO
+
+	POP HL
+	RET
+.TILECOPY:
+	LD BC, #0898
+	JP BBYTECOPY	
+.SETDESTROW:
+	LD HL, (TILETMP1)
+	DI
+	CALL SETWRT_LOCAL
+	EI
+	RET
+; *******************************************************************************************************
+ ENDIF
+
+ IFNDEF CMDS_WITH_PARAMETERS
+; *******************************************************************************************************
+; function to handle CALL TILEVRM basic extension
+; fills vram with tiles
 ; TILEVRM ( INT request_data_ptr )
 ; request_data_ptr described in TILE
 ; will put ram in page 0 also, page 1 is already there
@@ -2418,14 +2754,7 @@ TILEVRM:
 	RET
 .TILECOPY:
 	LD BC, #0898
- IFNDEF EXCLUDE_VRAM_CMDS
-	JP MEMVRM.BBYTECOPY	
- ELSE
-.BBYTECOPY:
-	OUTI
-	JP	NZ, .BBYTECOPY
-	RET
- ENDIF
+	JP BBYTECOPY	
 .SETDESTROW:
 	LD HL, (TILETMP1)
 	DI
@@ -2433,7 +2762,10 @@ TILEVRM:
 	EI
 	RET
 ; *******************************************************************************************************
+ ENDIF
+ ENDIF
 
+ IF (BOX_CMDS == 1)
 ; *******************************************************************************************************
 ; generic function to implement rectangle data copy
 ; should be modified to call appropriate function for memory or vram
@@ -2569,11 +2901,7 @@ BOXMEMVRM:
 .COPYDATA:
 	LD B, C
 	LD C, #98
- IFNDEF EXCLUDE_VRAM_CMDS	
-	JP MEMVRM.BBYTECOPY
- ELSE
-	JP TILEVRM.BBYTECOPY
- ENDIF
+	JP BBYTECOPY
 ; *******************************************************************************************************
  ENDIF
 
