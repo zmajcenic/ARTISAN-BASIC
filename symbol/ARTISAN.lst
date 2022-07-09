@@ -1817,8 +1817,8 @@
   20  A229               INCLUDE "symbol/main.exp"
 # file opened: ./symbol/main.exp
    1+ A229              ORIG.HTIMI: EQU 0x00004CF0
-   2+ A229              MBGE_HTIMI: EQU 0x0000521E
-   3+ A229              VBLANK: EQU 0x00005256
+   2+ A229              MBGE_HTIMI: EQU 0x000053B2
+   3+ A229              VBLANK: EQU 0x000053EA
    4+ A229
 # file closed: ./symbol/main.exp
   21  A229
@@ -2051,8 +2051,8 @@
  248  A32E DD 36 00 F7      LD (IX), #F7 ; RST #30
  249  A332 3A 42 F3         LD A, (RAMAD1)
  250  A335 DD 77 01         LD (IX+1), A ; slot info
- 251  A338 DD 36 02 1E      LD (IX+2), low (MBGE_HTIMI)
- 252  A33C DD 36 03 52      LD (IX+3), high (MBGE_HTIMI) ; function address
+ 251  A338 DD 36 02 B2      LD (IX+2), low (MBGE_HTIMI)
+ 252  A33C DD 36 03 53      LD (IX+3), high (MBGE_HTIMI) ; function address
  253  A340 DD 36 04 C9      LD (IX+4), #C9 ; RET
  254  A344
  255  A344 D1               POP DE
@@ -2070,8 +2070,8 @@
  267  A357                  ; set new interrupt vector
  268  A357 DD 21 38 00      LD IX, #38
  269  A35B DD 36 00 C3      LD (IX), #C3 ; JP
- 270  A35F DD 36 01 56      LD (IX+1), low (VBLANK)
- 271  A363 DD 36 02 52      LD (IX+2), high (VBLANK)
+ 270  A35F DD 36 01 EA      LD (IX+1), low (VBLANK)
+ 271  A363 DD 36 02 53      LD (IX+2), high (VBLANK)
  272  A367              	; restore page 0
  273  A367 D1               POP DE
  274  A368 C1               POP BC
