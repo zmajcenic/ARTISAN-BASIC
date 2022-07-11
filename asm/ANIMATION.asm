@@ -35,7 +35,7 @@ MAXANIMITEMS:
 
 	; save position
 	PUSH HL
-
+MAXANIMITEMS.ENTRY:
     LD B,A
     LD A,(ANIMITEMNUM)
     SUB B
@@ -109,6 +109,12 @@ MAXANIMITEMS:
     LDIR
 .L1:
     POP BC
+    LD L,(IY)
+    LD H,(IY+1)
+    XOR A
+    SBC HL,BC
+    LD (IY),L
+    LD (IY+1),H
     RET 
 .INCREASE_COMMON:
     LD HL,(FREEMEMPTR)
@@ -127,10 +133,10 @@ MAXANIMITEMS:
     LDDR
 .L2:
     POP BC
-    LD L,(IX)
-    LD H,(IX+1)
+    LD L,(IY)
+    LD H,(IY+1)
     ADD HL,BC
-    LD (IX),L
-    LD (IX+1),H
+    LD (IY),L
+    LD (IY+1),H
     RET
 ; *******************************************************************************************************
