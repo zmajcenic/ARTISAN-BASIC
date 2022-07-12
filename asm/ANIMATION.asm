@@ -16,9 +16,34 @@ ANIMSPRNUM:
 ANIMSPRPTR:
  DW EXT_END
 
+; ANIMATION ITEM
+; byte type = [0 - pattern and color change
+;              1 - pattern definition change ]
+; word ticks - number of ticks to hold this state
+; for type = 0
+;   byte pattern;
+;   byte color;
+; for type = 1
+;   work data_pointer;
+; total size = 5b
+
+; *******************************************************************************************************
+; helper function HL=A*5
+; changes HL,DE;
+Ax5:
+    LD H,0
+    LD L,A
+    LD D,H
+    LD E,L
+    ADD HL,HL
+    ADD HL,HL
+    ADD HL,DE
+    RET
+; *******************************************************************************************************
+
 ; *******************************************************************************************************
 ; function to handle CALL MAXANIMITEMS basic extension
-; MAXANIMITEMS BYTE number
+; MAXANIMITEMS (BYTE number)
 ; sets new number and moves memory buffers as needed
 MAXANIMITEMS:
 	; opening (
@@ -70,10 +95,7 @@ MAXANIMITEMS.ENTRY:
     LD (FREEMEMPTR),HL
     JR .EXIT
 .SIZEDIFF:
-    LD H,0
-    LD L,A
-    ADD HL,HL
-    ADD HL,HL
+    CALL Ax5
     LD A,B
     LD (ANIMITEMNUM),A
     LD B,H
@@ -140,3 +162,78 @@ MAXANIMITEMS.ENTRY:
     LD (IY+1),H
     RET
 ; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function to handle CALL ANIMITEMPAT basic extension
+; ANIMITEMPAT ( BYTE id,
+;               INT ticks,
+;               BYTE pattern,
+;               BYTE color )
+; fills animation item data, returns an error if out of bounds
+ANIMITEMPAT:
+    ; opening (
+	CALL CHKCHAR
+	DB '('
+	; get id
+	LD IX, GETBYT
+	CALL CALBAS
+    PUSH AF
+    ; check if out of bounds
+    INC A
+    LD C,A
+    LD A,(ANIMITEMNUM)
+    CP C
+    JR NC, .L1
+    LD E,9 ; subscript out of range
+    JP THROW_ERROR
+.L1:
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get ticks
+	LD IX, FRMQNT
+	CALL CALBAS
+	PUSH DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get pattern
+	LD IX, GETBYT
+	CALL CALBAS
+    PUSH AF
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get color
+	LD IX, GETBYT
+	CALL CALBAS
+    PUSH AF
+	; ending )
+	CALL CHKCHAR
+	DB ')'
+
+    PUSH HL
+    POP IX
+    EXX
+    POP BC ; color
+    POP DE ; pattern
+    POP HL ; ticks
+    EXX
+    POP AF
+    CALL Ax5
+    LD DE,(ANIMITEMPTR)
+    ADD HL,DE
+    PUSH HL
+    POP IY
+    EXX
+    LD (IY),0 ; type=0
+    LD (IY+1),L
+    LD (IY+2),H
+    LD (IY+3),D
+    LD (IY+4),B
+    
+    PUSH IX
+    POP HL
+    RET
+; *******************************************************************************************************
+

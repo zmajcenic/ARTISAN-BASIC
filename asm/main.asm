@@ -142,7 +142,11 @@ BLIT_STRUCT:
 ; List of pointers to available instructions (as ASCIIZ) and execute address (as word)
 ; per starting letter, if no commands with this letter, NULL value
 CMDS:
+ IF (ANIM_CMDS == 1)
+	DW CMDS_A ;
+ ELSE
     DW 0 ; A
+ ENDIF
  IF (BLIT_CMDS + BOX_CMDS > 0)
     DW CMDS_B ; B
  ELSE
@@ -289,6 +293,12 @@ CMDS_T:
 	DW TILEVRM
  ENDIF
  IF (TILE_CMDS > 0)
+	DB 0
+ ENDIF
+CMDS_A:
+ IF (ANIM_CMDS == 1)
+	DB "ANIMITEMPAT",0
+	DW ANIMITEMPAT
 	DB 0
  ENDIF
 
