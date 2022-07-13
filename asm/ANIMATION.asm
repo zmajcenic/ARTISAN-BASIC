@@ -211,7 +211,7 @@ ANIMITEMPAT:
 	; ending )
 	CALL CHKCHAR
 	DB ')'
-
+ANIMITEMPAT.ENTRY:
     PUSH HL
     POP IX
     EXX
@@ -231,6 +231,71 @@ ANIMITEMPAT:
     LD (IY+2),H
     LD (IY+3),D
     LD (IY+4),B
+    
+    PUSH IX
+    POP HL
+    RET
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function to handle CALL ANIMITEMPTR basic extension
+; ANIMITEMPTR ( BYTE id,
+;               INT ticks,
+;               INT pointer,
+; fills animation item data, returns an error if out of bounds
+ANIMITEMPTR_CMD:
+    ; opening (
+	CALL CHKCHAR
+	DB '('
+	; get id
+	LD IX, GETBYT
+	CALL CALBAS
+    PUSH AF
+    ; check if out of bounds
+    INC A
+    LD C,A
+    LD A,(ANIMITEMNUM)
+    CP C
+    JR NC, .L1
+    LD E,9 ; subscript out of range
+    JP THROW_ERROR
+.L1:
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get ticks
+	LD IX, FRMQNT
+	CALL CALBAS
+	PUSH DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get pointer
+	LD IX, FRMQNT
+	CALL CALBAS
+	PUSH DE
+	; ending )
+	CALL CHKCHAR
+	DB ')'
+ANIMITEMPTR.ENTRY:
+    PUSH HL
+    POP IX
+    EXX
+    POP DE ; pointer
+    POP HL ; ticks
+    EXX
+    POP AF
+    CALL Ax5
+    LD DE,(ANIMITEMPTR)
+    ADD HL,DE
+    PUSH HL
+    POP IY
+    EXX
+    LD (IY),1 ; type=1
+    LD (IY+1),L
+    LD (IY+2),H
+    LD (IY+3),E
+    LD (IY+4),D
     
     PUSH IX
     POP HL
