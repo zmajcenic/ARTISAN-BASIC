@@ -27,6 +27,10 @@ ANIMSPRPTR:
 ;   work data_pointer;
 ; total size = 5b
 
+; ANIMATION DEFINITION
+; byte number of items 1-15
+; byte[15] anim_item;
+
 ; *******************************************************************************************************
 ; helper function HL=A*5
 ; changes HL,DE;
@@ -185,10 +189,7 @@ ANIMITEMPAT:
     LD C,A
     LD A,(ANIMITEMNUM)
     CP C
-    JR NC, .L1
-    LD E,9 ; subscript out of range
-    JP THROW_ERROR
-.L1:
+    JP C,SUBSCRIPT_OUT_OF_RANGE
 	; comma
 	CALL CHKCHAR
 	DB ','
@@ -258,10 +259,7 @@ ANIMITEMPTR_CMD:
     LD C,A
     LD A,(ANIMITEMNUM)
     CP C
-    JR NC, .L1
-    LD E,9 ; subscript out of range
-    JP THROW_ERROR
-.L1:
+    JP C,SUBSCRIPT_OUT_OF_RANGE
 	; comma
 	CALL CHKCHAR
 	DB ','
@@ -349,4 +347,88 @@ MAXANIMDEFS:
     LD B,H
     LD C,L
     RET ; BC=size difference in bytes
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function to handle CALL ANIMDEF basic extension
+; ANIMITEMPAT ( BYTE id,
+;               BYTE size,
+;               INT[] list )
+; fills animation definition data, returns an error if out of bounds, or invalid type
+ANIMDEF:
+    ; opening (
+	CALL CHKCHAR
+	DB '('
+	; get id
+	LD IX, GETBYT
+	CALL CALBAS
+    PUSH AF
+    ; check if out of bounds
+    INC A
+    LD C,A
+    LD A,(ANIMDEFNUM)
+    CP C
+    JP C,SUBSCRIPT_OUT_OF_RANGE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get size
+	LD IX, GETBYT
+	CALL CALBAS
+    CP 16
+    JP NC, OVERFLOW
+    OR A
+    JP Z, OVERFLOW
+	PUSH AF
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get pointer to a list of animation items in integer array format
+    LD A,1
+    LD (SUBFLG),A ; search for arrays only
+	LD IX, PTRGET
+	CALL CALBAS
+    ; contrary to documentation we get a pointer to array dimension in BC
+    ; and type in VALTYP
+    LD A,(VALTYP)
+    CP 2
+    JP NZ,TYPE_MISMATCH
+    LD A,(BC)
+    CP 1
+    JP NZ,TYPE_MISMATCH
+    INC BC
+    LD A,(BC)
+    POP DE
+    PUSH DE
+    INC A
+    CP D
+    JP C,SUBSCRIPT_OUT_OF_RANGE
+    .2 INC BC
+    PUSH BC
+	; ending )
+	CALL CHKCHAR
+	DB ')'
+.ENTRY:
+    PUSH HL
+    POP IX
+    POP DE ; pointer to INT array
+    POP BC ; B=item number
+    POP AF ; id
+    LD H,0
+    LD L,A
+    CALL HLx16
+    PUSH DE
+    LD DE,(ANIMDEFPTR)
+    ADD HL,DE
+    POP DE
+    LD (HL),B
+.L1:
+    INC HL
+    LD A,(DE)
+    .2 INC DE
+    LD (HL),A
+    DJNZ .L1
+    PUSH IX
+    POP HL
+    RET
 ; *******************************************************************************************************
