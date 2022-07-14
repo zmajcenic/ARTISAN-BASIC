@@ -213,6 +213,8 @@ CMDS_M:
  IF (ANIM_CMDS == 1)
 	DB "MAXANIMITEMS",0
 	DW MAXANIMITEMS
+	DB "MAXANIMDEFS",0
+	DW MAXANIMDEFS
  ENDIF
  IF (VRAM_CMDS + RAM_CMDS + ANIM_CMDS > 0)
 	DB 0
@@ -333,6 +335,10 @@ BBYTECOPY:
 ; ****************************************************************************************************
  ENDIF
 
+; ****************************************************************************************************
+; function multiplies HL by 16
+HLx16:
+	ADD HL,HL
 ; ****************************************************************************************************
 ; function multiplies HL by 8
 HLx8:

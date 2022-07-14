@@ -60,7 +60,7 @@ MAXANIMITEMS:
 
 	; save position
 	PUSH HL
-MAXANIMITEMS.ENTRY:
+.ENTRY:
     LD B,A
     LD A,(ANIMITEMNUM)
     SUB B
@@ -75,6 +75,7 @@ MAXANIMITEMS.ENTRY:
     XOR A
     SBC HL,BC
     LD (ANIMSPRPTR),HL
+.E1:
     LD HL,(FREEMEMPTR)
     XOR A
     SBC HL,BC
@@ -90,6 +91,7 @@ MAXANIMITEMS.ENTRY:
     LD HL,(ANIMSPRPTR)
     ADD HL,BC
     LD (ANIMSPRPTR),HL
+.E2:
     LD HL,(FREEMEMPTR)
     ADD HL,BC
     LD (FREEMEMPTR),HL
@@ -126,8 +128,8 @@ MAXANIMITEMS.ENTRY:
     JR Z,.L1
     LD L,(IY)
     LD H,(IY+1)
-    LD (IX),E
-    LD (IX+1),D
+    ;LD (IX),E
+    ;LD (IX+1),D
     LDIR
 .L1:
     POP BC
@@ -211,7 +213,7 @@ ANIMITEMPAT:
 	; ending )
 	CALL CHKCHAR
 	DB ')'
-ANIMITEMPAT.ENTRY:
+.ENTRY:
     PUSH HL
     POP IX
     EXX
@@ -277,7 +279,7 @@ ANIMITEMPTR_CMD:
 	; ending )
 	CALL CHKCHAR
 	DB ')'
-ANIMITEMPTR.ENTRY:
+.ENTRY:
     PUSH HL
     POP IX
     EXX
@@ -302,3 +304,49 @@ ANIMITEMPTR.ENTRY:
     RET
 ; *******************************************************************************************************
 
+; *******************************************************************************************************
+; function to handle CALL MAXANIMDEFS basic extension
+; MAXANIMDEFS (BYTE number)
+; sets new number and moves memory buffers as needed
+MAXANIMDEFS:
+	; opening (
+	CALL CHKCHAR
+	DB '('
+	; get value
+	LD IX, GETBYT
+	CALL CALBAS
+    PUSH AF
+	; ending )
+	CALL CHKCHAR
+	DB ')'
+    POP AF
+
+	; save position
+	PUSH HL
+.ENTRY:
+    LD B,A
+    LD A,(ANIMDEFNUM)
+    SUB B
+    JP Z, MAXANIMITEMS.EXIT; same value as before
+    LD IX,ANIMDEFPTR
+    LD IY,ANIMSPRPTR
+    JP M, .INCREASE
+    ; new value is lower than previous one
+    CALL .SIZEDIFF
+    CALL MAXANIMITEMS.DECREASE_COMMON
+    JP MAXANIMITEMS.E1
+.INCREASE:
+    NEG
+    CALL .SIZEDIFF
+    CALL MAXANIMITEMS.INCREASE_COMMON
+    JP MAXANIMITEMS.E2
+.SIZEDIFF:
+    LD H,0
+    LD L,A
+    CALL HLx16
+    LD A,B
+    LD (ANIMDEFNUM),A
+    LD B,H
+    LD C,L
+    RET ; BC=size difference in bytes
+; *******************************************************************************************************
