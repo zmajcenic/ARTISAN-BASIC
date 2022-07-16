@@ -30,6 +30,17 @@ ANIMSPRPTR:
 ; ANIMATION DEFINITION
 ; byte number of items 1-15
 ; byte[15] anim_item;
+; total size = 16b
+
+; SPRITE ANIMATION
+; byte sprite number;
+; word time;
+; byte current item;
+; byte animation definition;
+; byte cyclic;
+; byte active;
+; byte reserved
+; total size = 8b
 
 ; *******************************************************************************************************
 ; helper function HL=A*5
@@ -69,7 +80,6 @@ MAXANIMITEMS:
     LD A,(ANIMITEMNUM)
     SUB B
     JR Z, .EXIT; same value as before
-    LD IX,ANIMITEMPTR
     LD IY,ANIMDEFPTR
     JP M, .INCREASE
     ; new value is lower than previous one
@@ -132,8 +142,6 @@ MAXANIMITEMS:
     JR Z,.L1
     LD L,(IY)
     LD H,(IY+1)
-    ;LD (IX),E
-    ;LD (IX+1),D
     LDIR
 .L1:
     POP BC
@@ -326,7 +334,6 @@ MAXANIMDEFS:
     LD A,(ANIMDEFNUM)
     SUB B
     JP Z, MAXANIMITEMS.EXIT; same value as before
-    LD IX,ANIMDEFPTR
     LD IY,ANIMSPRPTR
     JP M, .INCREASE
     ; new value is lower than previous one
@@ -431,4 +438,50 @@ ANIMDEF:
     PUSH IX
     POP HL
     RET
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function to handle CALL MAXANIMSPRS basic extension
+; MAXANIMSPRS (BYTE number)
+; sets new number and moves memory buffers as needed
+MAXANIMSPRS:
+	; opening (
+	CALL CHKCHAR
+	DB '('
+	; get value
+	LD IX, GETBYT
+	CALL CALBAS
+    PUSH AF
+	; ending )
+	CALL CHKCHAR
+	DB ')'
+    POP AF
+
+	; save position
+	PUSH HL
+.ENTRY:
+    LD B,A
+    LD A,(ANIMSPRNUM)
+    SUB B
+    JP Z, MAXANIMITEMS.EXIT; same value as before
+    LD IY,FREEMEMPTR
+    JP M, .INCREASE
+    ; new value is lower than previous one
+    CALL .SIZEDIFF
+    CALL MAXANIMITEMS.DECREASE_COMMON
+    JP MAXANIMITEMS.EXIT
+.INCREASE:
+    NEG
+    CALL .SIZEDIFF
+    CALL MAXANIMITEMS.INCREASE_COMMON
+    JP MAXANIMITEMS.EXIT
+.SIZEDIFF:
+    LD H,0
+    LD L,A
+    CALL HLx8
+    LD A,B
+    LD (ANIMSPRNUM),A
+    LD B,H
+    LD C,L
+    RET ; BC=size difference in bytes
 ; *******************************************************************************************************
