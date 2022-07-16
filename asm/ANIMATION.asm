@@ -33,13 +33,13 @@ ANIMSPRPTR:
 ; total size = 16b
 
 ; SPRITE ANIMATION
-; byte sprite number;
-; word time;
-; byte current item;
-; byte animation definition;
-; byte cyclic;
-; byte active;
-; byte reserved
+; +00 byte sprite number;
+; +01 word time;
+; +03 byte current item;
+; +04 byte animation definition;
+; +05 byte cyclic;
+; +06 byte active;
+; +07 byte reserved
 ; total size = 8b
 
 ; *******************************************************************************************************
@@ -472,8 +472,20 @@ MAXANIMSPRS:
     JP MAXANIMITEMS.EXIT
 .INCREASE:
     NEG
+    PUSH AF; save difference for later to set active flag to 0 of new entires
     CALL .SIZEDIFF
     CALL MAXANIMITEMS.INCREASE_COMMON
+    XOR A
+    SBC HL,BC ; location of new stuff
+    POP AF
+    LD B,A
+    LD DE,8
+    PUSH HL
+    POP IX
+.L1:
+    LD (IX+6),0
+    ADD IX,DE
+    DJNZ .L1
     JP MAXANIMITEMS.EXIT
 .SIZEDIFF:
     LD H,0
@@ -484,4 +496,82 @@ MAXANIMSPRS:
     LD B,H
     LD C,L
     RET ; BC=size difference in bytes
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function to handle CALL ANIMSPRITE basic extension
+; ANIMSPRITE ( BYTE id,
+;              BYTE sprite_number,
+;              BYTE animation_definition_id,
+;              BYTE cyclic_flag )
+; fills sprite animation data, returns an error if out of bounds, or invalid type
+ANIMSPRITE:
+    ; opening (
+	CALL CHKCHAR
+	DB '('
+	; get sprite animation id
+	LD IX, GETBYT
+	CALL CALBAS
+    PUSH AF
+    INC A
+    LD C,A
+    LD A,(ANIMSPRNUM)
+    CP C
+    JP C,SUBSCRIPT_OUT_OF_RANGE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get sprite number
+	LD IX, GETBYT
+	CALL CALBAS
+    PUSH AF
+    ; check if out of bounds
+    CP 32
+    JP NC, SUBSCRIPT_OUT_OF_RANGE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get animation definition id
+	LD IX, GETBYT
+	CALL CALBAS
+    PUSH AF
+    INC A
+    LD C,A
+    LD A,(ANIMDEFNUM)
+    CP C
+    JP C,SUBSCRIPT_OUT_OF_RANGE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get cyclic flag
+	LD IX, GETBYT
+    CALL CALBAS
+	PUSH AF
+	; ending )
+	CALL CHKCHAR
+	DB ')'
+.ENTRY:
+    PUSH HL
+    POP IX
+    EXX
+    POP DE ; cyclic
+    POP BC ; animation definition id
+    POP HL ; sprite number
+    EXX
+    POP AF ; sprite animation id
+    LD H,0
+    LD L,A
+    CALL HLx8
+    LD DE,(ANIMSPRPTR)
+    ADD HL,DE
+    PUSH HL
+    POP IY
+    EXX
+    LD (IY),H
+    LD (IY+4),B
+    LD (IY+5),D
+    ;LD (IY+6),0
+    PUSH IX
+    POP HL
+    RET
 ; *******************************************************************************************************
