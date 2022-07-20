@@ -57,6 +57,18 @@ Ax5:
 ; *******************************************************************************************************
 
 ; *******************************************************************************************************
+; helper function gets pointer to n-th entry in sprite animation
+; changes HL,DE;
+GETnthSPRANIM:
+    LD H,0
+    LD L,A
+    CALL HLx16
+    LD DE,(ANIMSPRPTR)
+    ADD HL,DE
+    RET
+; *******************************************************************************************************
+
+; *******************************************************************************************************
 ; function to handle CALL MAXANIMITEMS basic extension
 ; MAXANIMITEMS (BYTE number)
 ; sets new number and moves memory buffers as needed
@@ -573,5 +585,107 @@ ANIMSPRITE:
     ;LD (IY+6),0
     PUSH IX
     POP HL
+    RET
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function to handle CALL ANIMSTART basic extension
+; two forms
+; ANIMSTART ( BYTE id )
+; or
+; ANIMSTART ( BYTE item_number,
+;             INT[] sprite_animations )
+; sets active flag to 1
+ANIMSTART:
+    LD A,1
+    JR ANIMSTARTSTOP_COMMON
+; *******************************************************************************************************
+; *******************************************************************************************************
+; function to handle CALL ANIMSTOP basic extension
+; two forms
+; ANIMSTOP ( BYTE id )
+; or
+; ANIMSTOP ( BYTE item_number,
+;            INT[] sprite_animations )
+; sets active flag to 1
+ANIMSTOP:
+    XOR A
+ANIMSTARTSTOP_COMMON:
+    LD (ANIMSTARTSTOP_COMMON.VALUE+3),A
+; *******************************************************************************************************
+    ; opening (
+	CALL CHKCHAR
+	DB '('
+	; get sprite animation id or array size
+	LD IX,GETBYT
+	CALL CALBAS
+    PUSH AF
+    ; check if comma present
+    CALL GETPREVCHAR
+    CP ','
+    JR Z,.L1
+    CP ')'
+    JP NZ,SYNTAX_ERROR
+    ; ok so single argument variant
+    POP AF
+    PUSH HL
+    CALL .SETVALUE
+    POP HL
+    RET 
+.L1:
+    ; array of items
+	; get pointer to a list of animation items in integer array format
+    LD A,1
+    LD (SUBFLG),A ; search for arrays only
+	LD IX, PTRGET
+	CALL CALBAS
+    ; contrary to documentation we get a pointer to array dimension in BC
+    ; and type in VALTYP
+    LD A,(VALTYP)
+    CP 2
+    JP NZ,TYPE_MISMATCH
+    LD A,(BC)
+    CP 1
+    JP NZ,TYPE_MISMATCH
+    INC BC
+    LD A,(BC)
+    POP DE
+    PUSH DE
+    INC A
+    CP D
+    JP C,SUBSCRIPT_OUT_OF_RANGE
+    .2 INC BC
+    PUSH BC
+	; ending )
+	CALL CHKCHAR
+	DB ')'
+    POP DE ; array pointer
+    POP BC ; number of items
+    PUSH HL
+    DI
+.L2:
+    PUSH BC
+    LD A,(DE)
+    .2 INC DE
+    PUSH DE
+    CALL .SETVALUE
+    POP DE
+    POP BC
+    DJNZ .L2
+    EI
+    RET
+
+.SETVALUE:
+    LD B,A
+    INC A
+    LD C,A
+    LD A,(ANIMSPRNUM)
+    CP C
+    JP C,SUBSCRIPT_OUT_OF_RANGE
+    CALL GETnthSPRANIM
+    PUSH HL
+    POP IX
+.VALUE:
+    LD (IX+6),1
     RET
 ; *******************************************************************************************************

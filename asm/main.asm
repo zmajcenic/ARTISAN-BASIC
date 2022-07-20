@@ -303,6 +303,10 @@ CMDS_T:
  ENDIF
 CMDS_A:
  IF (ANIM_CMDS == 1)
+	DB "ANIMSTART",0
+	DW ANIMSTART
+	DB "ANIMSTOP",0
+	DW ANIMSTOP
 	DB "ANIMITEMPAT",0
 	DW ANIMITEMPAT
 	DB "ANIMITEMPTR",0
@@ -343,6 +347,10 @@ BBYTECOPY:
 ; ****************************************************************************************************
  ENDIF
 
+; ****************************************************************************************************
+; function multiplies HL by 32
+HPx32:
+	ADD HL,HL
 ; ****************************************************************************************************
 ; function multiplies HL by 16
 HLx16:
