@@ -622,6 +622,7 @@ ANIMSTARTSTOP_COMMON:
     PUSH AF
     ; check if comma present
     CALL GETPREVCHAR
+    INC HL
     CP ','
     JR Z,.L1
     CP ')'
@@ -661,6 +662,9 @@ ANIMSTARTSTOP_COMMON:
 	DB ')'
     POP DE ; array pointer
     POP BC ; number of items
+    LD A,B
+    OR A
+    JP Z,SUBSCRIPT_OUT_OF_RANGE
     PUSH HL
     DI
 .L2:
@@ -673,6 +677,7 @@ ANIMSTARTSTOP_COMMON:
     POP BC
     DJNZ .L2
     EI
+    POP HL
     RET
 
 .SETVALUE:
