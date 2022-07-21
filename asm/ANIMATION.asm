@@ -57,6 +57,28 @@ Ax5:
 ; *******************************************************************************************************
 
 ; *******************************************************************************************************
+; helper function gets pointer to n-th animation item
+; changes HL,DE;
+GETnthANIMITEM:
+    CALL Ax5
+    LD DE,(ANIMITEMPTR)
+    ADD HL,DE
+    RET
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; helper function gets pointer to n-th entry in animation definition
+; changes HL,DE;
+GETnthANIMDEF:
+    LD H,0
+    LD L,A
+    CALL HLx8
+    LD DE,(ANIMDEFPTR)
+    ADD HL,DE
+    RET
+; *******************************************************************************************************
+
+; *******************************************************************************************************
 ; helper function gets pointer to n-th entry in sprite animation
 ; changes HL,DE;
 GETnthSPRANIM:
@@ -243,9 +265,7 @@ ANIMITEMPAT:
     POP HL ; ticks
     EXX
     POP AF
-    CALL Ax5
-    LD DE,(ANIMITEMPTR)
-    ADD HL,DE
+    CALL GETnthANIMITEM
     PUSH HL
     POP IY
     EXX
@@ -305,9 +325,7 @@ ANIMITEMPTR_CMD:
     POP HL ; ticks
     EXX
     POP AF
-    CALL Ax5
-    LD DE,(ANIMITEMPTR)
-    ADD HL,DE
+    CALL GETnthANIMITEM
     PUSH HL
     POP IY
     EXX
@@ -433,12 +451,7 @@ ANIMDEF:
     POP DE ; pointer to INT array
     POP BC ; B=item number
     POP AF ; id
-    LD H,0
-    LD L,A
-    CALL HLx16
-    PUSH DE
-    LD DE,(ANIMDEFPTR)
-    ADD HL,DE
+    CALL GETnthANIMDEF
     POP DE
     LD (HL),B
 .L1:

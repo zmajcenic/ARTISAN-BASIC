@@ -17,6 +17,18 @@ TMPSP:
  DW 0
 
 ; *******************************************************************************************************
+; helper function gets pointer to n-th entry in sprite attributes
+; changes HL,DE;
+GETnthSPRATTR:
+    LD H,0
+    LD L,A
+    CALL HLx8
+    LD DE,(SPRATR_DATA)
+    ADD HL,DE
+    RET
+; *******************************************************************************************************
+
+; *******************************************************************************************************
 ; function updates sprite attribute table in VRAM based on buffer of the form with rotating for flicker
 ; struct {
 ; DW y
@@ -295,12 +307,8 @@ SPRSET:
 	JP THROW_ERROR
 .L2:
 	; find location in sprite attributes table
-	.3 ADD A, A
 	PUSH DE
-	LD D, 0
-	LD E, A
-	LD HL, (SPRATR_DATA)
-	ADD HL, DE
+	CALL GETnthSPRATTR
 	POP DE
 	; set y
 	LD (HL), C
@@ -361,12 +369,10 @@ SPRSET:
 ; input IY=location where delta y,x are located
 ; modifies AF, HL, IX
 SPRSET_DELTA_POS:
-	.3 ADD A, A
 	PUSH DE
-	LD D, 0
-	LD E, A
-	LD IX, (SPRATR_DATA)
-	ADD IX, DE
+	CALL GETnthSPRATTR
+	PUSH HL
+	POP IX
 	POP DE
 	; IX=sprite's y location
 	LD L, (IY)
