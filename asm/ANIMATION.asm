@@ -704,6 +704,148 @@ ANIMSTARTSTOP_COMMON:
     PUSH HL
     POP IX
 .VALUE:
-    LD (IX+6),1
+    LD (IX+6),1 ; active flag
+    ; following stuff is needed to start only, but code sharing
+    XOR A
+    LD (IX+3),A ; current item
+    CALL INIT_CURRENT_ANIMATION
+    RET
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function processes animations during vblank period
+PROCESS_ANIMATIONS:
+    LD A,(ANIMSPRNUM)
+    OR A
+    RET Z; no animations defined
+    LD B,A
+    LD IX,(ANIMSPRPTR)
+.L1:
+    PUSH BC
+    LD A,(IX+6); active
+    OR A
+    JP Z,.SKIP ; inactive animation
+    LD L,(IX+1)
+    LD H,(IX+2) ; HL=end time
+    LD DE,(JIFFY)
+    XOR A
+    SBC HL,DE
+    JP P,.SKIP ; time until next animation item not yet reached
+    INC (IX+3) ; current animation item
+    LD C,(IX+4) ; animation definition ID
+    INC C
+    LD A,(ANIMDEFNUM)
+    CP C
+    JR NC,.L2
+    ; given animation item is outside of bounds, deactivate animation
+.STOPANIM:
+    LD (IX+6),0
+    JP .SKIP
+.L2:
+    DEC C
+    LD A,C
+    CALL INIT_CURRENT_ANIMATION
+    JR C, .STOPANIM
+    LD A,(IY) ; type of animation item
+    OR A
+    JP Z,.L4 ; change pattern and/or color
+    ; change sprite pattern definition
+    LD A,(IX) ; sprite number
+    CALL GETnthSPRATTR
+    .4 INC HL ; skip y and x
+    LD A,(HL); current pattern
+    LD H,0
+    LD L,A
+    LD A,(REG1SAV)
+    AND 2
+    JR NZ,.L6
+    ; 8x8 sprite
+    CALL HLx8
+    LD B,8
+    JR .L5
+.L6:
+    CALL HLx32
+    LD B,32
+.L5:
+	LD A, (SCRMOD)
+	DEC A
+	JR Z, .L7 ; screen 1
+    ; screen 2
+    LD DE,(GRPPAT)
+    JR .L8
+.L7:
+    LD DE,(T32PAT)
+.L8:
+    ADD HL,DE
+    CALL SETWRT_LOCAL
+    LD L,(IY+3)
+    LD H,(IY+4) ; pointer to sprite patter data
+    CALL BBYTECOPY
+.SKIP:
+    LD DE,8
+    ADD IX,DE
+    POP BC
+    DJNZ .L1
+    RET 
+.L4:
+    ; change pattern and color in sprite attributes table
+    LD A,(IX) ; sprite number
+    CALL GETnthSPRATTR
+    .4 INC HL ; skip y and x
+    LD A,(IY+3) ; new pattern
+    LD (HL),A
+    .2 INC HL
+    LD A,(IY+4) ; new color
+    LD (HL),A
+    LD A,1
+    LD (SPRATR_UPDATE_FLAG),A
+    JR .SKIP
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function will setup sprite animation after current item change
+; input A=current animation
+; input IX=pointer to sprite animation
+; output IY=pointer to animation item
+; CF=1 error or non-cyclic animation ended, in both cases set active flag to 0
+; basically sets new end time for current animation
+INIT_CURRENT_ANIMATION:
+    CALL GETnthANIMDEF
+    LD A,(HL); number of animation items in the animation definition
+    CP (IX+3) ; current animation item
+    JR C,.L3 ; last item not reached
+    ; last item reached
+    LD A,(IX+5) ; cyclic flag
+    OR A
+    JR Z,.ERROR ; non-cyclic animation
+    ; cyclic animation, restart
+    LD (IX+3),0; current item
+.L3:
+    ; HL = animation definition
+    INC HL ; skip animation definition size field
+    LD D,0
+    LD E,(IX+3); current item
+    ADD HL,DE
+    LD C,(HL) ; current animation item
+    INC C
+    LD A,(ANIMITEMNUM)
+    CP C
+    JR C,.ERROR ; invalid animation item, stop animation
+    DEC C
+    LD A,C
+    CALL GETnthANIMITEM
+    PUSH HL
+    POP IY ; IY=animation item
+    LD HL,(JIFFY)
+    LD E,(IY+1)
+    LD D,(IY+2) ; duration
+    ADD HL,DE
+    LD (IX+1),L
+    LD (IX+2),H ; end time for current item
+.EXIT:
+    XOR A
+    RET 
+.ERROR:
+    SCF
     RET
 ; *******************************************************************************************************

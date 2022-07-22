@@ -37,25 +37,14 @@ GETnthSPRATTR:
 ; DW color
 ; } [32]
 ; will hide sprites whose location is outside of visible area
-; works in screen 1 and 2
 ; triggered by value in (SPRATR_UPDATE_FLAG) != 0 and after being done resets it to 0
 ; modifies AF, AF', BC, DE, HL
 SPRATR_UPDATE:
-	; check if initialized
-	LD A, (SPRATR_INIT_STATUS)
-	OR A
-	RET Z
 	; check if update requested
 	LD HL, (SPRATR_UPDATE_FLAG)
 	LD A, (HL)
 	OR A
 	RET Z
-	; check screen mode
-	LD A, (SCRMOD)
-	DEC A
-	JR Z, .L0 ; screen 1
-	DEC A
-	RET NZ ; not screen 2
 .L0:
 	LD B, 32 ; sprite number
 	LD C, #98 ; register for vdp data output
@@ -103,10 +92,13 @@ SPRATR_UPDATE:
 	POP HL ; skip pattern
 	POP HL ; skip color
 	LD A, #D1
-	OUT (#98), A ; sprite hidden
-	OUT (#98), A ; value unimportant
-	OUT (#98), A ; value unimportant
-	OUT (#98), A ; value unimportant
+	OUT (C), A ; sprite hidden
+	.3 NOP
+	OUT (C), A ; value unimportant
+	.3 NOP
+	OUT (C), A ; value unimportant
+	.3 NOP
+	OUT (C), A ; value unimportant
 	JP .NEXT
 .X:
 	POP HL
@@ -124,10 +116,10 @@ SPRATR_UPDATE:
 	LD E, #80
 .XY:
 	OUT (C), D
-	OUT (C), L
-	POP HL ; pattern
 	LD A, (REG1SAV)
 	AND 2
+	OUT (C), L
+	POP HL ; pattern
 	LD A, L
 	JR Z, .SMALLSPRITES
 	ADD A, A

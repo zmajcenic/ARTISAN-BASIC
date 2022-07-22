@@ -47,6 +47,9 @@ RAMAD3	EQU	#F344	; Main-RAM Slot (0C000h~0FFFFh)
 EXPTBL	EQU #FCC1
 SCRMOD	EQU #FCAF ; current screen mode
 REG1SAV EQU #F3E0 ; VDP(1)
+JIFFY	EQU #FC9E 
+GRPPAT	EQU #F3CF ; SCREEN 2 sprite generator table address 
+T32PAT	EQU #F3C5 ; SCREEN 1 sprite generator table address 
 
 ; BASIC error codes
 ;01 NEXT without FOR 
@@ -105,9 +108,7 @@ VERSION:
 	INCLUDE "symbol/AKG.sym"
  ENDIF
 
-ORIG.HTIMI:
-	DB 0, 0, 0, 0, 0
- EXPORT ORIG.HTIMI
+ INCLUDE "VBLANK.asm"
 
  IF (SOUND_CMDS == 1)
 MUSIC_INIT_STATUS:
@@ -139,6 +140,11 @@ BLIT_TMP2:
 BLIT_STRUCT:
  DS 17
   ENDIF
+ ENDIF
+
+ IF (VRAM_CMDS + TILE_CMDS + BOX_CMDS > 0)
+VRAM_UPDATE_IN_PROGRESS:
+ DB 0
  ENDIF
 
 ; List of pointers to available instructions (as ASCIIZ) and execute address (as word)
@@ -349,7 +355,7 @@ BBYTECOPY:
 
 ; ****************************************************************************************************
 ; function multiplies HL by 32
-HPx32:
+HLx32:
 	ADD HL,HL
 ; ****************************************************************************************************
 ; function multiplies HL by 16
@@ -787,7 +793,11 @@ FILVRM:
     POP AF ; value
     POP BC ; count
     POP HL ; offset
+	LD A,1
+	LD (VRAM_UPDATE_IN_PROGRESS),A
     CALL BIOS_FILVRM
+	XOR A
+	LD (VRAM_UPDATE_IN_PROGRESS),A
 
 .L3:
 	PUSH IX
@@ -1012,7 +1022,11 @@ MEMVRM:
 .RET:
 	EI
 	EXX
+	LD A,1
+	LD (VRAM_UPDATE_IN_PROGRESS),A
 	CALL .LDIRVM
+	XOR A
+	LD (VRAM_UPDATE_IN_PROGRESS),A
     POP DE
     POP BC
     CALL RESTORE_PAGE_INFO
@@ -1095,7 +1109,11 @@ VRMMEM:
 .RET:	
 	EI
 	EXX
+	LD A,1
+	LD (VRAM_UPDATE_IN_PROGRESS),A
 	CALL .LDIRMV
+	XOR A
+	LD (VRAM_UPDATE_IN_PROGRESS),A
     POP DE
     POP BC
     CALL RESTORE_PAGE_INFO
@@ -1127,104 +1145,6 @@ VRMMEM:
     RET
 ; *******************************************************************************************************
  ENDIF
-
-; *******************************************************************************************************
-; H.TIMI function
-MBGE_HTIMI:
- EXPORT MBGE_HTIMI
-	PUSH AF
-	
- IF (SPRITE_CMDS == 1)
-	CALL SPRATR_UPDATE
- ENDIF
-
- IF (SOUND_CMDS == 1)
-	LD A, (SOUND_ENABLED)
-	OR A
-	JR Z, .EXIT
-
-	; enable page 2
-    LD A, 2
-    CALL GET_PAGE_INFO
-    PUSH BC
-    PUSH DE
-    LD A, (RAMAD2)
-    LD H, 080H
-    CALL LOCAL_ENASLT
-	; enable page 0
-    XOR A
-    CALL GET_PAGE_INFO
-    PUSH BC
-    PUSH DE
-    LD A, (RAMAD0)
-    LD H, 0
-    CALL LOCAL_ENASLT
-
-	CALL PLY_AKG_PLAY
-
-	; restore page 0
-    POP DE
-    POP BC
-    CALL RESTORE_PAGE_INFO
-	; restore page 2
-    POP DE
-    POP BC
-    CALL RESTORE_PAGE_INFO
- ENDIF
-
-.EXIT:
-	POP AF
-	JP ORIG.HTIMI
-; *******************************************************************************************************
-
-; *******************************************************************************************************
-; interrupt handler when page 0 enabled
-VBLANK:
-	EXPORT VBLANK
-
-    PUSH AF
-	; is VDP originator ?
-	IN	A, (099H)
-	AND	A
-	JP P, .EXIT
-
- IF (SOUND_CMDS == 1)
-	LD A, (SOUND_ENABLED)
-	OR A
-	JR Z, .EXIT
-
-    PUSH BC
-    PUSH DE
-    PUSH HL
-    EX AF, AF'
-    EXX
-    PUSH AF
-    PUSH BC
-    PUSH DE
-    PUSH HL
-    PUSH IX
-    PUSH IY
-
-	CALL PLY_AKG_PLAY
-
-    POP IY
-    POP IX
-    POP HL
-    POP DE
-    POP BC
-    POP AF
-    EX AF, AF'
-    EXX
-    POP HL
-    POP DE
-    POP BC
- ENDIF
-
-.EXIT:
-	POP AF
-	EI
-	RETI
-; *******************************************************************************************************
 
  IF (SOUND_CMDS == 1)
 ; *******************************************************************************************************
@@ -1991,7 +1911,11 @@ TILERAM:
 	LD (TILE.CALL2+1), HL
 	LD HL, .SETDESTROW
 	LD (TILE.CALL1+1), HL
+	LD A,1
+	LD (VRAM_UPDATE_IN_PROGRESS),A
 	CALL TILE
+	XOR A
+	LD (VRAM_UPDATE_IN_PROGRESS),A
 
     POP DE
     POP BC
@@ -2447,7 +2371,11 @@ BOXMEMVRM:
 	LD A, #CD ; CALL
 	LD (RECTANGLE_COPY.CALL1), A
 	LD (RECTANGLE_COPY.CALL2), A
+	LD A,1
+	LD (VRAM_UPDATE_IN_PROGRESS),A
 	CALL RECTANGLE_COPY
+	XOR A
+	LD (VRAM_UPDATE_IN_PROGRESS),A
 
     POP DE
     POP BC
