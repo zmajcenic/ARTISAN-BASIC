@@ -451,6 +451,7 @@ ANIMDEF:
     POP DE ; pointer to INT array
     POP BC ; B=item number
     POP AF ; id
+    PUSH DE
     CALL GETnthANIMDEF
     POP DE
     LD (HL),B
