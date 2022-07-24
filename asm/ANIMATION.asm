@@ -427,6 +427,8 @@ ANIMDEF:
 	CALL CALBAS
     ; contrary to documentation we get a pointer to array dimension in BC
     ; and type in VALTYP
+    XOR A
+    LD (SUBFLG),A ; if not reset will cause syntax errors
     LD A,(VALTYP)
     CP 2
     JP NZ,TYPE_MISMATCH
@@ -585,11 +587,7 @@ ANIMSPRITE:
     POP HL ; sprite number
     EXX
     POP AF ; sprite animation id
-    LD H,0
-    LD L,A
-    CALL HLx8
-    LD DE,(ANIMSPRPTR)
-    ADD HL,DE
+    CALL GETnthSPRANIM
     PUSH HL
     POP IY
     EXX
@@ -656,6 +654,8 @@ ANIMSTARTSTOP_COMMON:
 	CALL CALBAS
     ; contrary to documentation we get a pointer to array dimension in BC
     ; and type in VALTYP
+    XOR A
+    LD (SUBFLG),A ; if not reset will cause syntax errors
     LD A,(VALTYP)
     CP 2
     JP NZ,TYPE_MISMATCH
@@ -701,6 +701,7 @@ ANIMSTARTSTOP_COMMON:
     LD A,(ANIMSPRNUM)
     CP C
     JP C,SUBSCRIPT_OUT_OF_RANGE
+    LD A,B
     CALL GETnthSPRANIM
     PUSH HL
     POP IX
@@ -709,6 +710,7 @@ ANIMSTARTSTOP_COMMON:
     ; following stuff is needed to start only, but code sharing
     XOR A
     LD (IX+3),A ; current item
+    LD A,(IX+4) ; animation definition ID
     CALL INIT_CURRENT_ANIMATION
     RET
 ; *******************************************************************************************************
@@ -798,8 +800,8 @@ PROCESS_ANIMATIONS:
     .2 INC HL
     LD A,(IY+4) ; new color
     LD (HL),A
-    LD A,1
-    LD (SPRATR_UPDATE_FLAG),A
+    LD HL,(SPRATR_UPDATE_FLAG)
+    LD (HL),1
     JR .SKIP
 ; *******************************************************************************************************
 
@@ -814,7 +816,7 @@ INIT_CURRENT_ANIMATION:
     CALL GETnthANIMDEF
     LD A,(HL); number of animation items in the animation definition
     CP (IX+3) ; current animation item
-    JR C,.L3 ; last item not reached
+    JR NZ,.L3 ; last item not reached
     ; last item reached
     LD A,(IX+5) ; cyclic flag
     OR A
