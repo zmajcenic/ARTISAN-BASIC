@@ -50,6 +50,7 @@ REG1SAV EQU #F3E0 ; VDP(1)
 JIFFY	EQU #FC9E 
 GRPPAT	EQU #F3CF ; SCREEN 2 sprite generator table address 
 T32PAT	EQU #F3C5 ; SCREEN 1 sprite generator table address 
+PATBAS  EQU #F926 ; current sprite generator table address
 
 ; BASIC error codes
 ;01 NEXT without FOR 
