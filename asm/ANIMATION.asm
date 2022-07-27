@@ -707,10 +707,11 @@ ANIMSTARTSTOP_COMMON:
     POP IX
 .VALUE:
     LD (IX+6),1 ; active flag
-    ; following stuff is needed to start only, but code sharing
+    LD A,(.VALUE+3)
+    OR A
+    RET Z
     LD (IX+3),0 ; current item
-    CALL SETUP_ANIM_STEP
-    RET
+    JP SETUP_ANIM_STEP
 ; *******************************************************************************************************
 
 ; *******************************************************************************************************
