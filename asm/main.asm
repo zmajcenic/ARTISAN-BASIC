@@ -346,10 +346,12 @@ SETWRT_LOCAL:
 ; function copies data from RAM to VRAM
 ; input HL=address in RAM
 ; input B=count
-; modifies AF
+; modifies AF, BC, HL
 BBYTECOPY:
+	LD C,#98
+BBYTECOPY_NO_C:
 	OUTI
-	JP	NZ, BBYTECOPY
+	JP	NZ, BBYTECOPY_NO_C
 	RET
 ; ****************************************************************************************************
  ENDIF
@@ -1088,7 +1090,7 @@ MEMVRM:
 .L2:
 	LD D, B
 	LD B, 0
-	CALL BBYTECOPY
+	CALL BBYTECOPY_NO_C
 	LD B, D
 	DJNZ .L2
 	POP BC
@@ -1097,7 +1099,6 @@ MEMVRM:
 	OR A
 	RET Z
 	LD B, C
-	LD C, #98
 	JP BBYTECOPY
 ; *******************************************************************************************************
  ENDIF
@@ -2230,7 +2231,7 @@ TILEVRM:
 	RET
 .TILECOPY:
 	LD BC, #0898
-	JP BBYTECOPY	
+	JP BBYTECOPY_NO_C	
 .SETDESTROW:
 	LD HL, (TILETMP1)
 	DI
@@ -2282,7 +2283,7 @@ TILEVRM:
 	RET
 .TILECOPY:
 	LD BC, #0898
-	JP BBYTECOPY	
+	JP BBYTECOPY_NO_C	
 .SETDESTROW:
 	LD HL, (TILETMP1)
 	DI
@@ -2432,7 +2433,6 @@ BOXMEMVRM:
 	RET	
 .COPYDATA:
 	LD B, C
-	LD C, #98
 	JP BBYTECOPY
 ; *******************************************************************************************************
  ENDIF

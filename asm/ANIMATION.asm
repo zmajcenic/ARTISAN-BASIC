@@ -808,8 +808,7 @@ SETUP_ANIM_STEP:
     CALL SETWRT_LOCAL
     LD L,(IY+3)
     LD H,(IY+4) ; pointer to sprite patter data
-    CALL BBYTECOPY
-    RET 
+    JP BBYTECOPY 
 .L4:
     ; change pattern and color in sprite attributes table
     LD A,(IX) ; sprite number
