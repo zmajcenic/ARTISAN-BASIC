@@ -421,28 +421,14 @@ ANIMDEF:
 	CALL CHKCHAR
 	DB ','
 	; get pointer to a list of animation items in integer array format
-    LD A,1
-    LD (SUBFLG),A ; search for arrays only
-	LD IX, PTRGET
-	CALL CALBAS
-    ; contrary to documentation we get a pointer to array dimension in BC
-    ; and type in VALTYP
-    XOR A
-    LD (SUBFLG),A ; if not reset will cause syntax errors
-    LD A,(VALTYP)
-    CP 2
-    JP NZ,TYPE_MISMATCH
-    LD A,(BC)
-    CP 1
-    JP NZ,TYPE_MISMATCH
-    INC BC
-    LD A,(BC)
+    ; get array pointer
     POP DE
     PUSH DE
-    INC A
-    CP D
-    JP C,SUBSCRIPT_OUT_OF_RANGE
-    .2 INC BC
+    DEC D
+    LD E,0
+    LD A,2
+    LD B,1
+    CALL GET_BASIC_ARRAY_DATA_POINTER
     PUSH BC
 	; ending )
 	CALL CHKCHAR
@@ -646,30 +632,14 @@ ANIMSTARTSTOP_COMMON:
     POP HL
     RET 
 .L1:
-    ; array of items
-	; get pointer to a list of animation items in integer array format
-    LD A,1
-    LD (SUBFLG),A ; search for arrays only
-	LD IX, PTRGET
-	CALL CALBAS
-    ; contrary to documentation we get a pointer to array dimension in BC
-    ; and type in VALTYP
-    XOR A
-    LD (SUBFLG),A ; if not reset will cause syntax errors
-    LD A,(VALTYP)
-    CP 2
-    JP NZ,TYPE_MISMATCH
-    LD A,(BC)
-    CP 1
-    JP NZ,TYPE_MISMATCH
-    INC BC
-    LD A,(BC)
+    ; get array pointer
     POP DE
     PUSH DE
-    INC A
-    CP D
-    JP C,SUBSCRIPT_OUT_OF_RANGE
-    .2 INC BC
+    DEC D
+    LD E,0
+    LD A,2
+    LD B,1
+    CALL GET_BASIC_ARRAY_DATA_POINTER
     PUSH BC
 	; ending )
 	CALL CHKCHAR
@@ -814,6 +784,7 @@ SETUP_ANIM_STEP:
     LD A,(IY) ; type of animation item
     OR A
     JP Z,.L4 ; change pattern and/or color
+.PAT:
     ; change sprite pattern definition
     LD A,(IX) ; sprite number
     CALL GETnthSPRATTR

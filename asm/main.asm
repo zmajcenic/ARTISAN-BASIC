@@ -679,6 +679,45 @@ THROW_ERROR:
 	JP	CALBAS
  
 ;---------------------------
+
+; *******************************************************************************************************
+; helper function to get pointer to BASIC array data
+; input A=data type (2=INT,4=SINGLE,8=DOUBLE)
+; input B=dimensions (1 or 2)
+; input D=minimal first dimension
+; input E=minimal second dimension
+; returns BC=pointer to first data element
+; throws BASIC error if invalid type
+GET_BASIC_ARRAY_DATA_POINTER:
+	PUSH DE
+	PUSH BC
+	PUSH AF
+    LD A,1
+    LD (SUBFLG),A ; search for arrays only
+	LD IX, PTRGET
+	CALL CALBAS
+    XOR A
+    LD (SUBFLG),A ; if not reset will cause syntax errors
+	LD A,(VALTYP)
+	POP DE ; required type
+	CP D
+	JP NZ,TYPE_MISMATCH
+	LD A,(BC)
+	INC BC
+	POP DE ; required number of dimensions
+	CP D
+	JP NZ,TYPE_MISMATCH
+	LD A,(BC)
+	INC BC
+	POP DE ; required minimal array dimensions
+	CP D
+	JP C,SUBSCRIPT_OUT_OF_RANGE
+	LD A,(BC)
+	INC BC
+	CP E
+	JP C,SUBSCRIPT_OUT_OF_RANGE
+	RET	
+; *******************************************************************************************************
  
  IF (RAM_CMDS == 1)
 ; *******************************************************************************************************
