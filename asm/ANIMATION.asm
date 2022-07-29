@@ -424,8 +424,6 @@ ANIMDEF:
     ; get array pointer
     POP DE
     PUSH DE
-    DEC D
-    LD E,0
     LD A,2
     LD B,1
     CALL GET_BASIC_ARRAY_DATA_POINTER
@@ -635,8 +633,6 @@ ANIMSTARTSTOP_COMMON:
     ; get array pointer
     POP DE
     PUSH DE
-    DEC D
-    LD E,0
     LD A,2
     LD B,1
     CALL GET_BASIC_ARRAY_DATA_POINTER

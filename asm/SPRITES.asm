@@ -162,56 +162,45 @@ SPRATR_UPDATE:
 ; *******************************************************************************************************
 ; function to handle CALL SPRENABLE basic extension
 ; initializes sprites handler
-; _SPRENABLE ( INT sprites_attributes_data, 
-;			   INT update_variable_location,
-;			   INT sprite_flicker_enabled )
-; expects both locations to be in range #8000+ or throws an error
-; since these should be BASIC variables
+; _SPRENABLE ( INT[][] sprites_attributes, 
+;			   INT update_variable,
+;			   BYTE sprite_flicker_enabled )
 ; sets variables SPRATR_INIT_STATUS, SPRATR_UPDATE_FLAG, SPRATR_DATA and SPRFLICKER_ENABLED
 SPRENABLE:
 	; opening (
 	CALL CHKCHAR
 	DB '('
 	; get address of sprite attribute table DIM SA%(3,31)
-	LD IX, FRMQNT
-	CALL CALBAS
-	PUSH DE
+	LD A,2
+	LD B,2
+	LD DE,#0420
+	CALL GET_BASIC_ARRAY_DATA_POINTER
+	PUSH BC
 	; comma
 	CALL CHKCHAR
 	DB ','
-	; get address of sprite update flag location
-	LD IX, FRMQNT
+	; get address of sprite update flag
+	LD IX, PTRGET
 	CALL CALBAS
 	PUSH DE
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; get flicker enabled flag
-	LD IX, FRMQNT
+	LD IX, GETBYT
 	CALL CALBAS
-	PUSH DE
+	PUSH AF
 	; ending )
 	CALL CHKCHAR
 	DB ')'
 
-	POP DE ; get flicker flag
-	LD A, D
-	OR E
+	POP AF ; get flicker flag
+	OR A
 	LD (SPRFLICKER_ENABLED), A
 
 	POP DE ; update variable location
-	BIT 7, D ; is address >= &h8000
-	JR NZ, .L1
-	LD E, 5 ; illegal function call
-	JP THROW_ERROR
-.L1:
 	LD (SPRATR_UPDATE_FLAG), DE
 	POP DE ; address of sprite attribute table
-	BIT 7, D ; is address >= &h8000
-	JR NZ, .L2
-	LD E, 5 ; illegal function call
-	JP THROW_ERROR
-.L2:
 	LD (SPRATR_DATA), DE
 	LD A, 1
 	LD (SPRATR_INIT_STATUS), A
