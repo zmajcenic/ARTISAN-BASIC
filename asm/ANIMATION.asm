@@ -695,10 +695,16 @@ PROCESS_ANIMATIONS:
     JR Z,.SKIP ; inactive animation
     LD L,(IX+1)
     LD H,(IX+2) ; HL=end time
-    LD DE,(JIFFY)
-    XOR A
-    SBC HL,DE
-    JP P,.SKIP ; time until next animation item not yet reached
+    ;LD DE,(JIFFY)
+    ;XOR A
+    ;SBC HL,DE
+    ;JP P,.SKIP ; time until next animation item not yet reached
+    DEC HL
+    LD (IX+1),L
+    LD (IX+2),H
+    LD A,L
+    OR H
+    JR NZ,.SKIP
     INC (IX+3) ; current animation item
     CALL SETUP_ANIM_STEP
 .SKIP:
@@ -743,12 +749,14 @@ INIT_CURRENT_ANIMATION:
     CALL GETnthANIMITEM
     PUSH HL
     POP IY ; IY=animation item
-    LD HL,(JIFFY)
+    ;LD HL,(JIFFY)
     LD E,(IY+1)
     LD D,(IY+2) ; duration
-    ADD HL,DE
-    LD (IX+1),L
-    LD (IX+2),H ; end time for current item
+    ;ADD HL,DE
+    ;LD (IX+1),L
+    ;LD (IX+2),H ; end time for current item
+    LD (IX+1),E
+    LD (IX+2),D
 .EXIT:
     XOR A
     RET 

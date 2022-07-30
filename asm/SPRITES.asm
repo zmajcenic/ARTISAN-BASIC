@@ -375,8 +375,8 @@ SPRSET_DELTA_POS:
 ; { int sprite_num, int delta_y, int delta_x } [count]
 ; _SPRGRPMOV ( INT x, 
 ;			   INT y, 
-;			   INT data_ptr, 
 ;			   BYTE count, 
+;			   INT[2][count] data_ptr
 ; will put ram in page 0 also, page 1 is already there
 SPRGRPMOV:
 	LD A, (SPRATR_INIT_STATUS)
@@ -402,17 +402,22 @@ SPRGRPMOV:
 	; comma
 	CALL CHKCHAR
 	DB ','
-	; get data pointer
-	LD IX, FRMQNT
-	CALL CALBAS
-	PUSH DE
-	; comma
-	CALL CHKCHAR
-	DB ','
 	; get count
 	LD IX, GETBYT
 	CALL CALBAS
 	PUSH AF
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get sprite group definition array data pointer
+	POP DE
+	PUSH DE
+	LD E,D
+	LD D,3
+	LD A,2
+	LD B,A
+	CALL GET_BASIC_ARRAY_DATA_POINTER
+	PUSH BC
 	; ending )
 	CALL CHKCHAR
 	DB ')'
@@ -420,8 +425,8 @@ SPRGRPMOV:
 	PUSH HL
 	POP IX
 
-	POP BC ; count
 	POP HL ; data pointer
+	POP BC ; count
 	EXX
 	POP BC ; y
 	POP DE ; x
