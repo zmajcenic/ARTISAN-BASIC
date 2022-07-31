@@ -148,7 +148,7 @@ VERSION:
  ENDIF 
 
 ; temp variables for BLIT, TILE functions
- IF (BLIT_CMDS + TILE_CMDS > 0)
+ IF (BLIT_CMDS + TILE_CMDS + BOX_CMDS > 0)
 BLIT_TMP:
 TILETMP1:
 BLIT_TMP1:

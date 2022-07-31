@@ -41,28 +41,19 @@ RECTANGLE_COPY:
 
 ; *******************************************************************************************************
 ; function to handle CALL BOXMEMCPY basic extension
-; copies data with window like boundaries to ram
-; BOXMEMCPY ( INT request_data_ptr )
+; copies data with window like boundaries within ram
+; BOXMEMCPY ( INT source data pointer,
+;			  INT source number of bytes in a row,
+;			  INT number of rows,
+;			  INT source add-to value till next row,
+; 			  INT destination pointer,
+;			  INT destination add-to value till next row )
 ; request_data_ptr described in RECTANGLE_COPY
 ; will put ram in page 0 also, page 1 is already there
 BOXMEMCPY:
-	; opening (
-	CALL CHKCHAR
-	DB '('
-	; get pointer to request struct
-	LD IX, FRMQNT
-	CALL CALBAS
-	PUSH DE
-	; ending )
-	CALL CHKCHAR
-	DB ')'
-
-	POP IX ; pointer to request struct
-
-	PUSH HL ; save position in BASIC buffer
-
-	LD IY, .RET
-	JP ENABLE_PAGE0
+	LD DE,BOXMEMCPY.RET
+	LD (BOXCOMMON.ADDR+2), DE
+	JP BOXCOMMON
 .RET:
 	EI
 	; set RAM functions to call
@@ -71,7 +62,67 @@ BOXMEMCPY:
 	LD (RECTANGLE_COPY.CALL1+2), HL ; NOP NOP
 	LD HL, #B0ED ; LDIR
 	LD (RECTANGLE_COPY.CALL1+4), HL
+	JP BOXCOMMON.CALL
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; common parts of BOX commands
+BOXCOMMON:
+	; opening (
+	CALL CHKCHAR
+	DB '('
+	; get source data pointer
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD (BLIT_STRUCT+0), DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; source number of bytes in a row
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD (BLIT_STRUCT+2), DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; number of rows
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD (BLIT_STRUCT+4), DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; source add-to value till next row
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD (BLIT_STRUCT+6), DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; destination pointer
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD (BLIT_STRUCT+8), DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; destination add-to value till next row
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD (BLIT_STRUCT+10), DE
+	; ending )
+	CALL CHKCHAR
+	DB ')'
+
+	PUSH HL ; save position in BASIC buffer
+.ADDR:
+	LD IY, 0
+	JP ENABLE_PAGE0
+.CALL:
+	LD IX,BLIT_STRUCT
 	CALL RECTANGLE_COPY
+	XOR A
+	LD (VRAM_UPDATE_IN_PROGRESS),A
 
     POP DE
     POP BC
@@ -83,28 +134,19 @@ BOXMEMCPY:
 
 ; *******************************************************************************************************
 ; function to handle CALL BOXMEMVRM basic extension
-; copies data with window like boundaries to Vram
-; BOXMEMVRM ( INT request_data_ptr )
+; copies data with window like boundaries from ram to Vram
+; BOXMEMVRM ( INT source data pointer,
+;			  INT source number of bytes in a row,
+;			  INT number of rows,
+;			  INT source add-to value till next row,
+; 			  INT destination pointer,
+;			  INT destination add-to value till next row )
 ; request_data_ptr described in RECTANGLE_COPY
 ; will put ram in page 0 also, page 1 is already there
 BOXMEMVRM:
-	; opening (
-	CALL CHKCHAR
-	DB '('
-	; get pointer to request struct
-	LD IX, FRMQNT
-	CALL CALBAS
-	PUSH DE
-	; ending )
-	CALL CHKCHAR
-	DB ')'
-
-	POP IX ; pointer to request struct
-
-	PUSH HL ; save position in BASIC buffer
-
-	LD IY, .RET
-	JP ENABLE_PAGE0
+	LD DE,BOXMEMVRM.RET
+	LD (BOXCOMMON.ADDR+2), DE
+	JP BOXCOMMON
 .RET:
 	EI
 	; set RAM functions to call
@@ -117,16 +159,7 @@ BOXMEMVRM:
 	LD (RECTANGLE_COPY.CALL2), A
 	;LD A,1
 	LD (VRAM_UPDATE_IN_PROGRESS),A
-	CALL RECTANGLE_COPY
-	XOR A
-	LD (VRAM_UPDATE_IN_PROGRESS),A
-
-    POP DE
-    POP BC
-    CALL RESTORE_PAGE_INFO
-
-	POP HL
-	RET
+	JP BOXCOMMON.CALL
 .SETDEST:
 	EX DE, HL
 	DI
