@@ -578,7 +578,13 @@ ANIMSPRITE:
     LD (IY),H
     LD (IY+4),B
     LD (IY+5),D
-    ;LD (IY+6),0
+    ;LD (IY+6),0 -- not needed as set in MAXANIMSPRS
+    ; following will do preparation for ANIMSTEP situation
+    ; current item set to above limit and timer to 1
+    ; any call to ANIMSTEP will switch and setup to first item for cyclic
+    LD (IY+3),255
+    LD (IY+1),1
+    LD (IY+2),0
     PUSH IX
     POP HL
     RET
@@ -688,12 +694,14 @@ ANIMSTARTSTOP_COMMON:
 .START:
     LD (IX+6),1 ; active flag
     LD (IX+3),0 ; current item
-.STEP:
     LD B,0 ; setup timer
     JP SETUP_ANIM_STEP 
 .STOP:
     LD (IX+6),0 ; active flag
     RET 
+.STEP:
+    LD B,0
+    JP PROCESS_SINGLE_ANIMATION.INACTIVE_TOO
 ; *******************************************************************************************************
 
 ; *******************************************************************************************************
@@ -717,7 +725,7 @@ PROCESS_ANIMATIONS:
 
 ; *******************************************************************************************************
 ; processes single sprite animation
-; skips inactive ones
+; skips inactive ones, but this can be skipped by calling .INACTIVE_TOO entry point
 ; on timer expiry goes to next animation item
 ; input IX=sprite animation pointer
 ; input B=1 force mode, activate animation action regardless of expired timer
@@ -725,6 +733,7 @@ PROCESS_SINGLE_ANIMATION:
     LD A,(IX+6); active
     OR A
     RET Z ; inactive animation
+.INACTIVE_TOO:
     LD L,(IX+1)
     LD H,(IX+2) ; HL=end time
     DEC HL
@@ -753,9 +762,9 @@ PROCESS_SINGLE_ANIMATION:
 ; basically sets new end time for current animation
 INIT_CURRENT_ANIMATION:
     CALL GETnthANIMDEF
-    LD A,(HL); number of animation items in the animation definition
-    CP (IX+3) ; current animation item
-    JR NZ,.L3 ; last item not reached
+    LD A,(IX+3) ; current animation item
+    CP (HL) ; number of animation items in the animation definition
+    JR C,.L3 ; last item not reached
     ; last item reached
     LD A,(IX+5) ; cyclic flag
     OR A
