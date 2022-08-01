@@ -585,6 +585,18 @@ ANIMSPRITE:
 ; *******************************************************************************************************
 
 ; *******************************************************************************************************
+; function to handle CALL ANIMSTEP basic extension
+; two forms
+; ANIMSTEP ( BYTE id )
+; or
+; ANIMSTEP ( BYTE item_number,
+;            INT[] sprite_animations )
+; sets active flag to 1
+ANIMSTEP:
+    LD DE,ANIMSTARTSTOP_COMMON.STEP
+    JR ANIMSTARTSTOP_COMMON
+; *******************************************************************************************************
+; *******************************************************************************************************
 ; function to handle CALL ANIMSTART basic extension
 ; two forms
 ; ANIMSTART ( BYTE id )
@@ -593,7 +605,7 @@ ANIMSPRITE:
 ;             INT[] sprite_animations )
 ; sets active flag to 1
 ANIMSTART:
-    LD A,1
+    LD DE,ANIMSTARTSTOP_COMMON.START
     JR ANIMSTARTSTOP_COMMON
 ; *******************************************************************************************************
 ; *******************************************************************************************************
@@ -605,10 +617,10 @@ ANIMSTART:
 ;            INT[] sprite_animations )
 ; sets active flag to 1
 ANIMSTOP:
-    XOR A
-ANIMSTARTSTOP_COMMON:
-    LD (ANIMSTARTSTOP_COMMON.VALUE+3),A
+    LD DE,ANIMSTARTSTOP_COMMON.STOP
 ; *******************************************************************************************************
+ANIMSTARTSTOP_COMMON:
+    LD (ANIMSTARTSTOP_COMMON.FN+1),DE
     ; opening (
 	CALL CHKCHAR
 	DB '('
@@ -671,13 +683,17 @@ ANIMSTARTSTOP_COMMON:
     CALL GETnthSPRANIM
     PUSH HL
     POP IX
-.VALUE:
+.FN:
+    JP 0
+.START:
     LD (IX+6),1 ; active flag
-    LD A,(.VALUE+3)
-    OR A
-    RET Z
     LD (IX+3),0 ; current item
-    JP SETUP_ANIM_STEP
+.STEP:
+    LD B,0 ; setup timer
+    JP SETUP_ANIM_STEP 
+.STOP:
+    LD (IX+6),0 ; active flag
+    RET 
 ; *******************************************************************************************************
 
 ; *******************************************************************************************************
@@ -690,24 +706,8 @@ PROCESS_ANIMATIONS:
     LD IX,(ANIMSPRPTR)
 .L1:
     PUSH BC
-    LD A,(IX+6); active
-    OR A
-    JR Z,.SKIP ; inactive animation
-    LD L,(IX+1)
-    LD H,(IX+2) ; HL=end time
-    ;LD DE,(JIFFY)
-    ;XOR A
-    ;SBC HL,DE
-    ;JP P,.SKIP ; time until next animation item not yet reached
-    DEC HL
-    LD (IX+1),L
-    LD (IX+2),H
-    LD A,L
-    OR H
-    JR NZ,.SKIP
-    INC (IX+3) ; current animation item
-    CALL SETUP_ANIM_STEP
-.SKIP:
+    LD B,0 ; normal mode, change on timer expiry only
+    CALL PROCESS_SINGLE_ANIMATION
     LD DE,8
     ADD IX,DE
     POP BC
@@ -716,9 +716,38 @@ PROCESS_ANIMATIONS:
 ; *******************************************************************************************************
 
 ; *******************************************************************************************************
+; processes single sprite animation
+; skips inactive ones
+; on timer expiry goes to next animation item
+; input IX=sprite animation pointer
+; input B=1 force mode, activate animation action regardless of expired timer
+PROCESS_SINGLE_ANIMATION:
+    LD A,(IX+6); active
+    OR A
+    RET Z ; inactive animation
+    LD L,(IX+1)
+    LD H,(IX+2) ; HL=end time
+    DEC HL
+    LD (IX+1),L
+    LD (IX+2),H
+    LD A,L
+    OR H
+    JR Z,.STEP
+    DEC B
+    INC B
+    RET Z ; not forced mode, return
+    JP SETUP_ANIM_STEP; call function with flag to skip timer setup
+.STEP:
+    LD B,0; setup timer
+    INC (IX+3) ; current animation item
+    JP SETUP_ANIM_STEP
+; *******************************************************************************************************
+
+; *******************************************************************************************************
 ; function will setup sprite animation after current item change
 ; input A=current animation definition
 ; input IX=pointer to sprite animation
+; input B=1 skip timer setup
 ; output IY=pointer to animation item
 ; CF=1 error or non-cyclic animation ended, in both cases set active flag to 0
 ; basically sets new end time for current animation
@@ -749,12 +778,10 @@ INIT_CURRENT_ANIMATION:
     CALL GETnthANIMITEM
     PUSH HL
     POP IY ; IY=animation item
-    ;LD HL,(JIFFY)
+    DEC B
+    JR Z,.EXIT
     LD E,(IY+1)
     LD D,(IY+2) ; duration
-    ;ADD HL,DE
-    ;LD (IX+1),L
-    ;LD (IX+2),H ; end time for current item
     LD (IX+1),E
     LD (IX+2),D
 .EXIT:
@@ -770,6 +797,7 @@ INIT_CURRENT_ANIMATION:
 ; it will also stop the animation if expired
 ; sets sprite update flag if any changes in sprite data made
 ; input IX=current sprite animation
+; input B=1 skip timer setup
 SETUP_ANIM_STEP:
     LD C,(IX+4) ; animation definition ID
     INC C
@@ -811,7 +839,7 @@ SETUP_ANIM_STEP:
     ADD HL,DE
     CALL SETWRT_LOCAL
     LD L,(IY+3)
-    LD H,(IY+4) ; pointer to sprite patter data
+    LD H,(IY+4) ; pointer to sprite pattern data
     JP BBYTECOPY 
 .L4:
     ; change pattern and color in sprite attributes table
