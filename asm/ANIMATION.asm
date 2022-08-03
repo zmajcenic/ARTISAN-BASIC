@@ -32,14 +32,14 @@ ANIMSPRPTR:
 ; byte[15] anim_item;
 ; total size = 16b
 
-; SPRITE ANIMATION
-; +00 byte sprite number;
+; SPRITE/CHAR ANIMATION
+; +00 byte sprite/char number;
 ; +01 word time;
 ; +03 byte current item;
 ; +04 byte animation definition;
 ; +05 byte cyclic;
 ; +06 byte active;
-; +07 byte reserved
+; +07 byte 0=sprite, 1-3 character bank
 ; total size = 8b
 
 ; *******************************************************************************************************
@@ -72,7 +72,7 @@ GETnthANIMITEM:
 GETnthANIMDEF:
     LD H,0
     LD L,A
-    CALL HLx8
+    CALL HLx16
     LD DE,(ANIMDEFPTR)
     ADD HL,DE
     RET
@@ -84,7 +84,7 @@ GETnthANIMDEF:
 GETnthSPRANIM:
     LD H,0
     LD L,A
-    CALL HLx16
+    CALL HLx8
     LD DE,(ANIMSPRPTR)
     ADD HL,DE
     RET
@@ -585,6 +585,91 @@ ANIMSPRITE:
     LD (IY+3),255
     LD (IY+1),1
     LD (IY+2),0
+    ; mark as sprite animation
+    LD (IY+7),0
+    PUSH IX
+    POP HL
+    RET
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function to handle CALL ANIMCHAR basic extension
+; ANIMCHAR ( BYTE id,
+;            INT character number 0-767,
+;            BYTE animation_definition_id,
+;            BYTE cyclic_flag )
+; fills sprite animation data, returns an error if out of bounds, or invalid type
+ANIMCHAR:
+    ; opening (
+	CALL CHKCHAR
+	DB '('
+	; get sprite animation id
+	LD IX, GETBYT
+	CALL CALBAS
+    PUSH AF
+    INC A
+    LD C,A
+    LD A,(ANIMSPRNUM)
+    CP C
+    JP C,SUBSCRIPT_OUT_OF_RANGE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get character number
+	LD IX, FRMQNT
+	CALL CALBAS
+    PUSH DE
+    ; check if out of bounds
+    LD A,D
+    CP 3
+    JP NC, SUBSCRIPT_OUT_OF_RANGE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get animation definition id
+	LD IX, GETBYT
+	CALL CALBAS
+    PUSH AF
+    INC A
+    LD C,A
+    LD A,(ANIMDEFNUM)
+    CP C
+    JP C,SUBSCRIPT_OUT_OF_RANGE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get cyclic flag
+	LD IX, GETBYT
+    CALL CALBAS
+	PUSH AF
+	; ending )
+	CALL CHKCHAR
+	DB ')'
+.ENTRY:
+    PUSH HL
+    POP IX
+    EXX
+    POP DE ; cyclic
+    POP BC ; animation definition id
+    POP HL ; character number
+    EXX
+    POP AF ; sprite animation id
+    CALL GETnthSPRANIM
+    PUSH HL
+    POP IY
+    EXX
+    LD (IY),L
+    INC H ; save character bank+1
+    LD (IY+7),H
+    LD (IY+4),B
+    LD (IY+5),D
+    ;LD (IY+6),0 -- not needed as set in MAXANIMSPRS
+    ; following will do preparation for ANIMSTEP situation
+    ; current item set to above limit and timer to 1
+    ; any call to ANIMSTEP will switch and setup to first item for cyclic
+    LD (IY+3),255
+    LD (IY+1),1
+    LD (IY+2),0
     PUSH IX
     POP HL
     RET
@@ -824,9 +909,13 @@ SETUP_ANIM_STEP:
     JR C, .STOPANIM
     LD A,(IY) ; type of animation item
     OR A
-    JP Z,.L4 ; change pattern and/or color
+    JR Z,.L4 ; change pattern and/or color
 .PAT:
-    ; change sprite pattern definition
+    ; change pattern definition
+    ; check if sprite or character
+    LD A,(IX+7)
+    OR A
+    JR NZ,.CHAR
     LD A,(IX) ; sprite number
     CALL GETnthSPRATTR
     .4 INC HL ; skip y and x
@@ -845,6 +934,7 @@ SETUP_ANIM_STEP:
     LD B,32
 .L5:
     LD DE,(PATBAS)
+.L7:
     ADD HL,DE
     CALL SETWRT_LOCAL
     LD L,(IY+3)
@@ -863,4 +953,12 @@ SETUP_ANIM_STEP:
     LD HL,(SPRATR_UPDATE_FLAG)
     LD (HL),1
     RET
+.CHAR:
+    LD L,(IX)
+    DEC A
+    LD H,A
+    CALL HLx8
+    LD DE,(CGPBAS)
+    LD B,8
+    JR .L7
 ; *******************************************************************************************************
