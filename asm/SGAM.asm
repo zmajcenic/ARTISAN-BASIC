@@ -88,7 +88,7 @@ SGAM:
     LD B,A
     CALL SPRGRPMOV.UPDATE_LOC
 
-    LD HL,ANIMSTARTSTOP_COMMON.STEP
+    LD HL,.STEP
     LD (ANIMSTARTSTOP_COMMON.FN+1),HL
     LD A,(BLIT_STRUCT+7) ; anim number
     LD B,A
@@ -109,4 +109,7 @@ SGAM:
     EI
     POP HL
     RET
+.STEP:
+    LD B,1
+    JP PROCESS_SINGLE_ANIMATION.INACTIVE_TOO
 ; *******************************************************************************************************
