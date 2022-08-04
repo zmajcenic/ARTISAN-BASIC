@@ -381,10 +381,7 @@ SPRSET_DELTA_POS:
 SPRGRPMOV:
 	LD A, (SPRATR_INIT_STATUS)
 	OR A
-	JR NZ, .L1
-	LD E, 5 ; illegal function call
-	JP THROW_ERROR
-.L1:
+	JP Z,ILLEGAL_FUNCTION
 	; opening (
 	CALL CHKCHAR
 	DB '('
@@ -454,7 +451,11 @@ SPRGRPMOV:
 	EI
 	POP HL
 	POP BC
+	LD A,1
+	LD (VRAM_UPDATE_IN_PROGRESS),A
 	CALL .UPDATE_LOC
+	XOR A
+	LD (VRAM_UPDATE_IN_PROGRESS),A
     POP DE
     POP BC
     CALL RESTORE_PAGE_INFO
@@ -462,7 +463,6 @@ SPRGRPMOV:
 	RET
 
 .UPDATE_LOC:
-.L4:
 	LD A, (HL)
 	INC HL
 	INC HL
@@ -472,7 +472,7 @@ SPRGRPMOV:
 	CALL SPRSET_DELTA_POS
 	EXX
 	.4 INC HL
-	DJNZ .L4
+	DJNZ .UPDATE_LOC
 	RET
 ; *******************************************************************************************************
 
