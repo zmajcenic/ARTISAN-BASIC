@@ -10,7 +10,8 @@ GENCAL_CMD		EQU 1
 TILE_CMDS		EQU 1
 BOX_CMDS		   EQU 1
 ANIM_CMDS		EQU 1
-BYTEOPS_CMDS   EQU 1
+BYTEOPS_CMDS   EQU 0
+COLL_CMD       EQU 1
 
  DEFINE CMDS_WITH_PARAMETERS
 
@@ -28,32 +29,32 @@ FRMQNT	EQU		#542F
 ; input HL=pointer to current program expression
 ; output HL=next address
 ; output A=E=byte read
-GETBYT		EQU		#521C
-CHRGTR  	EQU     #4666
+GETBYT		EQU	#521C
+CHRGTR  	   EQU   #4666
 PTRGET		EQU 	#5EA4
-SUBFLG		EQU		#F6A5
-SYNCHR		EQU		#558C
-VALTYP  	EQU     #F663
-DAC         EQU     #F7F6
-USR     	EQU     #F7F8
-PROCNM		EQU		#FD89
-BIOS_FILVRM EQU     #0056
-CLIKSW		EQU		#F3DB
-ATRBAS		EQU		#F928
-GRPCGP		EQU		#F3CB
+SUBFLG		EQU	#F6A5
+SYNCHR		EQU	#558C
+VALTYP  	   EQU   #F663
+DAC         EQU   #F7F6
+USR     	   EQU   #F7F8
+PROCNM		EQU	#FD89
+BIOS_FILVRM EQU   #0056
+CLIKSW		EQU	#F3DB
+ATRBAS		EQU	#F928
+GRPCGP		EQU	#F3CB
 
-RAMAD0	EQU	#F341	; Main-RAM Slot (00000h~03FFFh)
-RAMAD1	EQU	#F342	; Main-RAM Slot (04000h~07FFFh)
-RAMAD2	EQU	#F343	; Main-RAM Slot (08000h~0BFFFh)
-RAMAD3	EQU	#F344	; Main-RAM Slot (0C000h~0FFFFh)
-EXPTBL	EQU #FCC1
-SCRMOD	EQU #FCAF ; current screen mode
-REG1SAV EQU #F3E0 ; VDP(1)
-JIFFY	EQU #FC9E 
-GRPPAT	EQU #F3CF ; SCREEN 2 sprite generator table address 
-T32PAT	EQU #F3C5 ; SCREEN 1 sprite generator table address 
-PATBAS  EQU #F926 ; current sprite generator table address
-CGPBAS  EQU #F924 ; current pattern generator table address 
+RAMAD0	   EQU	#F341	; Main-RAM Slot (00000h~03FFFh)
+RAMAD1	   EQU	#F342	; Main-RAM Slot (04000h~07FFFh)
+RAMAD2	   EQU	#F343	; Main-RAM Slot (08000h~0BFFFh)
+RAMAD3	   EQU	#F344	; Main-RAM Slot (0C000h~0FFFFh)
+EXPTBL	   EQU   #FCC1
+SCRMOD	   EQU   #FCAF ; current screen mode
+REG1SAV     EQU   #F3E0 ; VDP(1)
+JIFFY	      EQU   #FC9E 
+GRPPAT	   EQU   #F3CF ; SCREEN 2 sprite generator table address 
+T32PAT	   EQU   #F3C5 ; SCREEN 1 sprite generator table address 
+PATBAS      EQU   #F926 ; current sprite generator table address
+CGPBAS      EQU   #F924 ; current pattern generator table address 
 
 ; BASIC error codes
 ;01 NEXT without FOR 
@@ -153,6 +154,10 @@ VERSION:
 
  IF (BYTEOPS_CMDS == 1)
  INCLUDE "BYTEOPS.asm"
+ ENDIF
+
+ IF (COLL_CMD == 1)
+ INCLUDE "COLLISION.asm"
  ENDIF
 
 ; temp variables for BLIT, TILE functions
