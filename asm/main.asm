@@ -15,11 +15,11 @@ COLL_CMD       EQU 1
 
  DEFINE CMDS_WITH_PARAMETERS
 
-CHPUT   EQU     #A2
-CALBAS	EQU		#159
-ERRHAND EQU     #406F
-FRMEVL  EQU     #4C64
-FRESTR	EQU		#67D0
+CHPUT   EQU    #A2
+CALBAS  EQU		#159
+ERRHAND EQU    #406F
+FRMEVL  EQU    #4C64
+FRESTR  EQU		#67D0
 ; FRMQNT = formula quantificator
 ; input HL=pointer to current program expression
 ; output HL=next address
@@ -161,7 +161,7 @@ VERSION:
  ENDIF
 
 ; temp variables for BLIT, TILE functions
- IF (BLIT_CMDS + TILE_CMDS + BOX_CMDS + SPRITE_CMDS + ANIM_CMDS > 0)
+ IF (BLIT_CMDS + TILE_CMDS + BOX_CMDS + SPRITE_CMDS + ANIM_CMDS + COLL_CMD > 0)
 BLIT_TMP:
 TILETMP1:
 BLIT_TMP1:
@@ -193,7 +193,11 @@ CMDS:
  ELSE
 	DW 0
  ENDIF
+ IF (COLL_CMD == 1)
+	DW CMDS_C ;
+ ELSE
     DW 0 ; C
+ ENDIF
     DW 0 ; D
     DW 0 ; E
  IF (VRAM_CMDS + RAM_CMDS > 0)
@@ -410,6 +414,14 @@ CMDS_R:
     DW RANGE
  ENDIF
  IF (BYTEOPS_CMDS > 0)
+	DB	0
+ ENDIF
+CMDS_C:
+ IF (COLL_CMD == 1)
+    DB "COLL", 0
+    DW COLL
+ ENDIF
+ IF (COLL_CMD > 0)
 	DB	0
  ENDIF
 
@@ -785,12 +797,12 @@ GET_BASIC_ARRAY_DATA_POINTER:
 	PUSH DE
 	PUSH BC
 	PUSH AF
-    LD A,1
-    LD (SUBFLG),A ; search for arrays only
+   LD A,1
+   LD (SUBFLG),A ; search for arrays only
 	LD IX, PTRGET
 	CALL CALBAS
-    XOR A
-    LD (SUBFLG),A ; if not reset will cause syntax errors
+   XOR A
+   LD (SUBFLG),A ; if not reset will cause syntax errors
 	LD A,(VALTYP)
 	POP DE ; required type
 	CP D
