@@ -5,17 +5,22 @@
 ; modifies AF
 GENERIC_INNER_CHECK:
     PUSH HL
+    PUSH DE
+    EX DE,HL
     AND A 
     SBC HL, DE 
-    JP P, .GENERIC_INNER_CHECK_NOT
-    AND A
-    ADC HL, BC 
     JP M, .GENERIC_INNER_CHECK_NOT
+    AND A
+    SBC HL, BC 
+    JR Z, .L2
+    JP P, .GENERIC_INNER_CHECK_NOT
+.L2:
     AND A
     JR .EXIT
 .GENERIC_INNER_CHECK_NOT:
     SCF 
 .EXIT:
+    POP DE
     POP HL
     RET
 ; ************************************************************************************************
