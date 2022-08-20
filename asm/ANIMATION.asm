@@ -933,7 +933,13 @@ SETUP_ANIM_STEP:
     CALL HLx32
     LD B,32
 .L5:
-    LD DE,(PATBAS)
+    LD A,(SCRMOD)
+    DEC A
+    JR NZ,.L10
+    LD DE,(T32PAT)
+    JR .L7
+.L10:
+    LD DE,(GRPPAT)
 .L7:
     ADD HL,DE
     CALL SETWRT_LOCAL
@@ -958,7 +964,14 @@ SETUP_ANIM_STEP:
     DEC A
     LD H,A
     CALL HLx8
-    LD DE,(CGPBAS)
+    LD A,(SCRMOD)
+    DEC A
+    JR NZ,.L8
+    LD DE,(T32CGP)
+    JR .L9
+.L8:
+    LD DE,(GRPCGP)
+.L9:
     LD B,8
     JR .L7
 ; *******************************************************************************************************

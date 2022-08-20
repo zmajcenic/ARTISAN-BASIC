@@ -40,8 +40,6 @@ USR     	   EQU   #F7F8
 PROCNM		EQU	#FD89
 BIOS_FILVRM EQU   #0056
 CLIKSW		EQU	#F3DB
-ATRBAS		EQU	#F928
-GRPCGP		EQU	#F3CB
 
 RAMAD0	   EQU	#F341	; Main-RAM Slot (00000h~03FFFh)
 RAMAD1	   EQU	#F342	; Main-RAM Slot (04000h~07FFFh)
@@ -52,9 +50,11 @@ SCRMOD	   EQU   #FCAF ; current screen mode
 REG1SAV     EQU   #F3E0 ; VDP(1)
 JIFFY	      EQU   #FC9E 
 GRPPAT	   EQU   #F3CF ; SCREEN 2 sprite generator table address 
+GRPCGP		EQU	#F3CB ; SCREEN 2 pattern generator table address
+GRPATR      EQU   #F3CD ; SCREEN 2 sprite attribute table address 
 T32PAT	   EQU   #F3C5 ; SCREEN 1 sprite generator table address 
-PATBAS      EQU   #F926 ; current sprite generator table address
-CGPBAS      EQU   #F924 ; current pattern generator table address 
+T32CGP      EQU   #F3C1 ; SCREEN 1 pattern ganarator table address
+T32ATR      EQU   #F3C3 ; SCREEN 1 sprite attribute table address 
 
 ; BASIC error codes
 ;01 NEXT without FOR 

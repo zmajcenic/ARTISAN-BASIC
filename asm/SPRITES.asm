@@ -49,7 +49,14 @@ SPRATR_UPDATE:
 	LD B, 32 ; sprite number
 	LD C, #98 ; register for vdp data output
 	; set VDP address
-	LD HL, (ATRBAS)
+    LD A,(SCRMOD)
+    DEC A
+    JR NZ,.L4
+    LD HL, (T32ATR)
+    JR .L5
+.L4:
+    LD HL, (GRPATR)
+.L5:
 	LD A, (SPRFLICKER_ENABLED)
 	OR A
 	JR Z, .L3
@@ -70,9 +77,9 @@ SPRATR_UPDATE:
 .LOOP:
 	POP HL
 	INC H
-	JR Z, .L1 ; negative number above -256
+	JR Z, .L1 ; negative number between -256 and -1
 	DEC H
-	JR NZ, .OUT3 ; sprite verticall can't be visible
+	JR NZ, .OUT3 ; sprite vertically can't be visible
 	LD A, L
 	CP 192
 	JR NC, .OUT3
@@ -136,7 +143,14 @@ SPRATR_UPDATE:
 	AND 31
 	JP NZ, .NEXT2
 	EX AF, AF'
-	LD HL, (ATRBAS)
+    LD A,(SCRMOD)
+    DEC A
+    JR NZ,.L6
+    LD HL, (T32ATR)
+    JR .L7
+.L6:
+    LD HL, (GRPATR)
+.L7:
 	; CALL SETWRT_LOCAL not allowed as SP modified
 	LD	A, L
 	OUT	(099H), A
@@ -148,7 +162,8 @@ SPRATR_UPDATE:
 .NEXT2:
 	EX AF, AF'
 .NEXT3:
-	DJNZ .LOOP
+	DEC B
+	JP NZ, .LOOP
 	EX AF, AF'
 	INC A
 	LD (FLICKER), A
