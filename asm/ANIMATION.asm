@@ -15,6 +15,11 @@ ANIMSPRNUM:
  DB 0
 ANIMSPRPTR:
  DW EXT_END
+; number of automatic sprite group move and animate structures
+AUTOSGAMNUM:
+ DB 0
+AUTOSGAMPTR:
+ DW EXT_END
 
 ; ANIMATION ITEM
 ; byte type = [0 - pattern and color change
@@ -41,6 +46,23 @@ ANIMSPRPTR:
 ; +06 byte active;
 ; +07 byte 0=sprite, 1-3 character bank
 ; total size = 8b
+
+; AUTOMATIC SPRITE GROUP MOVE AND ANIMATE structure
+; +00 pointer to X variable
+; +02 pointer to Y variable
+; +04 minimum value
+; +06 maximal value
+; +08 delta value
+; +10 direction 0=horizontal, <>0 = vertical
+; +11 sprite group size
+; +13 sprite group pointer
+; +15 animation list size
+; +16 animation list pointer for negative delta values
+; +18 animation list pointer for positive delta values
+; +20 active flag
+; +21 ticks for movement
+; +22 timer
+; total = 24b
 
 ; *******************************************************************************************************
 ; helper function HL=A*5
@@ -91,6 +113,22 @@ GETnthSPRANIM:
 ; *******************************************************************************************************
 
 ; *******************************************************************************************************
+; helper function gets pointer to n-th entry in autosgam table
+; changes HL,DE;
+GETnthAUTOSGAM:
+    LD H,0
+    LD L,A
+    CALL HLx8
+    LD D,H
+    LD E,L
+    ADD HL,HL
+    ADD HL,DE
+    LD DE,(AUTOSGAMPTR)
+    ADD HL,DE
+    RET
+; *******************************************************************************************************
+
+; *******************************************************************************************************
 ; function to handle CALL MAXANIMITEMS basic extension
 ; MAXANIMITEMS (BYTE number)
 ; sets new number and moves memory buffers as needed
@@ -124,6 +162,11 @@ MAXANIMITEMS:
     SBC HL,BC
     LD (ANIMSPRPTR),HL
 .E1:
+    LD HL,(AUTOSGAMPTR)
+    XOR A
+    SBC HL,BC
+    LD (AUTOSGAMPTR),HL
+.E3:
     LD HL,(FREEMEMPTR)
     XOR A
     SBC HL,BC
@@ -140,6 +183,10 @@ MAXANIMITEMS:
     ADD HL,BC
     LD (ANIMSPRPTR),HL
 .E2:
+    LD HL,(AUTOSGAMPTR)
+    ADD HL,BC
+    LD (AUTOSGAMPTR),HL
+.E4:
     LD HL,(FREEMEMPTR)
     ADD HL,BC
     LD (FREEMEMPTR),HL
@@ -476,12 +523,12 @@ MAXANIMSPRS:
     LD A,(ANIMSPRNUM)
     SUB B
     JP Z, MAXANIMITEMS.EXIT; same value as before
-    LD IY,FREEMEMPTR
+    LD IY,AUTOSGAMPTR
     JP M, .INCREASE
     ; new value is lower than previous one
     CALL .SIZEDIFF
     CALL MAXANIMITEMS.DECREASE_COMMON
-    JP MAXANIMITEMS.EXIT
+    JP MAXANIMITEMS.E3
 .INCREASE:
     NEG
     PUSH AF; save difference for later to set active flag to 0 of new entires
@@ -498,7 +545,7 @@ MAXANIMSPRS:
     LD (IX+6),0
     ADD IX,DE
     DJNZ .L1
-    JP MAXANIMITEMS.EXIT
+    JP MAXANIMITEMS.E4
 .SIZEDIFF:
     LD H,0
     LD L,A
@@ -673,6 +720,68 @@ ANIMCHAR:
     PUSH IX
     POP HL
     RET
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function to handle CALL MAXAUTOSGAMS basic extension
+; MAXAUTOSGAMS (BYTE number)
+; sets new number and moves memory buffers as needed
+MAXAUTOSGAMS:
+	; opening (
+	CALL CHKCHAR
+	DB '('
+	; get value
+	LD IX, GETBYT
+	CALL CALBAS
+    PUSH AF
+	; ending )
+	CALL CHKCHAR
+	DB ')'
+    POP AF
+
+	; save position
+	PUSH HL
+.ENTRY:
+    LD B,A
+    LD A,(AUTOSGAMNUM)
+    SUB B
+    JP Z, MAXANIMITEMS.EXIT; same value as before
+    LD IY,FREEMEMPTR
+    JP M, .INCREASE
+    ; new value is lower than previous one
+    CALL .SIZEDIFF
+    CALL MAXANIMITEMS.DECREASE_COMMON
+    JP MAXANIMITEMS.EXIT
+.INCREASE:
+    NEG
+    PUSH AF; save difference for later to set active flag to 0 of new entires
+    CALL .SIZEDIFF
+    CALL MAXANIMITEMS.INCREASE_COMMON
+    XOR A
+    SBC HL,BC ; location of new stuff
+    POP AF
+    LD B,A
+    LD DE,24
+    PUSH HL
+    POP IX
+.L1:
+    LD (IX+20),0 ; active flag
+    ADD IX,DE
+    DJNZ .L1
+    JP MAXANIMITEMS.EXIT
+.SIZEDIFF:
+    LD H,0
+    LD L,A
+    CALL HLx8
+    LD D,H
+    LD E,L
+    ADD HL,HL
+    ADD HL,DE
+    LD A,B
+    LD (AUTOSGAMNUM),A
+    LD B,H
+    LD C,L
+    RET ; BC=size difference in bytes
 ; *******************************************************************************************************
 
 ; *******************************************************************************************************
