@@ -55,12 +55,12 @@ AUTOSGAMPTR:
 ; +08 delta value
 ; +10 direction 0=horizontal, <>0 = vertical
 ; +11 sprite group size
-; +13 sprite group pointer
-; +15 animation list size
-; +16 animation list pointer for negative delta values
-; +18 animation list pointer for positive delta values
-; +20 active flag
-; +21 ticks for movement
+; +12 sprite group pointer
+; +14 animation list size
+; +15 animation list pointer for negative delta values
+; +17 animation list pointer for positive delta values
+; +19 active flag
+; +20 ticks for movement
 ; +22 timer
 ; total = 24b
 
@@ -765,7 +765,7 @@ MAXAUTOSGAMS:
     PUSH HL
     POP IX
 .L1:
-    LD (IX+20),0 ; active flag
+    LD (IX+19),0 ; active flag
     ADD IX,DE
     DJNZ .L1
     JP MAXANIMITEMS.EXIT
@@ -782,6 +782,162 @@ MAXAUTOSGAMS:
     LD B,H
     LD C,L
     RET ; BC=size difference in bytes
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function to handle CALL AUTOSGAMDEF basic extension
+; AUTOSGAMDEF ( BYTE id,
+;               INT VARIABLE x, INT VARIABLE y,
+;               INT minimum, INT maximum, INT delta,
+;               INT direction,
+;               INT ticks,
+;               BYTE sprite_group_count,
+;               INT[2][sprite_group_count] VARIABLE sprite_group,
+;               BYTE item_number,
+;               INT[] VARIABLE sprite_animations_negative_direction,
+;               INT[] VARIABLE sprite_animations_positive_direction    
+AUTOSGAMDEF:
+    ; opening (
+	CALL CHKCHAR
+	DB '('
+	; get sprite animation id
+	LD IX, GETBYT
+	CALL CALBAS
+    PUSH AF
+    INC A
+    LD C,A
+    LD A,(AUTOSGAMNUM)
+    CP C
+    JP C,SUBSCRIPT_OUT_OF_RANGE
+    POP AF
+    PUSH HL
+    CALL GETnthAUTOSGAM
+    LD (BLIT_TMP),HL ; for later
+    POP HL
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get address of the X coordinate variable
+	LD IX, PTRGET
+	CALL CALBAS
+	LD IX,(BLIT_TMP)
+    LD (IX+0),E
+    LD (IX+1),D
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get address of the Y coordinate variable
+	LD IX, PTRGET
+	CALL CALBAS
+	LD IX,(BLIT_TMP)
+    LD (IX+2),E
+    LD (IX+3),D
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get minimum value
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD IX,(BLIT_TMP)
+    LD (IX+4),E
+    LD (IX+5),D
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get maximum value
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD IX,(BLIT_TMP)
+    LD (IX+6),E
+    LD (IX+7),D
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get delta value
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD IX,(BLIT_TMP)
+    LD (IX+8),E
+    LD (IX+9),D
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get direction value
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD IX,(BLIT_TMP)
+    LD (IX+10),E
+    LD (IX+11),D
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get ticks value
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD IX,(BLIT_TMP)
+    LD (IX+20),E
+    LD (IX+21),D
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get sprite group count
+	LD IX, GETBYT
+	CALL CALBAS
+    OR A
+    JP Z,SUBSCRIPT_OUT_OF_RANGE
+	LD IX,(BLIT_TMP)
+    LD (IX+11),A
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get sprite group definition array data pointer
+	LD IX,(BLIT_TMP)
+    LD E,(IX+11)
+	LD D,3
+	LD A,2
+	LD B,A
+	CALL GET_BASIC_ARRAY_DATA_POINTER
+	LD IX,(BLIT_TMP)
+	LD (IX+12),C
+    LD (IX+13),B
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get sprite animation array size
+	LD IX,GETBYT
+	CALL CALBAS
+	LD IX,(BLIT_TMP)
+    LD (IX+14),A
+    OR A
+    JP Z,SUBSCRIPT_OUT_OF_RANGE
+	; comma
+	CALL CHKCHAR
+	DB ','
+    ; get array pointer for negative direction
+	LD IX,(BLIT_TMP)
+    LD D,(IX+14)
+    LD A,2
+    LD B,1
+    CALL GET_BASIC_ARRAY_DATA_POINTER
+	LD IX,(BLIT_TMP)
+    LD (IX+15),C
+    LD (IX+16),B
+	; comma
+	CALL CHKCHAR
+	DB ','
+    ; get array pointer for positive direction
+	LD IX,(BLIT_TMP)
+    LD D,(IX+14)
+    LD A,2
+    LD B,1
+    CALL GET_BASIC_ARRAY_DATA_POINTER
+	LD IX,(BLIT_TMP)
+    LD (IX+17),C
+    LD (IX+18),B
+	; ending )
+	CALL CHKCHAR
+	DB ')'
+    RET 
 ; *******************************************************************************************************
 
 ; *******************************************************************************************************
