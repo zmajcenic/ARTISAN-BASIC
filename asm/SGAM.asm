@@ -1,6 +1,28 @@
 ; Sprite Group Animate and Move
 
 ; *******************************************************************************************************
+; shared function to process a list of animations
+; input B=list size
+; input DE=list pointer
+SGAM_PROCESS_ANIM_LIST:
+    LD HL,.STEP
+    LD (ANIMSTARTSTOP_COMMON.FN+1),HL
+.L1:
+    PUSH BC
+    LD A,(DE)
+    .2 INC DE
+    PUSH DE
+    CALL ANIMSTARTSTOP_COMMON.SETVALUE
+    POP DE
+    POP BC
+    DJNZ .L1
+	RET
+.STEP:
+    LD B,1
+    JP PROCESS_SINGLE_ANIMATION.INACTIVE_TOO
+; *******************************************************************************************************
+
+; *******************************************************************************************************
 ; function to handle CALL SGAM basic extension
 ; sets position of a group of sprites as described in SPRGRPMOV
 ; and manually animate a list of animations
@@ -88,20 +110,10 @@ SGAM:
     LD B,A
     CALL SPRGRPMOV.UPDATE_LOC
 
-    LD HL,.STEP
-    LD (ANIMSTARTSTOP_COMMON.FN+1),HL
     LD A,(BLIT_STRUCT+7) ; anim number
     LD B,A
     LD DE,(BLIT_STRUCT+8) ; anim list
-.L1:
-    PUSH BC
-    LD A,(DE)
-    .2 INC DE
-    PUSH DE
-    CALL ANIMSTARTSTOP_COMMON.SETVALUE
-    POP DE
-    POP BC
-    DJNZ .L1
+	CALL SGAM_PROCESS_ANIM_LIST
 
     POP DE
     POP BC
@@ -109,7 +121,4 @@ SGAM:
     EI
     POP HL
     RET
-.STEP:
-    LD B,1
-    JP PROCESS_SINGLE_ANIMATION.INACTIVE_TOO
 ; *******************************************************************************************************

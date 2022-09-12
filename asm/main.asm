@@ -538,18 +538,18 @@ GET_PAGE_INFO_L3:
 ; input E = subslot value if present
 ; modifies AF, disables interrupts
 RESTORE_PAGE_INFO:
-    LD A, D
-    OR A
-    JR Z, RESTORE_PAGE_INFO_L1
-    LD A, C
+   LD A, D
+   OR A
+   JR Z, RESTORE_PAGE_INFO_L1
+   LD A, C
 	DI
-    OUT (0A8H), A
-    LD A, E
-    LD (0FFFFH), A
+   OUT (0A8H), A
+   LD A, E
+   LD (0FFFFH), A
 RESTORE_PAGE_INFO_L1:
-    LD A, B
-    OUT (0A8H), A
-    RET 
+   LD A, B
+   OUT (0A8H), A
+   RET 
 ; ****************************************************************************************************
 
 ; *******************************************************************************************************
@@ -660,36 +660,38 @@ L0390:
 ; some common code to activate page 0 and place values needed to restore original page on stack
 ; input IY=return address
 ENABLE_PAGE0:
-    XOR A
-    CALL GET_PAGE_INFO
-    PUSH BC
-    PUSH DE
-    LD A, (RAMAD0)
-    LD H, 0
-    CALL LOCAL_ENASLT
+   XOR A
+   CALL GET_PAGE_INFO
+   PUSH BC
+   PUSH DE
+   LD A, (RAMAD0)
+   LD H, 0
+   CALL LOCAL_ENASLT
 	JP (IY)
 ; *******************************************************************************************************
 
 ; General BASIC CALL-instruction handler
 CALLHAND:
+   EI
 	PUSH HL
 	LD	HL, CMDS ; pointer table based on starting letter
-    LD A, (PROCNM)
-    SUB 'A'
-    ADD A, A
-    LD D, 0
-    LD E, A
-    ADD HL, DE
-    LD E, (HL)
-    INC HL
-    LD D, (HL)
-    LD A, D
-    OR E
-    JR Z, .CMDNOTRECOGNIZED
-    EX DE, HL
+   LD A, (PROCNM)
+   SUB 'A'
+   ADD A, A
+   LD D, 0
+   LD E, A
+   ADD HL, DE
+   LD E, (HL)
+   INC HL
+   LD D, (HL)
+   LD A, D
+   OR E
+   JR Z, .CMDNOTRECOGNIZED
+   EX DE, HL
 .CHKCMD:
 	LD	DE, PROCNM
-.LOOP:	LD	A,(DE)
+.LOOP:	
+   LD	A,(DE)
 	CP	(HL)
 	JR	NZ,.TONEXTCMD	; Not equal
 	INC	DE
@@ -715,7 +717,7 @@ CALLHAND:
 	JR	NZ,.CHKCMD	; Not end of table, go checking
 .CMDNOTRECOGNIZED:
 	POP	HL
-    SCF
+   SCF
 	RET
  
 .CALLDE:
@@ -764,9 +766,11 @@ CHKCHAR:
 	INC	HL		; Get next basic char
  
 GETPREVCHAR:
-	DEC	HL
+	DEC HL
 	LD	IX,CHRGTR
-	JP      CALBAS
+	CALL CALBAS
+   EI
+   RET
  
  
 TYPE_MISMATCH:
