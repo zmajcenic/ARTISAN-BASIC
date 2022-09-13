@@ -38,7 +38,6 @@ FILVRM:
 	CALL CHKCHAR
 	DB ')'
 
-    EI
 	; save position
 	PUSH HL
 	POP IX
@@ -115,7 +114,6 @@ MEMVRM:
 	POP AF ; wait vsync
 	OR A
 	JR Z, .L1
-    EI
 	HALT
 	DI
 .L1:
@@ -209,6 +207,7 @@ VRMMEM:
 	POP HL ; source
 	EXX
 	LD IY, .RET
+	DI
 	JP ENABLE_PAGE0
 .RET:	
 	EI
