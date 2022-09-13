@@ -941,6 +941,56 @@ AUTOSGAMDEF:
 ; *******************************************************************************************************
 
 ; *******************************************************************************************************
+; function to handle CALL AUTOSGAMSTART basic extension
+; AUTOSGAMSTART ( BYTE id )
+AUTOSGAMSTART:
+    LD A,1
+.COMMON:
+    LD (.SETVALUE+3),A
+    ; opening (
+	CALL CHKCHAR
+	DB '('
+	; get sprite animation id
+	LD IX, GETBYT
+	CALL CALBAS
+    PUSH AF
+    INC A
+    LD C,A
+    LD A,(AUTOSGAMNUM)
+    CP C
+    JP C,SUBSCRIPT_OUT_OF_RANGE
+    POP AF
+    PUSH HL
+    CALL GETnthAUTOSGAM
+    PUSH HL
+    POP IX
+    POP HL
+    PUSH IX
+	; ending )
+	CALL CHKCHAR
+	DB ')'
+
+    ; so syntax is fine
+    POP IX
+.SETVALUE:
+    LD (IX+19),1 ; active flag
+    ; set initial timer
+    LD A,(IX+20)
+    LD (IX+22),A
+    LD A,(IX+21)
+    LD (IX+23),A    
+    RET
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function to handle CALL AUTOSGAMSTOP basic extension
+; AUTOSGAMSTOP ( BYTE id )
+AUTOSGAMSTOP:
+    XOR A
+    JR AUTOSGAMSTART.COMMON
+; *******************************************************************************************************
+
+; *******************************************************************************************************
 ; function to handle CALL ANIMSTEP basic extension
 ; two forms
 ; ANIMSTEP ( BYTE id )

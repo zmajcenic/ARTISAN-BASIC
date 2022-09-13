@@ -117,6 +117,7 @@ MBGE_HTIMI:
 ; function checks if the sprite system is initialized and what screen mode we are running
 ; also checks if some VRAM modifying command is running
 ; when that checks out calls sprite updates and animation processing
+; if in an unsupported mode disables sprite handling
 PROCESS_SPRITES_AND_ANIMATIONS:
 	; check if initialized
 	LD A, (SPRATR_INIT_STATUS)
@@ -127,7 +128,11 @@ PROCESS_SPRITES_AND_ANIMATIONS:
 	DEC A
 	JR Z, .L0 ; screen 1
 	DEC A
-	RET NZ ; not screen 2
+    JR Z, .L0 ; screen 2
+	; unsupported screen mode, disable 
+    XOR A
+    LD (SPRATR_INIT_STATUS),A
+    RET
 .L0:
     ; check if anyone else is working with VRAM
     LD A,(VRAM_UPDATE_IN_PROGRESS)
@@ -138,6 +143,7 @@ PROCESS_SPRITES_AND_ANIMATIONS:
 
  IF (ANIM_CMDS == 1)
     CALL PROCESS_ANIMATIONS
+    CALL PROCESS_AUTOSGAMS
  ENDIF
     RET
 ; *******************************************************************************************************
