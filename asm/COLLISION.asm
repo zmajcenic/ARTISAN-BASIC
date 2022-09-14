@@ -1,3 +1,16 @@
+; generic collision checking routines
+; in BASIC we use rectangle structure array DIM R%(7,n) of the format
+; R%(0,n) is active flag, <>0 active / 0 skipped in checks
+; R%(1,n) is either upper left x coordinate or sprite id (0-31) depending on R(7,n)
+; R%(2,n) is either upper left y coordinate or unused depending on R(7,n)
+; R%(3,n) x offset where rectangle begins
+; R%(4,n) y offset where rectangle begins
+; R%(5,n) is width
+; R%(6,n) is height
+; R%(7,0) is type, 0=generic where R%(1,0) contains x coordinate
+;                  <>0 sprite where R%(1,0) contains sprite id 
+; for type sprite, upper left coordinates are taken from sprite attribute array
+
 ; ************************************************************************************************
 ; quick test if HL<=DE<=HL+BC 
 ; input BC=width, DE=x, HL=min
@@ -27,7 +40,7 @@ GENERIC_INNER_CHECK:
 
 ; ************************************************************************************************
 ; function to check if rectangles are overlapping
-; input IX=pointer to struct
+; input IX=IY=pointer to struct
 ;  +00 active flag
 ;  +02 x coordinate
 ;  +04 y coordinate
@@ -35,6 +48,8 @@ GENERIC_INNER_CHECK:
 ;  +08 y offset where rectangle begins
 ;  +10 width
 ;  +12 height
+; where IY is used to read +2 and +4, and IX to read +6, +8, +10 and +12
+; this is a hack to allow location being taken from sprite attributes table
 ; input BLIT_STRUCT data
 ;  +00 x coordinate
 ;  +02 y coordinate
@@ -42,14 +57,14 @@ GENERIC_INNER_CHECK:
 ;  +06 height
 ; returns CF=1 if not overlapping, CF=0 if overlapping
 RECTANGLE_OVERLAP_CHECK:
-    ; first check which rectanlge is higher
+    ; first check which rectangle is higher
     LD L,(IX+12)
     LD H,(IX+13)
     LD DE,(BLIT_STRUCT+6)
     AND A
     SBC HL,DE
-    LD L,(IX+4)
-    LD H,(IX+5)
+    LD L,(IY+4)
+    LD H,(IY+5)
     LD E,(IX+8)
     LD D,(IX+9)
     JP M,.L1
@@ -94,8 +109,8 @@ RECTANGLE_OVERLAP_CHECK:
     LD DE,(BLIT_STRUCT+4)
     AND A
     SBC HL,DE
-    LD L,(IX+2)
-    LD H,(IX+3)
+    LD L,(IY+2)
+    LD H,(IY+3)
     LD E,(IX+6)
     LD D,(IX+7)
     JP M,.L2
@@ -139,7 +154,7 @@ RECTANGLE_OVERLAP_CHECK:
 ;  +04 width
 ;  +06 height
 ;  +08 number of items in a list, described under RECTANGLE_OVERLAP_CHECK
-;  +09 pointer to first element
+;  +09 pointer to first element of R%(7,n)
 ;  +11 pointer to INT result variable
 ; returns CF=1 if not overlapping
 ; returns A=list index and CF=0 if overlapping
@@ -149,9 +164,17 @@ FIND_OVERLAP:
     LD IX,(BLIT_STRUCT+9)
 .L1:
     PUSH BC
+    ; check active flag
     LD A,(IX)
     OR (IX+1)
     JR Z,.NEXT
+    ; check type
+    LD A,(IX+14)
+    OR (IX+15)
+    JR NZ,.L2
+    PUSH IX
+    POP IY
+.L3:
     CALL RECTANGLE_OVERLAP_CHECK
     JR C,.NEXT
     ; found
@@ -161,12 +184,30 @@ FIND_OVERLAP:
     AND A
     RET
 .NEXT:
-    LD DE,14
+    LD DE,16
     ADD IX,DE
     POP BC
     DJNZ .L1
     SCF
     RET 
+.L2:
+    ; sprite, need to build a temporary data struct since x and y values are inversed
+    ; at BLIT_STRUCT+13
+    LD A,(IX+2) ; sprite ID
+    CALL GETnthSPRATTR
+    LD IY,BLIT_STRUCT+11
+    LD A,(HL)
+    LD (IY+4),A
+    INC HL
+    LD A,(HL)
+    LD (IY+5),A
+    INC HL
+    LD A,(HL)
+    LD (IY+2),A
+    INC HL
+    LD A,(HL)
+    LD (IY+3),A
+    JR .L3
 ; ************************************************************************************************
 
 ; ************************************************************************************************
@@ -227,7 +268,7 @@ COLL:
 	; comma
 	CALL CHKCHAR
 	DB ','
-	; get address of rectangle structure array DIM R%(6,n)
+	; get address of rectangle structure array DIM R%(7,n)
 	LD A,(BLIT_STRUCT+8)
     LD E,A
     LD A,2
