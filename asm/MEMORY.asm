@@ -39,6 +39,7 @@ MEMCPY:
 	POP HL ; source
 	EXX
 	; enable page 0
+	DI
 	LD IY, .RET
 	JP ENABLE_PAGE0
 .RET:
@@ -57,7 +58,7 @@ MEMCPY:
 ; function to handle CALL FILRAM basic extension
 ; FILRAM ( INT start address, 
 ;		   INT count, 
-;		   BYTE value,
+;		   BYTE value )
 ; will put ram in page 0 also, page 1 is already there
 FILRAM:
 	; opening (
@@ -106,6 +107,7 @@ FILRAM:
 .L1:
 	EXX
 	; enable page 0
+	DI
 	LD IY, .RET
 	JP ENABLE_PAGE0
 .RET:

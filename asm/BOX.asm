@@ -115,6 +115,7 @@ BOXCOMMON:
 	DB ')'
 
 	PUSH HL ; save position in BASIC buffer
+	DI
 .ADDR:
 	LD IY, 0
 	JP ENABLE_PAGE0

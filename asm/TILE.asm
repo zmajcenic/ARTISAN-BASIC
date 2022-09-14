@@ -72,7 +72,7 @@ TILERAM:
 	POP IX ; pointer to request struct
 
 	PUSH HL ; save position in BASIC buffer
-
+	DI
 	LD IY, .RET
 	JP ENABLE_PAGE0
 .RET:
@@ -225,7 +225,7 @@ TILERAM:
 	LD DE,(BLIT_STRUCT+6)
 	ADD HL,DE
 	LD (BLIT_STRUCT+6),HL
-
+	DI
 	LD IY, .RET
 	JP ENABLE_PAGE0
 .RET:
@@ -340,7 +340,7 @@ TILEVRM:
 	LD DE,(GRPCGP)
 	ADD HL,DE
 	LD (BLIT_STRUCT+6),HL
-
+	DI
 	LD IY, .RET
 	JP ENABLE_PAGE0
 .RET:
@@ -393,7 +393,7 @@ TILEVRM:
 	POP IX ; pointer to request struct
 
 	PUSH HL ; save position in BASIC buffer
-
+	DI
 	LD IY, .RET
 	JP ENABLE_PAGE0
 .RET:

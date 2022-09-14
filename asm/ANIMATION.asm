@@ -66,7 +66,7 @@ AUTOSGAMPTR:
 
 ; *******************************************************************************************************
 ; helper function HL=A*5
-; changes HL,DE;
+; changes HL,DE
 Ax5:
     LD H,0
     LD L,A
@@ -80,7 +80,7 @@ Ax5:
 
 ; *******************************************************************************************************
 ; helper function gets pointer to n-th animation item
-; changes HL,DE;
+; changes HL,DE
 GETnthANIMITEM:
     CALL Ax5
     LD DE,(ANIMITEMPTR)
@@ -90,7 +90,7 @@ GETnthANIMITEM:
 
 ; *******************************************************************************************************
 ; helper function gets pointer to n-th entry in animation definition
-; changes HL,DE;
+; changes HL,DE
 GETnthANIMDEF:
     LD H,0
     LD L,A
@@ -102,7 +102,7 @@ GETnthANIMDEF:
 
 ; *******************************************************************************************************
 ; helper function gets pointer to n-th entry in sprite animation
-; changes HL,DE;
+; changes HL,DE
 GETnthSPRANIM:
     LD H,0
     LD L,A
@@ -114,7 +114,7 @@ GETnthSPRANIM:
 
 ; *******************************************************************************************************
 ; helper function gets pointer to n-th entry in autosgam table
-; changes HL,DE;
+; changes HL,DE
 GETnthAUTOSGAM:
     LD H,0
     LD L,A
@@ -144,7 +144,7 @@ MAXANIMITEMS:
 	CALL CHKCHAR
 	DB ')'
     POP AF
-
+    DI
 	; save position
 	PUSH HL
 .ENTRY:
@@ -264,7 +264,7 @@ MAXANIMITEMS:
 ;               INT ticks,
 ;               BYTE pattern,
 ;               BYTE color )
-; fills animation item data, returns an error if out of bounds
+; fills animation item data, returns an error if ID out of bounds
 ANIMITEMPAT:
     ; opening (
 	CALL CHKCHAR
@@ -332,7 +332,7 @@ ANIMITEMPAT:
 ; ANIMITEMPTR ( BYTE id,
 ;               INT ticks,
 ;               INT pointer,
-; fills animation item data, returns an error if out of bounds
+; fills animation item data, returns an error if ID out of bounds
 ANIMITEMPTR_CMD:
     ; opening (
 	CALL CHKCHAR
@@ -403,7 +403,7 @@ MAXANIMDEFS:
 	CALL CHKCHAR
 	DB ')'
     POP AF
-
+    DI
 	; save position
 	PUSH HL
 .ENTRY:
@@ -515,7 +515,7 @@ MAXANIMSPRS:
 	CALL CHKCHAR
 	DB ')'
     POP AF
-
+    DI
 	; save position
 	PUSH HL
 .ENTRY:
@@ -542,7 +542,7 @@ MAXANIMSPRS:
     PUSH HL
     POP IX
 .L1:
-    LD (IX+6),0
+    LD (IX+6),0 ; active flag
     ADD IX,DE
     DJNZ .L1
     JP MAXANIMITEMS.E4
@@ -738,7 +738,7 @@ MAXAUTOSGAMS:
 	CALL CHKCHAR
 	DB ')'
     POP AF
-
+    DI
 	; save position
 	PUSH HL
 .ENTRY:
@@ -1044,7 +1044,9 @@ ANIMSTARTSTOP_COMMON:
     ; ok so single argument variant
     POP AF
     PUSH HL
+    DI
     CALL .SETVALUE
+    EI
     POP HL
     RET 
 .L1:

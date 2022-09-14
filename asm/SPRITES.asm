@@ -18,7 +18,7 @@ TMPSP:
 
 ; *******************************************************************************************************
 ; helper function gets pointer to n-th entry in sprite attributes
-; changes HL,DE;
+; changes HL,DE
 GETnthSPRATTR:
     LD H,0
     LD L,A
@@ -306,6 +306,7 @@ SPRSET:
 	PUSH DE
 	CALL GETnthSPRATTR
 	POP DE
+	DI
 	; set y
 	LD (HL), C
 	INC HL
@@ -352,6 +353,7 @@ SPRSET:
 	LD (HL), B
 
 .L5:
+	EI
 	PUSH IX
 	POP HL
 	RET
@@ -392,7 +394,6 @@ SPRSET_DELTA_POS:
 ;			   INT y, 
 ;			   BYTE count, 
 ;			   INT[2][count] data_ptr
-; will put ram in page 0 also, page 1 is already there
 SPRGRPMOV:
 	LD A, (SPRATR_INIT_STATUS)
 	OR A
@@ -403,77 +404,53 @@ SPRGRPMOV:
 	; get x
 	LD IX, FRMQNT
 	CALL CALBAS
-	PUSH DE
+	LD (BLIT_STRUCT),DE
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; get y
 	LD IX, FRMQNT
 	CALL CALBAS
-	PUSH DE
+	LD (BLIT_STRUCT+2),DE
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; get count
 	LD IX, GETBYT
 	CALL CALBAS
-	PUSH AF
+	LD (BLIT_STRUCT+4),A
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; get sprite group definition array data pointer
-	POP DE
-	PUSH DE
-	LD E,D
+	LD A,(BLIT_STRUCT+4)
+	LD E,A
 	LD D,3
 	LD A,2
 	LD B,A
 	CALL GET_BASIC_ARRAY_DATA_POINTER
-	PUSH BC
+	LD (BLIT_STRUCT+5),BC
 	; ending )
 	CALL CHKCHAR
 	DB ')'
 
 	PUSH HL
-	POP IX
 
-	POP HL ; data pointer
-	POP BC ; count
-	EXX
-	POP BC ; y
-	POP DE ; x
-	EXX
-	
-	PUSH IX ; save position in BASIC buffer
-
-	PUSH BC
-	PUSH HL
-    XOR A
-    CALL GET_PAGE_INFO
-	EXX
-	POP HL
-	POP AF
-	EXX
-    PUSH BC
-    PUSH DE
-	EXX
-	PUSH AF
-	PUSH HL
-	EXX
-    LD A, (RAMAD0)
-    LD H, 0
-    CALL LOCAL_ENASLT
-	EI
-	POP HL
-	POP BC
+    EXX
+    LD DE,(BLIT_STRUCT) ; initial x
+    LD BC,(BLIT_STRUCT+2) ; initial y
+    EXX
+    LD HL,(BLIT_STRUCT+5) ; pointer to data
+    LD A,(BLIT_STRUCT+4) ; number of entries
+    LD B,A
 	LD A,1
 	LD (VRAM_UPDATE_IN_PROGRESS),A
+	DI
 	CALL .UPDATE_LOC
+	EI
 	XOR A
 	LD (VRAM_UPDATE_IN_PROGRESS),A
-    POP DE
-    POP BC
-    CALL RESTORE_PAGE_INFO
+
 	POP HL
 	RET
 

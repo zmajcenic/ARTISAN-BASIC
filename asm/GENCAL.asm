@@ -3,10 +3,6 @@
 ; GENCAL ( INT fn_addr, = address of the function to call
 ;		   INT[] reg_list_ptr, = array holding register values (AF,BC,DE,HL,IX,IY)
 ; output values of registers will also be stored at reg_list_ptr
-GENCAL_VAR_SP:
-    DW 0
-GENCAL_VAR_SP2:
-    DW 0
 GENCAL:
 	; opening (
 	CALL CHKCHAR
@@ -36,7 +32,7 @@ GENCAL:
 
     POP HL ; get pointer to register values
 	DI
-    LD (GENCAL_VAR_SP), SP
+    LD (BLIT_STRUCT), SP
     LD SP, HL
     POP AF
     POP BC
@@ -45,22 +41,22 @@ GENCAL:
     POP IX
     POP IY
     EXX
-    LD (GENCAL_VAR_SP2), SP
-    LD SP, (GENCAL_VAR_SP)
+    LD (BLIT_STRUCT+2), SP
+    LD SP, (BLIT_STRUCT)
     EI
     POP DE ; get function to call
     PUSH HL
     CALL .EXXDECALL
     DI
-    LD (GENCAL_VAR_SP), SP
-    LD SP, (GENCAL_VAR_SP2)
+    LD (BLIT_STRUCT), SP
+    LD SP, (BLIT_STRUCT+2)
     PUSH IY
     PUSH IX
     PUSH HL
     PUSH DE
     PUSH BC
     PUSH AF
-    LD SP, (GENCAL_VAR_SP)
+    LD SP, (BLIT_STRUCT)
     EI
     POP HL
 	RET 
