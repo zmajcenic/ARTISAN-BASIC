@@ -10,7 +10,6 @@ GENCAL_CMD		EQU 1
 TILE_CMDS		EQU 1
 BOX_CMDS		   EQU 1
 ANIM_CMDS		EQU 1
-BYTEOPS_CMDS   EQU 0
 COLL_CMD       EQU 1
 
  DEFINE CMDS_WITH_PARAMETERS
@@ -105,7 +104,7 @@ FREEMEMPTR:
 ; this location #4012 stores extension version in DAA format
 ; first byte is major version and second minor
 VERSION:
- DB #00, #70
+ DB #00, #80
 
 ; binary included AKG player compiled at #4014
  IF (SOUND_CMDS == 1)
@@ -151,10 +150,6 @@ VERSION:
  IF (TILE_CMDS == 1)
  INCLUDE "TILE.asm"
  ENDIF 
-
- IF (BYTEOPS_CMDS == 1)
- INCLUDE "BYTEOPS.asm"
- ENDIF
 
  IF (COLL_CMD == 1)
  INCLUDE "COLLISION.asm"
@@ -210,19 +205,11 @@ CMDS:
  ELSE
 	DW 0
  ENDIF
- IF (BYTEOPS_CMDS == 1)
-    DW CMDS_H; H
- ELSE
-    DW 0
- ENDIF
+    DW 0 ; H
     DW 0 ; I
     DW 0 ; J
     DW 0 ; K
- IF (BYTEOPS_CMDS == 1)
-    DW CMDS_L; L
- ELSE
-    DW 0
- ENDIF
+    DW 0 ; L
  IF (VRAM_CMDS + RAM_CMDS + ANIM_CMDS > 0)
     DW CMDS_M ; M
  ELSE
@@ -232,11 +219,7 @@ CMDS:
     DW 0 ; O
     DW 0 ; P
     DW 0 ; Q
- IF (BYTEOPS_CMDS == 1)
-    DW CMDS_R; R
- ELSE
-    DW 0
- ENDIF
+    DW 0 ; R
  IF (SOUND_CMDS + SPRITE_CMDS > 0)
     DW CMDS_S ; S
  ELSE
@@ -253,11 +236,7 @@ CMDS:
  ELSE
 	DW 0
  ENDIF
- IF (BYTEOPS_CMDS == 1)
-    DW CMDS_W; W
- ELSE
-    DW 0
- ENDIF
+    DW 0 ; W
     DW 0 ; X
     DW 0 ; Y
     DW 0 ; Z
@@ -391,38 +370,6 @@ CMDS_A:
    DB "AUTOSGAMSTOP",0
    DW AUTOSGAMSTOP
 	DB 0
- ENDIF
-CMDS_H:
- IF (BYTEOPS_CMDS == 1)
-    DB "HI", 0
-    DW HI
- ENDIF
- IF (BYTEOPS_CMDS > 0)
-	DB	0
- ENDIF
-CMDS_L:
- IF (BYTEOPS_CMDS == 1)
-    DB "LO", 0
-    DW LO
- ENDIF
- IF (BYTEOPS_CMDS > 0)
-	DB	0
- ENDIF
-CMDS_W:
- IF (BYTEOPS_CMDS == 1)
-    DB "W", 0
-    DW WORD
- ENDIF
- IF (BYTEOPS_CMDS > 0)
-	DB	0
- ENDIF
-CMDS_R:
- IF (BYTEOPS_CMDS == 1)
-    DB "RANGE", 0
-    DW RANGE
- ENDIF
- IF (BYTEOPS_CMDS > 0)
-	DB	0
  ENDIF
 CMDS_C:
  IF (COLL_CMD == 1)
