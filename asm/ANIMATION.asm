@@ -537,6 +537,7 @@ MAXANIMSPRS:
     XOR A
     SBC HL,BC ; location of new stuff
     POP AF
+    PUSH BC
     LD B,A
     LD DE,8
     PUSH HL
@@ -545,6 +546,7 @@ MAXANIMSPRS:
     LD (IX+6),0 ; active flag
     ADD IX,DE
     DJNZ .L1
+    POP BC
     JP MAXANIMITEMS.E4
 .SIZEDIFF:
     LD H,0
@@ -760,6 +762,7 @@ MAXAUTOSGAMS:
     XOR A
     SBC HL,BC ; location of new stuff
     POP AF
+    PUSH BC
     LD B,A
     LD DE,24
     PUSH HL
@@ -768,6 +771,7 @@ MAXAUTOSGAMS:
     LD (IX+19),0 ; active flag
     ADD IX,DE
     DJNZ .L1
+    POP BC
     JP MAXANIMITEMS.EXIT
 .SIZEDIFF:
     LD H,0
