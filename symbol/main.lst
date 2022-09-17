@@ -2616,7 +2616,7 @@
   93+ 576F              	; ending )
   94+ 576F CD C1 65     	CALL CHKCHAR
   95+ 5772 29           	DB ')'
-  96+ 5773
+  96+ 5773              .ENTRY:
   97+ 5773 E5               PUSH HL
   98+ 5774 F3               DI
   99+ 5775

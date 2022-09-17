@@ -93,7 +93,7 @@ SGAM:
 	; ending )
 	CALL CHKCHAR
 	DB ')'
- 
+.ENTRY:
     PUSH HL
     DI
 
