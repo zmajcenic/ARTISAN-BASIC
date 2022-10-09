@@ -799,7 +799,7 @@ MAXAUTOSGAMS:
 ; AUTOSGAMDEF ( BYTE id,
 ;               INT VARIABLE x, INT VARIABLE y,
 ;               INT minimum, INT maximum, INT delta,
-;               INT direction,
+;               INT direction =0 horizontal,
 ;               INT ticks,
 ;               BYTE sprite_group_count,
 ;               INT[2][sprite_group_count] VARIABLE sprite_group,
@@ -1007,7 +1007,6 @@ AUTOSGAMSTOP:
 ; or
 ; ANIMSTEP ( BYTE item_number,
 ;            INT[] sprite_animations )
-; sets active flag to 1
 ANIMSTEP:
     LD DE,ANIMSTARTSTOP_COMMON.STEP
     JR ANIMSTARTSTOP_COMMON
