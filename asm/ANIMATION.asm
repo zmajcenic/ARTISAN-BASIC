@@ -261,7 +261,7 @@ MAXANIMITEMS:
 ; *******************************************************************************************************
 ; function to handle CALL ANIMITEMPAT basic extension
 ; ANIMITEMPAT ( BYTE id,
-;               INT ticks,
+;               INT ticks >0,
 ;               BYTE pattern,
 ;               BYTE color )
 ; fills animation item data, returns an error if ID out of bounds
@@ -285,6 +285,9 @@ ANIMITEMPAT:
 	; get ticks
 	LD IX, FRMQNT
 	CALL CALBAS
+    LD A,D
+    OR E
+    JP Z, OVERFLOW
 	PUSH DE
 	; comma
 	CALL CHKCHAR
@@ -353,6 +356,9 @@ ANIMITEMPTR_CMD:
 	; get ticks
 	LD IX, FRMQNT
 	CALL CALBAS
+    LD A,D
+    OR E
+    JP Z,OVERFLOW
 	PUSH DE
 	; comma
 	CALL CHKCHAR

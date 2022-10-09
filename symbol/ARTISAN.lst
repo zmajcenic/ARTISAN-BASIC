@@ -1808,278 +1808,278 @@
   11  8800
   12  8800 FE            DB 0FEH ; header
   13  8801 07 88         DW LoaderBegin
-  14  8803 6E AF         DW LoaderEnd-1
-  15  8805 E9 AE         DW LoaderStart
+  14  8803 73 AF         DW LoaderEnd-1
+  15  8805 EE AE         DW LoaderStart
   16  8807
   17  8807              LoaderBegin:
   18  8807
   19  8807               INCBIN "bin/main.bin"
-  20  AE2A               INCLUDE "symbol/main.exp"
+  20  AE2F               INCLUDE "symbol/main.exp"
 # file opened: ./symbol/main.exp
-   1+ AE2A              ORIG.HTIMI: EQU 0x00004CF0
-   2+ AE2A              VBLANK: EQU 0x00004CF5
-   3+ AE2A              MBGE_HTIMI: EQU 0x00004D24
-   4+ AE2A
+   1+ AE2F              ORIG.HTIMI: EQU 0x00004CF0
+   2+ AE2F              VBLANK: EQU 0x00004CF5
+   3+ AE2F              MBGE_HTIMI: EQU 0x00004D24
+   4+ AE2F
 # file closed: ./symbol/main.exp
-  21  AE2A
-  22  AE2A              DATA_END:
-  23  AE2A
-  24  AE2A              ; ****************************************************************************************************
-  25  AE2A              ; function gets slot and subslot data for specific page
-  26  AE2A              ; input A=page (0, 1 or 2)
-  27  AE2A              ; output B = 0A8H register value
-  28  AE2A              ; output D = 0 is no subslots, 1 if yes
-  29  AE2A              ; output C = 0A8H value when page 3 slot equals to requested page slot
-  30  AE2A              ; output E = subslot value if present
-  31  AE2A              ; modifies AF, BC, DE, HL
-  32  AE2A              GET_PAGE_INFO:
-  33  AE2A 6F               LD L, A
-  34  AE2B C6 C1            ADD A, low (EXPTBL)
-  35  AE2D 32 37 AE         LD (GET_PAGE_INFO_L1+1), A
-  36  AE30 DB A8            IN A, (0A8H)
-  37  AE32 47               LD B, A
-  38  AE33 E6 3F            AND 03FH
-  39  AE35 4F               LD C, A
-  40  AE36              GET_PAGE_INFO_L1:
-  41  AE36 3A C1 FC         LD A, (EXPTBL) ; modified by code above
-  42  AE39 E6 80            AND 080H
-  43  AE3B 28 1B            JR Z, GET_PAGE_INFO_L2
-  44  AE3D                  ; expanded
-  45  AE3D 2D               DEC L
-  46  AE3E FA 5D AE         JP M, GET_PAGE_INFO_L3
-  47  AE41 2D               DEC L
-  48  AE42 FA 5B AE         JP M, GET_PAGE_INFO_L4
-  49  AE45                  ; page 2
-  50  AE45 07               RLCA
-  51  AE46 07               RLCA
-  52  AE47              GET_PAGE_INFO_L5:
-  53  AE47 E6 C0            AND 0C0H
-  54  AE49 B1               OR C
-  55  AE4A D3 A8            OUT (0A8H), A ; slot 3 = slot of page requested
-  56  AE4C 4F               LD C, A
-  57  AE4D 3A FF FF         LD A, (0FFFFH)
-  58  AE50 2F               CPL
-  59  AE51 5F               LD E, A
-  60  AE52 16 01            LD D, 1
-  61  AE54 78               LD A, B ; return stack
-  62  AE55 D3 A8            OUT (0A8H), A
-  63  AE57 C9               RET
-  64  AE58              GET_PAGE_INFO_L2:
-  65  AE58                  ; not expanded
-  66  AE58 16 00            LD D, 0
-  67  AE5A C9               RET
-  68  AE5B              GET_PAGE_INFO_L4:
-  69  AE5B                  ; page 1
-  70  AE5B 0F               RRCA
-  71  AE5C 0F               RRCA
-  72  AE5D              GET_PAGE_INFO_L3:
-  73  AE5D                  ; page 0
-  74  AE5D 0F               RRCA
-  75  AE5E 0F               RRCA
-  76  AE5F 18 E6            JR GET_PAGE_INFO_L5
-  77  AE61              ; ****************************************************************************************************
-  78  AE61
-  79  AE61              ; ****************************************************************************************************
-  80  AE61              ; function returns original slot and subslot info
-  81  AE61              ; input B = 0A8H register value
-  82  AE61              ; input D = 0 is no subslots, 1 if yes
-  83  AE61              ; input C = 0A8H value when page 3 slot equals to requested page slot
-  84  AE61              ; input E = subslot value if present
-  85  AE61              ; modifies AF
-  86  AE61              RESTORE_PAGE_INFO:
-  87  AE61 7A               LD A, D
-  88  AE62 B7               OR A
-  89  AE63 28 07            JR Z, RESTORE_PAGE_INFO_L1
-  90  AE65 79               LD A, C
-  91  AE66 D3 A8            OUT (0A8H), A
-  92  AE68 7B               LD A, E
-  93  AE69 32 FF FF         LD (0FFFFH), A
-  94  AE6C              RESTORE_PAGE_INFO_L1:
-  95  AE6C 78               LD A, B
-  96  AE6D D3 A8            OUT (0A8H), A
-  97  AE6F C9               RET
-  98  AE70              ; ****************************************************************************************************
-  99  AE70
- 100  AE70              ; *******************************************************************************************************
- 101  AE70              ; SELECTS A SLOT IN THE PAGE SPECIFIED BY AN ADDRESS.
- 102  AE70              ; INPUT:  A = SLOT ID: EXXXSSPP
- 103  AE70              ; E = EXPANDED FLAG
- 104  AE70              ; SS = SECONDARY SLOT NUMBER (ONLY IF EXPANDED)
- 105  AE70              ; PP = PRIMARY SLOT NUMBER
- 106  AE70              ;     HL = ADDRESS INSIDE THE PAGE TO CHANGE
- 107  AE70              ; CHANGES: AF, BC, DE
- 108  AE70
- 109  AE70              LOCAL_ENASLT:
- 110  AE70 CD 90 AE         CALL L0353
- 111  AE73 FA 7D AE         JP M, L0340
- 112  AE76 DB A8            IN A, (0A8H)
- 113  AE78 A1               AND C
- 114  AE79 B0               OR B
- 115  AE7A D3 A8            OUT (0A8H), A
- 116  AE7C C9               RET
- 117  AE7D              L0340:
- 118  AE7D E5               PUSH HL
- 119  AE7E CD B5 AE         CALL L0378
- 120  AE81 4F               LD C, A
- 121  AE82 06 00            LD B, 0
- 122  AE84 7D               LD A, L
- 123  AE85 A4               AND H
- 124  AE86 B2               OR D
- 125  AE87 21 C5 FC         LD HL, 0FCC5H
- 126  AE8A 09               ADD HL, BC
- 127  AE8B 77               LD (HL), A
- 128  AE8C E1               POP HL
- 129  AE8D 79               LD A, C
- 130  AE8E 18 E0            JR LOCAL_ENASLT
- 131  AE90              L0353:
- 132  AE90 F3               DI
- 133  AE91 F5               PUSH AF
- 134  AE92 7C               LD A, H
- 135  AE93 07               RLCA
- 136  AE94 07               RLCA
- 137  AE95 E6 03            AND 3
- 138  AE97 5F               LD E, A
- 139  AE98 3E C0            LD A, 0C0H
- 140  AE9A              L035D:
- 141  AE9A 07               RLCA
- 142  AE9B 07               RLCA
- 143  AE9C 1D               DEC E
- 144  AE9D F2 9A AE         JP P, L035D
- 145  AEA0 5F               LD E, A
- 146  AEA1 2F               CPL
- 147  AEA2 4F               LD C, A
- 148  AEA3 F1               POP AF
- 149  AEA4 F5               PUSH AF
- 150  AEA5 E6 03            AND 3
- 151  AEA7 3C               INC A
- 152  AEA8 47               LD B, A
- 153  AEA9 3E AB            LD A, 0ABH
- 154  AEAB              L036E:
- 155  AEAB C6 55            ADD A, 055H
- 156  AEAD 10 FC            DJNZ L036E
- 157  AEAF 57               LD D, A
- 158  AEB0 A3               AND E
- 159  AEB1 47               LD B, A
- 160  AEB2 F1               POP AF
- 161  AEB3 A7               AND A
- 162  AEB4 C9               RET
- 163  AEB5              L0378:
- 164  AEB5 F5               PUSH AF
- 165  AEB6 7A               LD A, D
- 166  AEB7 E6 C0            AND 0C0H
- 167  AEB9 4F               LD C, A
- 168  AEBA F1               POP AF
- 169  AEBB F5               PUSH AF
- 170  AEBC 57               LD D, A
- 171  AEBD DB A8            IN A, (0A8H)
- 172  AEBF 47               LD B, A
- 173  AEC0 E6 3F            AND 03FH
- 174  AEC2 B1               OR C
- 175  AEC3 D3 A8            OUT (0A8H), A
- 176  AEC5 7A               LD A, D
- 177  AEC6 0F               RRCA
- 178  AEC7 0F               RRCA
- 179  AEC8 E6 03            AND 3
- 180  AECA 57               LD D, A
- 181  AECB 3E AB            LD A, 0ABH
- 182  AECD              L0390:
- 183  AECD C6 55            ADD A, 055H
- 184  AECF 15               DEC D
- 185  AED0 F2 CD AE         JP P, L0390
- 186  AED3 A3               AND E
- 187  AED4 57               LD D, A
- 188  AED5 7B               LD A, E
- 189  AED6 2F               CPL
- 190  AED7 67               LD H, A
- 191  AED8 3A FF FF         LD A, (0FFFFH)
- 192  AEDB 2F               CPL
- 193  AEDC 6F               LD L, A
- 194  AEDD A4               AND H
- 195  AEDE B2               OR D
- 196  AEDF 32 FF FF         LD (0FFFFH), A
- 197  AEE2 78               LD A, B
- 198  AEE3 D3 A8            OUT (0A8H), A
- 199  AEE5 F1               POP AF
- 200  AEE6 E6 03            AND 3
- 201  AEE8 C9               RET
- 202  AEE9              ; *******************************************************************************************************
- 203  AEE9
- 204  AEE9              LoaderStart:
- 205  AEE9 F3               DI
- 206  AEEA
- 207  AEEA 3E 01            LD A, 1
- 208  AEEC CD 2A AE         CALL GET_PAGE_INFO
- 209  AEEF C5               PUSH BC
- 210  AEF0 D5               PUSH DE
- 211  AEF1 3A 42 F3         LD A, (RAMAD1)
- 212  AEF4 26 40            LD H, 040H
- 213  AEF6 CD 70 AE         CALL LOCAL_ENASLT
- 214  AEF9
- 215  AEF9 21 07 88         LD HL, LoaderBegin
- 216  AEFC 11 00 40         LD DE, 04000H
- 217  AEFF 01 23 26         LD BC, DATA_END-LoaderBegin
- 218  AF02 ED B0            LDIR
- 219  AF04
- 220  AF04                  ; mark slot where RAM is as BASIC extension
- 221  AF04 3A 42 F3         LD A, (RAMAD1)
- 222  AF07 A7            	AND A
- 223  AF08 FA 0D AF     	JP M, .SKIP   ; SlotID has SubSlot information
- 224  AF0B E6 03        	AND 3
- 225  AF0D              .SKIP
- 226  AF0D E6 0F        	AND 15
- 227  AF0F 5F           	LD E, A
- 228  AF10 07           	RLCA
- 229  AF11 07           	RLCA
- 230  AF12 07           	RLCA
- 231  AF13 07           	RLCA
- 232  AF14 B3           	OR E
- 233  AF15 E6 3C        	AND 60
- 234  AF17 16 00        	LD D, 0
- 235  AF19 5F           	LD E, A
- 236  AF1A 21 CA FC     	LD HL, SLTATR+1
- 237  AF1D 19           	ADD HL, DE
- 238  AF1E CB EE        	SET 5, (HL)     ; Set bit 5 to enable CALL handler
- 239  AF20
- 240  AF20                  ; save original H.TIMI handler
- 241  AF20 21 9F FD         LD HL, HTIMI
- 242  AF23 11 F0 4C         LD DE, ORIG.HTIMI
- 243  AF26 01 05 00         LD BC, 5
- 244  AF29 ED B0            LDIR
- 245  AF2B
- 246  AF2B                  ; write new handler
- 247  AF2B DD 21 9F FD      LD IX, HTIMI
- 248  AF2F DD 36 00 F7      LD (IX), #F7 ; RST #30
- 249  AF33 3A 42 F3         LD A, (RAMAD1)
- 250  AF36 DD 77 01         LD (IX+1), A ; slot info
- 251  AF39 DD 36 02 24      LD (IX+2), low (MBGE_HTIMI)
- 252  AF3D DD 36 03 4D      LD (IX+3), high (MBGE_HTIMI) ; function address
- 253  AF41 DD 36 04 C9      LD (IX+4), #C9 ; RET
- 254  AF45
- 255  AF45 D1               POP DE
- 256  AF46 C1               POP BC
- 257  AF47 CD 61 AE         CALL RESTORE_PAGE_INFO
- 258  AF4A
- 259  AF4A                  ; enable page 0
- 260  AF4A AF               XOR A
- 261  AF4B CD 2A AE         CALL GET_PAGE_INFO
- 262  AF4E C5               PUSH BC
- 263  AF4F D5               PUSH DE
- 264  AF50 3A 41 F3         LD A, (RAMAD0)
- 265  AF53 26 00            LD H, 0
- 266  AF55 CD 70 AE         CALL LOCAL_ENASLT
- 267  AF58                  ; set new interrupt vector
- 268  AF58 DD 21 38 00      LD IX, #38
- 269  AF5C DD 36 00 C3      LD (IX), #C3 ; JP
- 270  AF60 DD 36 01 F5      LD (IX+1), low (VBLANK)
- 271  AF64 DD 36 02 4C      LD (IX+2), high (VBLANK)
- 272  AF68              	; restore page 0
- 273  AF68 D1               POP DE
- 274  AF69 C1               POP BC
- 275  AF6A CD 61 AE         CALL RESTORE_PAGE_INFO
- 276  AF6D
- 277  AF6D FB               EI
- 278  AF6E C9               RET
- 279  AF6F
- 280  AF6F              LoaderEnd:
- 281  AF6F
+  21  AE2F
+  22  AE2F              DATA_END:
+  23  AE2F
+  24  AE2F              ; ****************************************************************************************************
+  25  AE2F              ; function gets slot and subslot data for specific page
+  26  AE2F              ; input A=page (0, 1 or 2)
+  27  AE2F              ; output B = 0A8H register value
+  28  AE2F              ; output D = 0 is no subslots, 1 if yes
+  29  AE2F              ; output C = 0A8H value when page 3 slot equals to requested page slot
+  30  AE2F              ; output E = subslot value if present
+  31  AE2F              ; modifies AF, BC, DE, HL
+  32  AE2F              GET_PAGE_INFO:
+  33  AE2F 6F               LD L, A
+  34  AE30 C6 C1            ADD A, low (EXPTBL)
+  35  AE32 32 3C AE         LD (GET_PAGE_INFO_L1+1), A
+  36  AE35 DB A8            IN A, (0A8H)
+  37  AE37 47               LD B, A
+  38  AE38 E6 3F            AND 03FH
+  39  AE3A 4F               LD C, A
+  40  AE3B              GET_PAGE_INFO_L1:
+  41  AE3B 3A C1 FC         LD A, (EXPTBL) ; modified by code above
+  42  AE3E E6 80            AND 080H
+  43  AE40 28 1B            JR Z, GET_PAGE_INFO_L2
+  44  AE42                  ; expanded
+  45  AE42 2D               DEC L
+  46  AE43 FA 62 AE         JP M, GET_PAGE_INFO_L3
+  47  AE46 2D               DEC L
+  48  AE47 FA 60 AE         JP M, GET_PAGE_INFO_L4
+  49  AE4A                  ; page 2
+  50  AE4A 07               RLCA
+  51  AE4B 07               RLCA
+  52  AE4C              GET_PAGE_INFO_L5:
+  53  AE4C E6 C0            AND 0C0H
+  54  AE4E B1               OR C
+  55  AE4F D3 A8            OUT (0A8H), A ; slot 3 = slot of page requested
+  56  AE51 4F               LD C, A
+  57  AE52 3A FF FF         LD A, (0FFFFH)
+  58  AE55 2F               CPL
+  59  AE56 5F               LD E, A
+  60  AE57 16 01            LD D, 1
+  61  AE59 78               LD A, B ; return stack
+  62  AE5A D3 A8            OUT (0A8H), A
+  63  AE5C C9               RET
+  64  AE5D              GET_PAGE_INFO_L2:
+  65  AE5D                  ; not expanded
+  66  AE5D 16 00            LD D, 0
+  67  AE5F C9               RET
+  68  AE60              GET_PAGE_INFO_L4:
+  69  AE60                  ; page 1
+  70  AE60 0F               RRCA
+  71  AE61 0F               RRCA
+  72  AE62              GET_PAGE_INFO_L3:
+  73  AE62                  ; page 0
+  74  AE62 0F               RRCA
+  75  AE63 0F               RRCA
+  76  AE64 18 E6            JR GET_PAGE_INFO_L5
+  77  AE66              ; ****************************************************************************************************
+  78  AE66
+  79  AE66              ; ****************************************************************************************************
+  80  AE66              ; function returns original slot and subslot info
+  81  AE66              ; input B = 0A8H register value
+  82  AE66              ; input D = 0 is no subslots, 1 if yes
+  83  AE66              ; input C = 0A8H value when page 3 slot equals to requested page slot
+  84  AE66              ; input E = subslot value if present
+  85  AE66              ; modifies AF
+  86  AE66              RESTORE_PAGE_INFO:
+  87  AE66 7A               LD A, D
+  88  AE67 B7               OR A
+  89  AE68 28 07            JR Z, RESTORE_PAGE_INFO_L1
+  90  AE6A 79               LD A, C
+  91  AE6B D3 A8            OUT (0A8H), A
+  92  AE6D 7B               LD A, E
+  93  AE6E 32 FF FF         LD (0FFFFH), A
+  94  AE71              RESTORE_PAGE_INFO_L1:
+  95  AE71 78               LD A, B
+  96  AE72 D3 A8            OUT (0A8H), A
+  97  AE74 C9               RET
+  98  AE75              ; ****************************************************************************************************
+  99  AE75
+ 100  AE75              ; *******************************************************************************************************
+ 101  AE75              ; SELECTS A SLOT IN THE PAGE SPECIFIED BY AN ADDRESS.
+ 102  AE75              ; INPUT:  A = SLOT ID: EXXXSSPP
+ 103  AE75              ; E = EXPANDED FLAG
+ 104  AE75              ; SS = SECONDARY SLOT NUMBER (ONLY IF EXPANDED)
+ 105  AE75              ; PP = PRIMARY SLOT NUMBER
+ 106  AE75              ;     HL = ADDRESS INSIDE THE PAGE TO CHANGE
+ 107  AE75              ; CHANGES: AF, BC, DE
+ 108  AE75
+ 109  AE75              LOCAL_ENASLT:
+ 110  AE75 CD 95 AE         CALL L0353
+ 111  AE78 FA 82 AE         JP M, L0340
+ 112  AE7B DB A8            IN A, (0A8H)
+ 113  AE7D A1               AND C
+ 114  AE7E B0               OR B
+ 115  AE7F D3 A8            OUT (0A8H), A
+ 116  AE81 C9               RET
+ 117  AE82              L0340:
+ 118  AE82 E5               PUSH HL
+ 119  AE83 CD BA AE         CALL L0378
+ 120  AE86 4F               LD C, A
+ 121  AE87 06 00            LD B, 0
+ 122  AE89 7D               LD A, L
+ 123  AE8A A4               AND H
+ 124  AE8B B2               OR D
+ 125  AE8C 21 C5 FC         LD HL, 0FCC5H
+ 126  AE8F 09               ADD HL, BC
+ 127  AE90 77               LD (HL), A
+ 128  AE91 E1               POP HL
+ 129  AE92 79               LD A, C
+ 130  AE93 18 E0            JR LOCAL_ENASLT
+ 131  AE95              L0353:
+ 132  AE95 F3               DI
+ 133  AE96 F5               PUSH AF
+ 134  AE97 7C               LD A, H
+ 135  AE98 07               RLCA
+ 136  AE99 07               RLCA
+ 137  AE9A E6 03            AND 3
+ 138  AE9C 5F               LD E, A
+ 139  AE9D 3E C0            LD A, 0C0H
+ 140  AE9F              L035D:
+ 141  AE9F 07               RLCA
+ 142  AEA0 07               RLCA
+ 143  AEA1 1D               DEC E
+ 144  AEA2 F2 9F AE         JP P, L035D
+ 145  AEA5 5F               LD E, A
+ 146  AEA6 2F               CPL
+ 147  AEA7 4F               LD C, A
+ 148  AEA8 F1               POP AF
+ 149  AEA9 F5               PUSH AF
+ 150  AEAA E6 03            AND 3
+ 151  AEAC 3C               INC A
+ 152  AEAD 47               LD B, A
+ 153  AEAE 3E AB            LD A, 0ABH
+ 154  AEB0              L036E:
+ 155  AEB0 C6 55            ADD A, 055H
+ 156  AEB2 10 FC            DJNZ L036E
+ 157  AEB4 57               LD D, A
+ 158  AEB5 A3               AND E
+ 159  AEB6 47               LD B, A
+ 160  AEB7 F1               POP AF
+ 161  AEB8 A7               AND A
+ 162  AEB9 C9               RET
+ 163  AEBA              L0378:
+ 164  AEBA F5               PUSH AF
+ 165  AEBB 7A               LD A, D
+ 166  AEBC E6 C0            AND 0C0H
+ 167  AEBE 4F               LD C, A
+ 168  AEBF F1               POP AF
+ 169  AEC0 F5               PUSH AF
+ 170  AEC1 57               LD D, A
+ 171  AEC2 DB A8            IN A, (0A8H)
+ 172  AEC4 47               LD B, A
+ 173  AEC5 E6 3F            AND 03FH
+ 174  AEC7 B1               OR C
+ 175  AEC8 D3 A8            OUT (0A8H), A
+ 176  AECA 7A               LD A, D
+ 177  AECB 0F               RRCA
+ 178  AECC 0F               RRCA
+ 179  AECD E6 03            AND 3
+ 180  AECF 57               LD D, A
+ 181  AED0 3E AB            LD A, 0ABH
+ 182  AED2              L0390:
+ 183  AED2 C6 55            ADD A, 055H
+ 184  AED4 15               DEC D
+ 185  AED5 F2 D2 AE         JP P, L0390
+ 186  AED8 A3               AND E
+ 187  AED9 57               LD D, A
+ 188  AEDA 7B               LD A, E
+ 189  AEDB 2F               CPL
+ 190  AEDC 67               LD H, A
+ 191  AEDD 3A FF FF         LD A, (0FFFFH)
+ 192  AEE0 2F               CPL
+ 193  AEE1 6F               LD L, A
+ 194  AEE2 A4               AND H
+ 195  AEE3 B2               OR D
+ 196  AEE4 32 FF FF         LD (0FFFFH), A
+ 197  AEE7 78               LD A, B
+ 198  AEE8 D3 A8            OUT (0A8H), A
+ 199  AEEA F1               POP AF
+ 200  AEEB E6 03            AND 3
+ 201  AEED C9               RET
+ 202  AEEE              ; *******************************************************************************************************
+ 203  AEEE
+ 204  AEEE              LoaderStart:
+ 205  AEEE F3               DI
+ 206  AEEF
+ 207  AEEF 3E 01            LD A, 1
+ 208  AEF1 CD 2F AE         CALL GET_PAGE_INFO
+ 209  AEF4 C5               PUSH BC
+ 210  AEF5 D5               PUSH DE
+ 211  AEF6 3A 42 F3         LD A, (RAMAD1)
+ 212  AEF9 26 40            LD H, 040H
+ 213  AEFB CD 75 AE         CALL LOCAL_ENASLT
+ 214  AEFE
+ 215  AEFE 21 07 88         LD HL, LoaderBegin
+ 216  AF01 11 00 40         LD DE, 04000H
+ 217  AF04 01 28 26         LD BC, DATA_END-LoaderBegin
+ 218  AF07 ED B0            LDIR
+ 219  AF09
+ 220  AF09                  ; mark slot where RAM is as BASIC extension
+ 221  AF09 3A 42 F3         LD A, (RAMAD1)
+ 222  AF0C A7            	AND A
+ 223  AF0D FA 12 AF     	JP M, .SKIP   ; SlotID has SubSlot information
+ 224  AF10 E6 03        	AND 3
+ 225  AF12              .SKIP
+ 226  AF12 E6 0F        	AND 15
+ 227  AF14 5F           	LD E, A
+ 228  AF15 07           	RLCA
+ 229  AF16 07           	RLCA
+ 230  AF17 07           	RLCA
+ 231  AF18 07           	RLCA
+ 232  AF19 B3           	OR E
+ 233  AF1A E6 3C        	AND 60
+ 234  AF1C 16 00        	LD D, 0
+ 235  AF1E 5F           	LD E, A
+ 236  AF1F 21 CA FC     	LD HL, SLTATR+1
+ 237  AF22 19           	ADD HL, DE
+ 238  AF23 CB EE        	SET 5, (HL)     ; Set bit 5 to enable CALL handler
+ 239  AF25
+ 240  AF25                  ; save original H.TIMI handler
+ 241  AF25 21 9F FD         LD HL, HTIMI
+ 242  AF28 11 F0 4C         LD DE, ORIG.HTIMI
+ 243  AF2B 01 05 00         LD BC, 5
+ 244  AF2E ED B0            LDIR
+ 245  AF30
+ 246  AF30                  ; write new handler
+ 247  AF30 DD 21 9F FD      LD IX, HTIMI
+ 248  AF34 DD 36 00 F7      LD (IX), #F7 ; RST #30
+ 249  AF38 3A 42 F3         LD A, (RAMAD1)
+ 250  AF3B DD 77 01         LD (IX+1), A ; slot info
+ 251  AF3E DD 36 02 24      LD (IX+2), low (MBGE_HTIMI)
+ 252  AF42 DD 36 03 4D      LD (IX+3), high (MBGE_HTIMI) ; function address
+ 253  AF46 DD 36 04 C9      LD (IX+4), #C9 ; RET
+ 254  AF4A
+ 255  AF4A D1               POP DE
+ 256  AF4B C1               POP BC
+ 257  AF4C CD 66 AE         CALL RESTORE_PAGE_INFO
+ 258  AF4F
+ 259  AF4F                  ; enable page 0
+ 260  AF4F AF               XOR A
+ 261  AF50 CD 2F AE         CALL GET_PAGE_INFO
+ 262  AF53 C5               PUSH BC
+ 263  AF54 D5               PUSH DE
+ 264  AF55 3A 41 F3         LD A, (RAMAD0)
+ 265  AF58 26 00            LD H, 0
+ 266  AF5A CD 75 AE         CALL LOCAL_ENASLT
+ 267  AF5D                  ; set new interrupt vector
+ 268  AF5D DD 21 38 00      LD IX, #38
+ 269  AF61 DD 36 00 C3      LD (IX), #C3 ; JP
+ 270  AF65 DD 36 01 F5      LD (IX+1), low (VBLANK)
+ 271  AF69 DD 36 02 4C      LD (IX+2), high (VBLANK)
+ 272  AF6D              	; restore page 0
+ 273  AF6D D1               POP DE
+ 274  AF6E C1               POP BC
+ 275  AF6F CD 66 AE         CALL RESTORE_PAGE_INFO
+ 276  AF72
+ 277  AF72 FB               EI
+ 278  AF73 C9               RET
+ 279  AF74
+ 280  AF74              LoaderEnd:
+ 281  AF74
 # file closed: asm\ARTISAN.asm
