@@ -177,8 +177,8 @@ SPRATR_UPDATE:
 ; *******************************************************************************************************
 ; function to handle CALL SPRENABLE basic extension
 ; initializes sprites handler
-; _SPRENABLE ( INT[][] sprites_attributes, 
-;			   INT update_variable,
+; _SPRENABLE ( INT[3][31] variable sprites_attributes, 
+;			   INT variable update_variable,
 ;			   BYTE sprite_flicker_enabled )
 ; sets variables SPRATR_INIT_STATUS, SPRATR_UPDATE_FLAG, SPRATR_DATA and SPRFLICKER_ENABLED
 SPRENABLE:
