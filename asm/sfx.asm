@@ -1,4 +1,4 @@
- ORG #A000
+ ORG #C000
 
  DB 0FEH ; header
  DW LoaderBegin 
