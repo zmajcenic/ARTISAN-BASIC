@@ -241,122 +241,122 @@ SPRDISABLE:
 ;			INT y, 
 ;			INT pattern, valid 0-63, otherwise ignored
 ;			INT color, valid 0-15, otherwise ignored
-SPRSET:
-	LD A, (SPRATR_INIT_STATUS)
-	OR A
-	JR NZ, .L1
-	LD E, 5 ; illegal function call
-	JP THROW_ERROR
-.L1:
-	; opening (
-	CALL CHKCHAR
-	DB '('
-	; get sprite number
-	LD IX, GETBYT
-	CALL CALBAS
-	PUSH AF
-	; comma
-	CALL CHKCHAR
-	DB ','
-	; get x
-	LD IX, FRMQNT
-	CALL CALBAS
-	PUSH DE
-	; comma
-	CALL CHKCHAR
-	DB ','
-	; get y
-	LD IX, FRMQNT
-	CALL CALBAS
-	PUSH DE
-	; comma
-	CALL CHKCHAR
-	DB ','
-	; get pattern
-	LD IX, FRMQNT
-	CALL CALBAS
-	PUSH DE
-	; comma
-	CALL CHKCHAR
-	DB ','
-	; get color
-	LD IX, FRMQNT
-	CALL CALBAS
-	PUSH DE
-	; ending )
-	CALL CHKCHAR
-	DB ')'
-
-    ; save position in BASIC text
-	PUSH HL
-	POP IX
-
-	POP BC ; color
-	POP DE ; pattern
-	EXX
-	POP BC ; y
-	POP DE ; x
-	POP AF ; sprite number
-	CP 32
-	JR C, .L2
-	LD E, 5 ; illegal function call
-	JP THROW_ERROR
-.L2:
-	; find location in sprite attributes table
-	PUSH DE
-	CALL GETnthSPRATTR
-	POP DE
-	DI
-	; set y
-	LD (HL), C
-	INC HL
-	LD (HL), B
-	INC HL
-	; set x
-	LD (HL), E
-	INC HL
-	LD (HL), D
-	INC HL
-	PUSH HL
-	EXX
-	POP HL
-	; check if 0<=pattern<64
-	LD A, D
-	OR A
-	JR NZ, .L3
-	LD A, E
-	CP 64
-	JR NC, .L3
-	; set pattern
-	;ADD A, A
-	;ADD A, A
-	;ADD A, A
-	LD (HL), A
-	INC HL
-	LD (HL), D
-	INC HL
-	JR .L4
-.L3:
-	; skip pattern
-	.2 INC HL
-.L4:
-	; check if 0<=color<16
-	LD A, B
-	OR A
-	JR NZ, .L5
-	LD A, C
-	CP 16
-	JR NC, .L5
-	; set color
-	LD (HL), C
-	INC HL
-	LD (HL), B
-
-.L5:
-	EI
-	PUSH IX
-	POP HL
-	RET
+;SPRSET:
+;	LD A, (SPRATR_INIT_STATUS)
+;	OR A
+;	JR NZ, .L1
+;	LD E, 5 ; illegal function call
+;	JP THROW_ERROR
+;.L1:
+;	; opening (
+;	CALL CHKCHAR
+;	DB '('
+;	; get sprite number
+;	LD IX, GETBYT
+;	CALL CALBAS
+;	PUSH AF
+;	; comma
+;	CALL CHKCHAR
+;	DB ','
+;	; get x
+;	LD IX, FRMQNT
+;	CALL CALBAS
+;	PUSH DE
+;	; comma
+;	CALL CHKCHAR
+;	DB ','
+;	; get y
+;	LD IX, FRMQNT
+;	CALL CALBAS
+;	PUSH DE
+;	; comma
+;	CALL CHKCHAR
+;	DB ','
+;	; get pattern
+;	LD IX, FRMQNT
+;	CALL CALBAS
+;	PUSH DE
+;	; comma
+;	CALL CHKCHAR
+;	DB ','
+;	; get color
+;	LD IX, FRMQNT
+;	CALL CALBAS
+;	PUSH DE
+;	; ending )
+;	CALL CHKCHAR
+;	DB ')'
+;
+;   ; save position in BASIC text
+;	PUSH HL
+;	POP IX
+;
+;	POP BC ; color
+;	POP DE ; pattern
+;	EXX
+;	POP BC ; y
+;	POP DE ; x
+;	POP AF ; sprite number
+;	CP 32
+;	JR C, .L2
+;	LD E, 5 ; illegal function call
+;	JP THROW_ERROR
+;.L2:
+;	; find location in sprite attributes table
+;	PUSH DE
+;	CALL GETnthSPRATTR
+;	POP DE
+;	DI
+;	; set y
+;	LD (HL), C
+;	INC HL
+;	LD (HL), B
+;	INC HL
+;	; set x
+;	LD (HL), E
+;	INC HL
+;	LD (HL), D
+;	INC HL
+;	PUSH HL
+;	EXX
+;	POP HL
+;	; check if 0<=pattern<64
+;	LD A, D
+;	OR A
+;	JR NZ, .L3
+;	LD A, E
+;	CP 64
+;	JR NC, .L3
+;	; set pattern
+;	;ADD A, A
+;	;ADD A, A
+;	;ADD A, A
+;	LD (HL), A
+;	INC HL
+;	LD (HL), D
+;	INC HL
+;	JR .L4
+;.L3:
+;	; skip pattern
+;	.2 INC HL
+;.L4:
+;	; check if 0<=color<16
+;	LD A, B
+;	OR A
+;	JR NZ, .L5
+;	LD A, C
+;	CP 16
+;	JR NC, .L5
+;	; set color
+;	LD (HL), C
+;	INC HL
+;	LD (HL), B
+;
+;.L5:
+;	EI
+;	PUSH IX
+;	POP HL
+;	RET
 ; *******************************************************************************************************
 
 ; *******************************************************************************************************
