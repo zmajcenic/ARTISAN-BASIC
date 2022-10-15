@@ -6,7 +6,7 @@ SYM_DIR = symbol
 all: basic sound bin
 
 basic:
-	cp basic/*.BAS dsk/
+	cp basic/*.ASC basic/*.BAS dsk/
 	./append_ctrl_z.sh
 
 sound:
@@ -20,21 +20,9 @@ bin:
 	sjasmplus --fullpath asm\\ARTISAN.asm --raw=$(BIN_DIR)\\ARTISAN.bin --sym=$(SYM_DIR)\\ARTISAN.sym --lst=$(SYM_DIR)\\ARTISAN.lst -I.
 	cp bin/ARTISAN.bin dsk/
 
-compress:
-	sjasmplus --fullpath game\\sprites_permanent_data.asm --raw=$(BIN_DIR)\\sprites_permanent_data.raw --sym=$(SYM_DIR)\\sprites_permanent_data.sym
-	pletter $(BIN_DIR)\\sprites_permanent_data.raw
-	sjasmplus --fullpath game\\cir_data.asm --raw=$(BIN_DIR)\\cir_data.raw --sym=$(SYM_DIR)\\cir_data.sym
-	pletter $(BIN_DIR)\\cir_data.raw
-
-upload:
-	pscp -P 22 bin/ff.rom pi@192.168.0.3:/media/usb0/gr8net/
-
 clean:
-	rm $(BIN_DIR)/*.bin $(BIN_DIR)/*.rom $(BIN_DIR)/*.raw $(BIN_DIR)/*.plet5 $(SYM_DIR)/*.* sound/*.bin sound/*.sym
+	rm $(BIN_DIR)/*.bin dsk/*.BAS dsk/*.ASC
 
-buildnum:
-	date -Iseconds > buildnum.txt
-	echo " DB "\"`cat buildnum.txt`\" > buildnum.inc
 
 
 	

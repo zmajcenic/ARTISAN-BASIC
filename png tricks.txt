@@ -5,7 +5,7 @@ bsave.sh lik.png.chr 0 0 > lik.bin
 cp lik.bin dsk/
 
 png2spr -v -hl 
-obavezno za background color koristiti boju sa 
-- alpha kanal 0
-- 255,0,255 ljubičastu
-- ili sivu 0x404040
+for background color use either
+- alpha channel 0
+- 0xFF00FF 
+- 0x404040
