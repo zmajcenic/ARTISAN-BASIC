@@ -342,7 +342,6 @@ BLIT:
 ;		 INT height (in characters),
 ;		 INT background_pointer (top left), 
 ;		 INT background_width (in characters),
-;		 INT background_height (in characters))
 ; will put ram in page 0 also, page 1 is already there
 BLIT:
 	; opening (
@@ -412,14 +411,6 @@ BLIT:
 	CALL CALBAS
 	LD A, E
 	LD (BLIT_TMP+2), A
-	; comma
-	CALL CHKCHAR
-	DB ','
-	; get background height
-	LD IX, FRMQNT
-	CALL CALBAS
-	LD A, E
-	LD (BLIT_TMP+3), A
 	; ending )
 	CALL CHKCHAR
 	DB ')'
