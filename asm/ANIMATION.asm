@@ -1030,7 +1030,7 @@ ANIMSTART:
 ; or
 ; ANIMSTOP ( BYTE item_number,
 ;            INT[] sprite_animations )
-; sets active flag to 1
+; sets active flag to 0
 ANIMSTOP:
     LD DE,ANIMSTARTSTOP_COMMON.STOP
 ; *******************************************************************************************************

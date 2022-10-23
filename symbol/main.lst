@@ -2241,7 +2241,7 @@
 1030+ 54D7              ; or
 1031+ 54D7              ; ANIMSTOP ( BYTE item_number,
 1032+ 54D7              ;            INT[] sprite_animations )
-1033+ 54D7              ; sets active flag to 1
+1033+ 54D7              ; sets active flag to 0
 1034+ 54D7              ANIMSTOP:
 1035+ 54D7 11 47 55         LD DE,ANIMSTARTSTOP_COMMON.STOP
 1036+ 54DA              ; *******************************************************************************************************
