@@ -1,3 +1,4 @@
+ IF (BASIC_EXTENSION == 1)
 ; *******************************************************************************************************
 ; function to handle CALL MEMCPY basic extension
 ; _MEMCPY ( INT source, 
@@ -53,6 +54,34 @@ MEMCPY:
 	POP HL
 	RET
 ; *******************************************************************************************************
+ ENDIF
+
+ IF (DEFUSR_EXTENSION == 1)
+; *******************************************************************************************************
+; same as MEMCPY but for DEFUSR approach
+; input IX=pointer to input array, real data from +2
+; +2 = source address
+; +4 = destination address
+; +6 = lenght
+MEMCPY_DEFUSR:
+	; enable page 0
+	DI
+	LD IY, .RET
+	JP ENABLE_PAGE0
+.RET:
+	EI
+	LD L,(IX+2)
+	LD H,(IX+3)
+	LD E,(IX+4)
+	LD D,(IX+5)
+	LD C,(IX+6)
+	LD B,(IX+7)
+	LDIR
+    POP DE
+    POP BC
+    JP RESTORE_PAGE_INFO
+; *******************************************************************************************************
+ ENDIF
 
 ; *******************************************************************************************************
 ; function to handle CALL FILRAM basic extension

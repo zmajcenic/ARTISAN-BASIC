@@ -12,6 +12,9 @@ BOX_CMDS		   EQU 1
 ANIM_CMDS		EQU 1
 COLL_CMD       EQU 1
 
+BASIC_EXTENSION   EQU 1
+DEFUSR_EXTENSION  EQU 1
+
  DEFINE CMDS_WITH_PARAMETERS
 
 CHPUT   EQU    #A2
@@ -104,9 +107,17 @@ FREEMEMPTR:
 ; this location #4012 stores extension version in DAA format
 ; first byte is major version and second minor
 VERSION:
- DB #00, #80
+ DB #00, #81
 
-; binary included AKG player compiled at #4014
+; this location #4014 contains a jump to entry point for DEFUSR approach
+; if excluded it contains 3xRET so that sound player can be at aspecific spot
+ IF (DEFUSR_EXTENSION == 1)
+   JP DEFUSR_ENTRY
+ ELSE
+   .3 RET
+ ENDIF
+
+; binary included AKG player compiled at #4017
  IF (SOUND_CMDS == 1)
 	INCBIN "bin/AKG.bin"
 	INCLUDE "symbol/AKG.sym"
@@ -153,6 +164,10 @@ VERSION:
 
  IF (COLL_CMD == 1)
  INCLUDE "COLLISION.asm"
+ ENDIF
+
+ IF (DEFUSR_EXTENSION == 1)
+ INCLUDE "DEFUSR.asm"
  ENDIF
 
 ; temp variables for BLIT, TILE functions
@@ -498,6 +513,7 @@ RESTORE_PAGE_INFO:
 RESTORE_PAGE_INFO_L1:
    LD A, B
    OUT (0A8H), A
+NOACTION_DEFUSR: ; just a safe RET for use when DEFUSR table has an empty entry
    RET 
 ; ****************************************************************************************************
 

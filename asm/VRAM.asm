@@ -65,6 +65,7 @@ FILVRM:
 	RET 
 ; *******************************************************************************************************
 
+ IF (BASIC_EXTENSION == 1)
 ; *******************************************************************************************************
 ; function to handle CALL MEMVRM basic extension
 ; copies from RAM to VRAM
@@ -115,8 +116,8 @@ MEMVRM:
 	OR A
 	JR Z, .L1
 	HALT
-	DI
 .L1:
+	DI
 	; pop LDIR parameters and store away for later
 	POP BC ; count
 	POP DE ; vram destination
@@ -127,19 +128,58 @@ MEMVRM:
 .RET:
 	EI
 	EXX
-	LD A,1
-	LD (VRAM_UPDATE_IN_PROGRESS),A
-	CALL .LDIRVM
-	XOR A
-	LD (VRAM_UPDATE_IN_PROGRESS),A
+	CALL VRAM_LDIRVM
     POP DE
     POP BC
     CALL RESTORE_PAGE_INFO
 	PUSH IX
 	POP HL
 	RET
+; *******************************************************************************************************
+ ENDIF
 
-.LDIRVM:
+ IF (DEFUSR_EXTENSION == 1)
+; *******************************************************************************************************
+; same as MEMVRM but for DEFUSR approach
+; input IX=pointer to input array, real data from +2
+; +2 = source address
+; +4 = destination address
+; +6 = lenght
+; +8 = vsync wait flag
+MEMVRM_DEFUSR:
+	LD A,(IX+8)
+	OR A
+	JR Z,.L0
+	HALT
+.L0:
+	; enable page 0
+	DI
+	LD IY, .RET
+	JP ENABLE_PAGE0
+.RET:
+	EI
+	LD L,(IX+2)
+	LD H,(IX+3)
+	LD E,(IX+4)
+	LD D,(IX+5)
+	LD C,(IX+6)
+	LD B,(IX+7)
+	CALL VRAM_LDIRVM
+    POP DE
+    POP BC
+    JP RESTORE_PAGE_INFO
+; *******************************************************************************************************
+ ENDIF
+
+ IF (BASIC_EXTENSION + DEFUSR_EXTENSION > 0)
+; *******************************************************************************************************
+; common code to copy from memory to VRAM
+; input HL=RAM source
+; input DE=VRAM destination
+; BC=count
+VRAM_LDIRVM:
+	LD A,1
+	LD (VRAM_UPDATE_IN_PROGRESS),A
 	EX DE, HL
 	DI
 	CALL SETWRT_LOCAL
@@ -162,8 +202,12 @@ MEMVRM:
 	OR A
 	RET Z
 	LD B, C
-	JP BBYTECOPY
+	CALL BBYTECOPY
+	XOR A
+	LD (VRAM_UPDATE_IN_PROGRESS),A
+	RET
 ; *******************************************************************************************************
+ ENDIF
 
 ; *******************************************************************************************************
 ; function to handle CALL VRMMEM basic extension

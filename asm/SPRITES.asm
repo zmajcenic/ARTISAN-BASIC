@@ -11,6 +11,8 @@ SPRFLICKER_ENABLED:
 ; to support sprite flicker
 FLICKER:
  DB 0
+NUM_SPRITES_HANDLED:
+ DB 32
 
 ; to temporarily store stack pointer
 TMPSP:
@@ -38,15 +40,16 @@ GETnthSPRATTR:
 ; } [32]
 ; will hide sprites whose location is outside of visible area
 ; triggered by value in (SPRATR_UPDATE_FLAG) != 0 and after being done resets it to 0
-; modifies AF, AF', BC, DE, HL
+; modifies AF, AF', BC, DE, HL, IX
 SPRATR_UPDATE:
 	; check if update requested
 	LD HL, (SPRATR_UPDATE_FLAG)
 	LD A, (HL)
 	OR A
 	RET Z
-.L0:
-	LD B, 32 ; sprite number
+
+	LD IX,NUM_SPRITES_HANDLED
+	LD B, (IX) ; sprite number
 	LD C, #98 ; register for vdp data output
 	; set VDP address
     LD A,(SCRMOD)
@@ -139,9 +142,10 @@ SPRATR_UPDATE:
 	OUT (#98), A
 .NEXT:
 	EX AF, AF'
-	INC A
-	AND 31
-	JP NZ, .NEXT2
+	INC A ; increase current sprite
+	CP (IX) ; compare to maximum handled
+	JP NZ, .NEXT2 ; continue if not over
+	XOR A ; back to zero
 	EX AF, AF'
     LD A,(SCRMOD)
     DEC A
@@ -165,7 +169,11 @@ SPRATR_UPDATE:
 	DEC B
 	JP NZ, .LOOP
 	EX AF, AF'
-	INC A
+	INC A ; increase flicker to start at the next one on next vblank
+	CP (IX)
+	JR NZ,.L8
+	XOR A
+.L8:
 	LD (FLICKER), A
 
 	LD SP, (TMPSP)
@@ -174,13 +182,15 @@ SPRATR_UPDATE:
 	RET
 ; *******************************************************************************************************
 
+ IF (BASIC_EXTENSION == 1)
 ; *******************************************************************************************************
 ; function to handle CALL SPRENABLE basic extension
 ; initializes sprites handler
 ; _SPRENABLE ( INT[3][31] variable sprites_attributes, 
 ;			   INT variable update_variable,
-;			   BYTE sprite_flicker_enabled )
-; sets variables SPRATR_INIT_STATUS, SPRATR_UPDATE_FLAG, SPRATR_DATA and SPRFLICKER_ENABLED
+;			   BYTE sprite_flicker_enabled,
+;			   BYTE num_sprites_handled )
+; sets variables SPRATR_INIT_STATUS, SPRATR_UPDATE_FLAG, SPRATR_DATA, SPRFLICKER_ENABLED and NUM_SPRITES_HANDLED
 SPRENABLE:
 	; opening (
 	CALL CHKCHAR
@@ -190,48 +200,78 @@ SPRENABLE:
 	LD B,2
 	LD DE,#0420
 	CALL GET_BASIC_ARRAY_DATA_POINTER
-	PUSH BC
+	LD (SPRATR_DATA), BC
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; get address of sprite update flag
 	LD IX, PTRGET
 	CALL CALBAS
-	PUSH DE
+	LD (SPRATR_UPDATE_FLAG), DE
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; get flicker enabled flag
 	LD IX, GETBYT
 	CALL CALBAS
-	PUSH AF
+	LD (SPRFLICKER_ENABLED), A
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get number of handled sprites
+	LD IX, GETBYT
+	CALL CALBAS
+	LD (NUM_SPRITES_HANDLED),A
 	; ending )
 	CALL CHKCHAR
 	DB ')'
-
-	POP AF ; get flicker flag
-	OR A
-	LD (SPRFLICKER_ENABLED), A
-
-	POP DE ; update variable location
-	LD (SPRATR_UPDATE_FLAG), DE
-	POP DE ; address of sprite attribute table
-	LD (SPRATR_DATA), DE
+.L0:
 	LD A, 1
 	LD (SPRATR_INIT_STATUS), A
 	RET
 ; *******************************************************************************************************
+ ENDIF
 
+ IF (DEFUSR_EXTENSION == 1)
+; same as SPRENABLE but for DEFUSR approach
+; input IX=pointer to input array, real data from +2
+; +2 = pointer to sprite attributes array data
+; +4 = pointer to sprite update variable
+; +6 = flicker flag
+; +8 = number of sprites to handle
+SPRENABLE_DEFUSR:
+	LD L,(IX+2)
+	LD H,(IX+3)
+	LD (SPRATR_DATA),HL
+	LD L,(IX+4)
+	LD H,(IX+5)
+	LD (SPRATR_UPDATE_FLAG),HL
+	LD A,(IX+6)
+	LD (SPRFLICKER_ENABLED),A
+	LD A,(IX+8)
+	LD (NUM_SPRITES_HANDLED),A
+ IF (BASIC_EXTENSION == 1)
+	JR SPRENABLE.L0
+ ELSE
+	LD A, 1
+	LD (SPRATR_INIT_STATUS), A
+	RET
+ ENDIF
+ ENDIF
+
+ IF (DEFUSR_EXTENSION + BASIC_EXTENSION > 0)
 ; *******************************************************************************************************
 ; function to handle CALL SPRDISABLE basic extension
 ; disables sprites handling
 ; _SPRDISABLE
 ; resets variable SPRATR_INIT_STATUS 
 SPRDISABLE:
+SPRDISABLE_DEFUSR:
 	XOR A
 	LD (SPRATR_INIT_STATUS), A
 	RET
 ; *******************************************************************************************************
+ ENDIF
 
 ; *******************************************************************************************************
 ; function to handle CALL SPRSET basic extension
