@@ -22,6 +22,7 @@ SGAM_PROCESS_ANIM_LIST:
     JP PROCESS_SINGLE_ANIMATION.INACTIVE_TOO
 ; *******************************************************************************************************
 
+ IF (BASIC_EXTENSION == 1)
 ; *******************************************************************************************************
 ; function to handle CALL SGAM basic extension
 ; sets position of a group of sprites as described in SPRGRPMOV
@@ -108,7 +109,7 @@ SGAM:
     LD HL,(BLIT_STRUCT+5) ; pointer to data
     LD A,(BLIT_STRUCT+4) ; number of entries
     LD B,A
-    CALL SPRGRPMOV.UPDATE_LOC
+    CALL SPR_UPDATE_LOC
 
     LD A,(BLIT_STRUCT+7) ; anim number
     LD B,A
@@ -122,6 +123,47 @@ SGAM:
     POP HL
     RET
 ; *******************************************************************************************************
+ ENDIF
+
+ IF (DEFUSR_EXTENSION == 1)
+; *******************************************************************************************************
+; same as SGAM but for DEFUSR approach
+; input IX=pointer to input array, real data from +2
+; +02 = X
+; +04 = Y
+; +06 = count
+; +08 = data pointer
+; +10 = anim number
+; +12 = sprite animations
+SGAM_DEFUSR:
+	; enable page 0
+	DI
+	LD IY, .RET
+	JP ENABLE_PAGE0
+.RET:
+	EI
+    EXX
+	LD E,(IX+2)
+	LD D,(IX+3) ; initial x
+	LD C,(IX+4)
+	LD B,(IX+5) ; initial y
+    EXX
+	LD L,(IX+8)
+	LD H,(IX+9) ; pointer to data
+    LD B,(IX+6) ; count
+	PUSH IX
+    CALL SPR_UPDATE_LOC
+	POP IX
+    LD B,(IX+10) ; anim number
+	LD E,(IX+12)
+	LD D,(IX+13)
+	CALL SGAM_PROCESS_ANIM_LIST
+
+    POP DE
+    POP BC
+    JP RESTORE_PAGE_INFO
+; *******************************************************************************************************
+ ENDIF
 
 ; *******************************************************************************************************
 ; handles automatic move and animate sprite groups during interrupt
@@ -246,7 +288,7 @@ PROCESS_AUTOSGAMS:
 	LD L,(IX+12)
 	LD H,(IX+13) ; pointer to sprite group data
 	LD B,(IX+11) ; sprite group size
-	CALL SPRGRPMOV.UPDATE_LOC
+	CALL SPR_UPDATE_LOC
 	POP IX
 	RET
 

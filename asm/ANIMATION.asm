@@ -1000,6 +1000,7 @@ AUTOSGAMSTOP:
     JR AUTOSGAMSTART.COMMON
 ; *******************************************************************************************************
 
+ IF (BASIC_EXTENSION == 1)
 ; *******************************************************************************************************
 ; function to handle CALL ANIMSTEP basic extension
 ; two forms
@@ -1114,6 +1115,123 @@ ANIMSTARTSTOP_COMMON:
     LD B,0
     JP PROCESS_SINGLE_ANIMATION.INACTIVE_TOO
 ; *******************************************************************************************************
+ ENDIF
+
+ IF (DEFUSR_EXTENSION == 1)
+; *******************************************************************************************************
+; helper function to locate single animation and execute operation
+; needs to have jump set to a correct function
+; input A=animation item
+ANIM_SETVALUE:
+    LD B,A
+    INC A
+    LD C,A
+    LD A,(ANIMSPRNUM)
+    CP C
+    RET C ; out of range, so do nothing
+    LD A,B
+    CALL GETnthSPRANIM
+    PUSH HL
+    POP IX
+.FN:
+    JP 0
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; helper function to set values of multiple animations
+; needs to have jump set to a correct function
+; input B=number of animation item
+; input DE=animation item array
+ANIM_LIST_SETVALUE:
+    DI
+    PUSH BC
+    LD A,(DE)
+    .2 INC DE
+    PUSH DE
+    CALL ANIM_SETVALUE
+    POP DE
+    POP BC
+    DJNZ ANIM_LIST_SETVALUE
+    EI
+    RET
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function to handle single item ANIMSTEP in DEFUSR mode
+; input IX=pointer to input array, real data from +2
+; +2 = animation id
+ANIMSTEP_SINGLE_DEFUSR:
+    LD HL,ANIMSTEP_SINGLE_DEFUSR.STEP
+.L1:
+    LD (ANIM_SETVALUE.FN+1),HL
+    LD A,(IX+2)
+    JR ANIM_SETVALUE
+.STEP:
+    LD B,0
+    JP PROCESS_SINGLE_ANIMATION.INACTIVE_TOO
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function to handle multi item ANIMSTEP in DEFUSR mode
+; input IX=pointer to input array, real data from +2
+; +2 = list size
+; +4 = array pointer holding items
+ANIMSTEP_MULTI_DEFUSR:
+    LD HL,ANIMSTEP_SINGLE_DEFUSR.STEP
+.L1:
+    LD (ANIM_SETVALUE.FN+1),HL
+    LD B,(IX+2)
+    LD E,(IX+4)
+    LD D,(IX+5)
+    JR ANIM_LIST_SETVALUE
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function to handle single item ANIMSTART in DEFUSR mode
+; input IX=pointer to input array, real data from +2
+; +2 = animation id
+ANIMSTART_SINGLE_DEFUSR:
+    LD HL,ANIMSTART_SINGLE_DEFUSR.START
+    JR ANIMSTEP_SINGLE_DEFUSR.L1
+.START:
+    LD (IX+6),1 ; active flag
+    LD (IX+3),0 ; current item
+    LD B,0 ; setup timer
+    JP SETUP_ANIM_STEP 
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function to handle multi item ANIMSTART in DEFUSR mode
+; input IX=pointer to input array, real data from +2
+; +2 = list size
+; +4 = array pointer holding items
+ANIMSTART_MULTI_DEFUSR:
+    LD HL,ANIMSTART_SINGLE_DEFUSR.START
+    JR ANIMSTEP_MULTI_DEFUSR.L1
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function to handle single item ANIMSTOP in DEFUSR mode
+; input IX=pointer to input array, real data from +2
+; +2 = animation id
+ANIMSTOP_SINGLE_DEFUSR:
+    LD HL,ANIMSTOP_SINGLE_DEFUSR.STOP
+    JR ANIMSTEP_SINGLE_DEFUSR.L1
+.STOP:
+    LD (IX+6),0 ; active flag
+    RET 
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function to handle multi item ANIMSTOP in DEFUSR mode
+; input IX=pointer to input array, real data from +2
+; +2 = list size
+; +4 = array pointer holding items
+ANIMSTOP_MULTI_DEFUSR:
+    LD HL,ANIMSTOP_SINGLE_DEFUSR.STOP
+    JR ANIMSTEP_MULTI_DEFUSR.L1
+; *******************************************************************************************************
+ ENDIF
 
 ; *******************************************************************************************************
 ; function processes animations during vblank period

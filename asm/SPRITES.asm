@@ -426,6 +426,29 @@ SPRSET_DELTA_POS:
 	RET
 ; *******************************************************************************************************	
 
+; *******************************************************************************************************	
+; helper function to set new locations for a set of sprites
+; input B=number of sprites
+; HL=pointer to list of sprites and offsets
+SPR_UPDATE_LOC:
+	LD A,1
+	LD (VRAM_UPDATE_IN_PROGRESS),A
+	LD A, (HL)
+	INC HL
+	INC HL
+	PUSH HL
+	POP IY
+	EXX
+	CALL SPRSET_DELTA_POS
+	EXX
+	.4 INC HL
+	DJNZ SPR_UPDATE_LOC
+	XOR A
+	LD (VRAM_UPDATE_IN_PROGRESS),A
+	RET
+; *******************************************************************************************************
+
+ IF (BASIC_EXTENSION == 1)
 ; *******************************************************************************************************
 ; function to handle CALL SPRGRPMOV basic extension
 ; sets position of a group of sprites described with
@@ -483,28 +506,31 @@ SPRGRPMOV:
     LD HL,(BLIT_STRUCT+5) ; pointer to data
     LD A,(BLIT_STRUCT+4) ; number of entries
     LD B,A
-	LD A,1
-	LD (VRAM_UPDATE_IN_PROGRESS),A
-	DI
-	CALL .UPDATE_LOC
-	EI
-	XOR A
-	LD (VRAM_UPDATE_IN_PROGRESS),A
+	CALL SPR_UPDATE_LOC
 
 	POP HL
 	RET
-
-.UPDATE_LOC:
-	LD A, (HL)
-	INC HL
-	INC HL
-	PUSH HL
-	POP IY
-	EXX
-	CALL SPRSET_DELTA_POS
-	EXX
-	.4 INC HL
-	DJNZ .UPDATE_LOC
-	RET
 ; *******************************************************************************************************
+ ENDIF
 
+ IF (DEFUSR_EXTENSION == 1)
+; *******************************************************************************************************
+; same as SPRGRPMOV but for DEFUSR approach
+; input IX=pointer to input array, real data from +2
+; +2 = X
+; +4 = Y
+; +6 = count
+; +8 = data pointer
+SPRGRPMOV_DEFUSR:
+    EXX
+	LD E,(IX+2)
+	LD D,(IX+3) ; initial x
+	LD C,(IX+4)
+	LD B,(IX+5) ; initial y
+    EXX
+	LD L,(IX+8)
+	LD H,(IX+9) ; pointer to data
+    LD B,(IX+6) ; count
+    JP SPR_UPDATE_LOC
+; *******************************************************************************************************
+ ENDIF

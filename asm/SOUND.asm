@@ -120,6 +120,7 @@ SNDPLYOFF:
 	RET
 ; *******************************************************************************************************
 
+ IF (BASIC_EXTENSION == 1)
 ; *******************************************************************************************************
 ; function to handle CALL SNDSFX basic extension
 ; plays a sound effect
@@ -193,3 +194,33 @@ SNDSFX:
 	POP HL
 	RET
 ; *******************************************************************************************************
+ ENDIF
+
+ IF (DEFUSR_EXTENSION == 1)
+; *******************************************************************************************************
+; same as SNDSFX but for DEFUSR approach
+; input IX=pointer to input array, real data from +2
+; +2 = SFX number
+; +4 = channel
+; +6 = volume
+SNDSFX_DEFUSR:
+	LD A, (SOUND_ENABLED)
+	OR A
+	RET Z ; sound disabled, just exit
+	LD A, (SFX_INIT_STATUS)
+	OR A
+	RET Z ; sfx data not initialized, just exit
+	DI
+	LD IY, .RET
+	JP ENABLE_PAGE0
+.RET:
+	EI
+	LD A,(IX+2) ; SFX number
+	LD C,(IX+4) ; channel
+	LD B,(IX+6) ; volume
+	CALL PLY_AKG_PLAYSOUNDEFFECT
+    POP DE
+    POP BC
+    JP RESTORE_PAGE_INFO
+; *******************************************************************************************************
+ ENDIF

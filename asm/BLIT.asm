@@ -289,46 +289,37 @@ SHIFT_MERGE_CHARACTER:
 	RET	
 ; *******************************************************************************************************
 
- IFNDEF CMDS_WITH_PARAMETERS
+ IF (DEFUSR_EXTENSION == 1)
 ; *******************************************************************************************************
-; function to handle CALL BLIT basic extension
-; rotates 1-bit character drawing horizontally with mask and character data and
-; fuses with background data and applies vertical shift too
-; BLIT ( INT request_data_ptr )
-; request_data_ptr described in SHIFT_MERGE_CHARACTER
+; function to handle BLIT basic extension through DEFUSR call
+; input IX=pointer to data described in SHIFT_MERGE_CHARACTER but starts from +2
+; +2  DW horizontal shift count 0-7 (low byte used)
+; +4  DW vertical shift count 0-7 (low byte used)
+; +6  DW background data start;
+; +8  DW background add to value to next row of background data
+; +10  DW mask data start;
+; +12  DW character data start;
+; +14 DW character&mask add to value to next row of data
+; +16 DW columns (low byte used)
+; +18 DW rows (low byte used)
 ; will put ram in page 0 also, page 1 is already there
-BLIT:
-	; opening (
-	CALL CHKCHAR
-	DB '('
-	; get pointer to request struct
-	LD IX, FRMQNT
-	CALL CALBAS
-	PUSH DE
-	; ending )
-	CALL CHKCHAR
-	DB ')'
-
-	POP IX ; pointer to request struct
-
-	PUSH HL ; save position in BASIC buffer
-
+BLIT_DEFUSR:
+	DI
 	LD IY, .RET
 	JP ENABLE_PAGE0
 .RET:
 	EI
+	INC IX
+	INC IX
 	CALL SHIFT_MERGE_CHARACTER
 
     POP DE
     POP BC
-    CALL RESTORE_PAGE_INFO
-
-	POP HL
-	RET
+    JP RESTORE_PAGE_INFO
 ; *******************************************************************************************************
  ENDIF
 
- IFDEF CMDS_WITH_PARAMETERS
+ IF (BASIC_EXTENSION == 1)
 ; *******************************************************************************************************
 ; function to handle CALL BLIT basic extension
 ; rotates 1-bit character drawing horizontally with mask and character data and

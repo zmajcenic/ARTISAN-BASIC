@@ -210,6 +210,7 @@ FIND_OVERLAP:
     JR .L3
 ; ************************************************************************************************
 
+ IF (BASIC_EXTENSION == 1)
 ; ************************************************************************************************
 ; function to handle CALL COLL basic extension
 ; checks for collision between player and other rectangles
@@ -296,3 +297,49 @@ COLL:
     POP HL
     RET 
 ; ************************************************************************************************
+ ENDIF
+
+ IF (DEFUSR_EXTENSION == 1)
+; *******************************************************************************************************
+; same as COLL but for DEFUSR approach
+; input IX=pointer to input array, real data from +2
+; +02 = pointer to result variable
+; +04 = player X
+; +06 = player Y
+; +08 = player width
+; +10 = player height
+; +12 = number of list items
+; +14 = pointer to list of collidable objects
+COLL_DEFUSR:
+    PUSH IX
+    POP HL
+    .4 INC HL ; skip over to player x
+    LD DE,BLIT_STRUCT
+    LD BC,9
+    LDIR ; copy over x,y,w,h,list item number
+    LD A,(IX+14)
+    LD (BLIT_STRUCT+9),A
+    LD A,(IX+15)
+    LD (BLIT_STRUCT+10),A ; address to collidable objects array
+    LD A,(IX+2)
+    LD (BLIT_STRUCT+11),A
+    LD A,(IX+3)
+    LD (BLIT_STRUCT+12),A ; address to results variable
+    PUSH IX
+    CALL FIND_OVERLAP
+    POP IX
+    LD L,(IX+2)
+    LD H,(IX+3)
+    JR C,.NOTFOUND
+    LD (HL),A
+    INC HL
+    LD (HL),0
+    RET 
+.NOTFOUND:
+    LD (HL),#FF
+    INC HL
+    LD (HL),#FF    
+    RET 
+; *******************************************************************************************************
+ ENDIF
+ 
