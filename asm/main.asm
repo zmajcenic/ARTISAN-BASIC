@@ -193,29 +193,25 @@ VRAM_UPDATE_IN_PROGRESS:
 ; List of pointers to available instructions (as ASCIIZ) and execute address (as word)
 ; per starting letter, if no commands with this letter, NULL value
 CMDS:
- IF (ANIM_CMDS == 1)
-	DW CMDS_A ;
- ELSE
-    DW 0 ; A
- ENDIF
- IF (BLIT_CMDS + BOX_CMDS > 0)
+	DW CMDS_A ; always present due to ARTINFO
+ IF (BLIT_CMDS + BOX_CMDS > 0) && (BASIC_EXTENSION == 1)
     DW CMDS_B ; B
  ELSE
 	DW 0
  ENDIF
- IF (COLL_CMD == 1)
+ IF (COLL_CMD == 1) && (BASIC_EXTENSION == 1)
 	DW CMDS_C ;
  ELSE
     DW 0 ; C
  ENDIF
     DW 0 ; D
     DW 0 ; E
- IF (VRAM_CMDS + RAM_CMDS > 0)
+ IF (VRAM_CMDS + RAM_CMDS > 0) && (BASIC_EXTENSION == 1)
     DW CMDS_F; F
  ELSE
 	DW 0
  ENDIF
- IF (GENCAL_CMD > 0)
+ IF (GENCAL_CMD > 0) && (BASIC_EXTENSION == 1)
     DW CMDS_G; G
  ELSE
 	DW 0
@@ -225,7 +221,7 @@ CMDS:
     DW 0 ; J
     DW 0 ; K
     DW 0 ; L
- IF (VRAM_CMDS + RAM_CMDS + ANIM_CMDS > 0)
+ IF (VRAM_CMDS + RAM_CMDS + ANIM_CMDS > 0) && (BASIC_EXTENSION == 1)
     DW CMDS_M ; M
  ELSE
 	DW 0
@@ -235,18 +231,18 @@ CMDS:
     DW 0 ; P
     DW 0 ; Q
     DW 0 ; R
- IF (SOUND_CMDS + SPRITE_CMDS > 0)
+ IF (SOUND_CMDS + SPRITE_CMDS > 0) && (BASIC_EXTENSION == 1)
     DW CMDS_S ; S
  ELSE
 	DW 0
  ENDIF
- IF (TILE_CMDS > 0)
+ IF (TILE_CMDS > 0) && (BASIC_EXTENSION == 1)
     DW CMDS_T ; T
  ELSE
 	DW 0
  ENDIF
     DW 0 ; U
- IF (VRAM_CMDS > 0)
+ IF (VRAM_CMDS > 0) && (BASIC_EXTENSION == 1)
     DW CMDS_V ; V
  ELSE
 	DW 0
@@ -256,6 +252,7 @@ CMDS:
     DW 0 ; Y
     DW 0 ; Z
 
+ IF (BASIC_EXTENSION == 1)
 CMDS_M:
  IF (VRAM_CMDS == 1)
     DB "MEMVRM", 0
@@ -358,6 +355,14 @@ CMDS_T:
  IF (TILE_CMDS > 0)
 	DB 0
  ENDIF
+CMDS_C:
+ IF (COLL_CMD == 1)
+    DB "COLL", 0
+    DW COLL
+ ENDIF
+ IF (COLL_CMD > 0)
+	DB	0
+ ENDIF
 CMDS_A:
  IF (ANIM_CMDS == 1)
    DB "ANIMSTEP",0
@@ -382,16 +387,17 @@ CMDS_A:
    DW AUTOSGAMSTART
    DB "AUTOSGAMSTOP",0
    DW AUTOSGAMSTOP
+ ENDIF
+   DB "ARTINFO",0
+   DW ARTINFO
 	DB 0
+ ELSE
+CMDS_A:
+ DB "ARTINFO",0
+ DW ARTINFO
+ DB 0
  ENDIF
-CMDS_C:
- IF (COLL_CMD == 1)
-    DB "COLL", 0
-    DW COLL
- ENDIF
- IF (COLL_CMD > 0)
-	DB	0
- ENDIF
+
 
  IF (VRAM_CMDS + TILE_CMDS + SPRITE_CMDS > 0)
 ; ****************************************************************************************************
@@ -800,5 +806,54 @@ GET_BASIC_ARRAY_DATA_POINTER:
 	JP C,SUBSCRIPT_OUT_OF_RANGE
 	RET	
 ; ******************************************************************************************************* 
+
+; *******************************************************************************************************
+; function to handle CALL ARTINFO basic extension
+; returns info about the extension
+; _ARTINFO ( INT variable version,
+;			    INT variable build_flags,
+;			    INT variable free_memory_ptr )
+; this function is always available and can be used to test if the extension is active
+ARTINFO:
+	; opening (
+	CALL CHKCHAR
+	DB '('
+	; get address of version variable
+	LD IX, PTRGET
+	CALL CALBAS
+	LD A,(VERSION)
+   LD (DE),A
+   INC DE
+   LD A,(VERSION+1)
+   LD (DE),A
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get address of build flags variable
+	LD IX, PTRGET
+	CALL CALBAS
+   PUSH HL
+   LD HL,SOUND_CMDS+2*RAM_CMDS+4*VRAM_CMDS+8*BLIT_CMDS+16*SPRITE_CMDS+32*GENCAL_CMD+64*TILE_CMDS+128*BOX_CMDS+256*ANIM_CMDS+512*COLL_CMD+1024*BASIC_EXTENSION+2048*DEFUSR_EXTENSION
+   EX DE,HL
+   LD (HL),E
+   INC HL
+   LD (HL),D
+   POP HL
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get address of free memory variable
+	LD IX, PTRGET
+	CALL CALBAS
+	LD A,(FREEMEMPTR)
+   LD (DE),A
+   INC DE
+   LD A,(FREEMEMPTR+1)
+   LD (DE),A
+	; ending )
+	CALL CHKCHAR
+	DB ')'
+	RET
+; *******************************************************************************************************
 
 EXT_END:
