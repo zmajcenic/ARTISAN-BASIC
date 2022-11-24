@@ -289,9 +289,22 @@ SHIFT_MERGE_CHARACTER:
 	RET	
 ; *******************************************************************************************************
 
+; *******************************************************************************************************
+; helper function DE \ 8
+DEdiv8:
+	LD A,E
+	SRA D 
+    RR  A
+    SRA D 
+    RR  A
+    SRA D 
+    RR  A
+	RET
+; *******************************************************************************************************
+
  IF (DEFUSR_EXTENSION == 1)
 ; *******************************************************************************************************
-; function to handle BLIT basic extension through DEFUSR call
+; function to handle BLIT basic extension through DEFUSR call in RAW format
 ; input IX=pointer to data described in SHIFT_MERGE_CHARACTER but starts from +2
 ; +2  DW horizontal shift count 0-7 (low byte used)
 ; +4  DW vertical shift count 0-7 (low byte used)
@@ -303,14 +316,109 @@ SHIFT_MERGE_CHARACTER:
 ; +16 DW columns (low byte used)
 ; +18 DW rows (low byte used)
 ; will put ram in page 0 also, page 1 is already there
+;BLIT_DEFUSR:
+;	DI
+;	LD IY, .RET
+;	JP ENABLE_PAGE0
+;.RET:
+;	EI
+;	INC IX
+;	INC IX
+;	CALL SHIFT_MERGE_CHARACTER
+;
+;   POP DE
+;    POP BC
+;    JP RESTORE_PAGE_INFO
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function to handle CALL BLIT basic extension in DEFUSR form
+; input IX=pointer to data described in SHIFT_MERGE_CHARACTER but starts from +2
+; +02 x
+; +04 y
+; +06 char_data_pointer
+; +08 mask_data_pointer
+; +10 width
+; +12 height
+; +14 background_pointer
+; +16 background_width
+; BLIT ( INT x,
+;		 INT y,
+;		 INT char_data_pointer,
+;		 INT mask_data_pointer,
+;		 INT width (in characters),
+;		 INT height (in characters),
+;		 INT background_pointer (top left), 
+;		 INT background_width (in characters),
 BLIT_DEFUSR:
+	LD E,(IX+2)
+	LD D,(IX+3)
+	LD A,E
+	AND 7
+	LD (BLIT_STRUCT+0),A
+	CALL DEdiv8
+	LD (BLIT_TMP+0),A
+	LD E,(IX+4)
+	LD D,(IX+5)
+	LD A,E
+	AND 7
+	LD (BLIT_STRUCT+2),A
+	CALL DEdiv8
+	LD (BLIT_TMP+1),A
+	LD L,(IX+6)
+	LD H,(IX+7)
+	LD (BLIT_STRUCT+10),HL
+	LD L,(IX+8)
+	LD H,(IX+9)
+	LD (BLIT_STRUCT+8),HL
+	LD A,(IX+10)
+	LD (BLIT_STRUCT+14),A
+	LD A,(IX+12)
+	LD (BLIT_STRUCT+16),A
+	LD L,(IX+14)
+	LD H,(IX+15)
+	LD (BLIT_STRUCT+4),HL
+	;LD A,(IX+16)
+	;LD (BLIT_TMP+2),A
+
+	; calculate char&mask add to value
+	LD H,0
+	LD A,(BLIT_STRUCT+14)
+	LD L,A
+	CALL HLx8
+	LD (BLIT_STRUCT+12),HL
+	; calculate background add to value
+	LD H,0
+	LD L,(IX+16)
+	CALL HLx8
+	LD (BLIT_STRUCT+6),HL
+	; calculate pointer to background location
+	LD HL,0
+	LD A,(BLIT_TMP+1)
+	OR A
+	JR Z, .L1
+	LD B,A
+	LD DE,(BLIT_STRUCT+6)
+.L0:
+	ADD HL, DE
+	DJNZ .L0
+.L1:
+	EX DE,HL
+	LD H,0
+	LD A,(BLIT_TMP+0)
+	LD L,A
+	CALL HLx8
+	ADD HL,DE
+	LD DE,(BLIT_STRUCT+4)
+	ADD HL,DE
+	LD (BLIT_STRUCT+4),HL
+
 	DI
 	LD IY, .RET
 	JP ENABLE_PAGE0
 .RET:
 	EI
-	INC IX
-	INC IX
+	LD IX, BLIT_STRUCT
 	CALL SHIFT_MERGE_CHARACTER
 
     POP DE
@@ -344,7 +452,7 @@ BLIT:
 	LD A, E
 	AND 7
 	LD (BLIT_STRUCT+0), A
-	CALL .DAdiv8
+	CALL DEdiv8
 	LD (BLIT_TMP+0),A
 	; comma
 	CALL CHKCHAR
@@ -355,7 +463,7 @@ BLIT:
 	LD A, E
 	AND 7
 	LD (BLIT_STRUCT+2), A
-	CALL .DAdiv8
+	CALL DEdiv8
 	LD (BLIT_TMP+1),A
 	; comma
 	CALL CHKCHAR
@@ -454,15 +562,6 @@ BLIT:
     CALL RESTORE_PAGE_INFO
 
 	POP HL
-	RET
-.DAdiv8:
-	LD A,E
-	SRA D 
-    RR  A
-    SRA D 
-    RR  A
-    SRA D 
-    RR  A
 	RET
 ; *******************************************************************************************************
  ENDIF

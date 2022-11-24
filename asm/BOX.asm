@@ -39,6 +39,7 @@ RECTANGLE_COPY:
 	RET
 ; *******************************************************************************************************
 
+ IF (BASIC_EXTENSION == 1)
 ; *******************************************************************************************************
 ; function to handle CALL BOXMEMCPY basic extension
 ; copies data with window like boundaries within ram
@@ -51,10 +52,30 @@ RECTANGLE_COPY:
 ; request_data_ptr described in RECTANGLE_COPY
 ; will put ram in page 0 also, page 1 is already there
 BOXMEMCPY:
-	LD DE,BOXMEMCPY.RET
-	LD (BOXCOMMON.ADDR+2), DE
-	JP BOXCOMMON
-.RET:
+	LD DE,BOXMEMCPY_COMMON
+	LD (BOXCOMMON_DEFUSR.ADDR+2), DE
+	JP BOX_EXTENSION_PARAMS_COMMON
+ ENDIF
+
+ IF (DEFUSR_EXTENSION == 1)
+; *******************************************************************************************************
+; same as BOXMEMCPY but for DEFUSR approach
+; input IX=pointer to input array, real data from +2
+; +02 = source data pointer
+; +04 = source number of bytes in a row
+; +06 = number of rows
+; +08 = source add-to value till next row
+; +10 = destination pointer
+; +12 = destination add-to value till next row
+BOXMEMCPY_DEFUSR:
+	LD HL,BOXMEMCPY_COMMON
+	LD (BOXCOMMON_DEFUSR.ADDR+2),HL
+	INC IX
+	INC IX
+	JP BOXCOMMON_DEFUSR
+ ENDIF
+
+BOXMEMCPY_COMMON:
 	EI
 	; set RAM functions to call
 	LD HL, 0
@@ -62,12 +83,13 @@ BOXMEMCPY:
 	LD (RECTANGLE_COPY.CALL1+2), HL ; NOP NOP
 	LD HL, #B0ED ; LDIR
 	LD (RECTANGLE_COPY.CALL1+4), HL
-	JP BOXCOMMON.CALL
+	JP BOXCOMMON_DEFUSR.CALL
 ; *******************************************************************************************************
 
+ IF (BASIC_EXTENSION == 1)
 ; *******************************************************************************************************
-; common parts of BOX commands
-BOXCOMMON:
+; common parts of BOX commands to load parameters
+BOX_EXTENSION_PARAMS_COMMON:
 	; opening (
 	CALL CHKCHAR
 	DB '('
@@ -113,14 +135,15 @@ BOXCOMMON:
 	; ending )
 	CALL CHKCHAR
 	DB ')'
-
+	LD IX,BLIT_STRUCT
+ ENDIF
+BOXCOMMON_DEFUSR:
 	PUSH HL ; save position in BASIC buffer
 	DI
 .ADDR:
-	LD IY, 0
+	LD IY, 0 ; modified by code
 	JP ENABLE_PAGE0
 .CALL:
-	LD IX,BLIT_STRUCT
 	CALL RECTANGLE_COPY
 	XOR A
 	LD (VRAM_UPDATE_IN_PROGRESS),A
@@ -133,6 +156,7 @@ BOXCOMMON:
 	RET
 ; *******************************************************************************************************
 
+ IF (BASIC_EXTENSION == 1)
 ; *******************************************************************************************************
 ; function to handle CALL BOXMEMVRM basic extension
 ; copies data with window like boundaries from ram to Vram
@@ -145,10 +169,30 @@ BOXCOMMON:
 ; request_data_ptr described in RECTANGLE_COPY
 ; will put ram in page 0 also, page 1 is already there
 BOXMEMVRM:
-	LD DE,BOXMEMVRM.RET
-	LD (BOXCOMMON.ADDR+2), DE
-	JP BOXCOMMON
-.RET:
+	LD DE,BOXMEMVRM_COMMON
+	LD (BOXCOMMON_DEFUSR.ADDR+2), DE
+	JP BOX_EXTENSION_PARAMS_COMMON
+ ENDIF
+
+ IF (DEFUSR_EXTENSION == 1)
+; *******************************************************************************************************
+; same as BOXMEMVRM but for DEFUSR approach
+; input IX=pointer to input array, real data from +2
+; +02 = source data pointer
+; +04 = source number of bytes in a row
+; +06 = number of rows
+; +08 = source add-to value till next row
+; +10 = destination pointer
+; +12 = destination add-to value till next row
+BOXMEMVRM_DEFUSR:
+	LD HL,BOXMEMVRM_COMMON
+	LD (BOXCOMMON_DEFUSR.ADDR+2),HL
+	INC IX
+	INC IX
+	JP BOXCOMMON_DEFUSR
+ ENDIF
+
+BOXMEMVRM_COMMON:
 	EI
 	; set RAM functions to call
 	LD HL, .SETDEST
@@ -160,7 +204,7 @@ BOXMEMVRM:
 	LD (RECTANGLE_COPY.CALL2), A
 	;LD A,1
 	LD (VRAM_UPDATE_IN_PROGRESS),A
-	JP BOXCOMMON.CALL
+	JP BOXCOMMON_DEFUSR.CALL
 .SETDEST:
 	EX DE, HL
 	DI

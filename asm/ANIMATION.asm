@@ -128,11 +128,23 @@ GETnthAUTOSGAM:
     RET
 ; *******************************************************************************************************
 
+ IF (DEFUSR_EXTENSION == 1)
+; *******************************************************************************************************
+; same as MAXIANIMITEMS but for DEFUSR approach
+; input IX=pointer to input array, real data from +2
+; +2 = number
+MAXANIMITEMS_DEFUSR:
+    LD A,(IX+2)
+    JR MAXANIMITEMS.COMMON
+; *******************************************************************************************************
+ ENDIF
+
 ; *******************************************************************************************************
 ; function to handle CALL MAXANIMITEMS basic extension
 ; MAXANIMITEMS (BYTE number)
 ; sets new number and moves memory buffers as needed
 MAXANIMITEMS:
+ IF (BASIC_EXTENSION == 1)
 	; opening (
 	CALL CHKCHAR
 	DB '('
@@ -144,6 +156,8 @@ MAXANIMITEMS:
 	CALL CHKCHAR
 	DB ')'
     POP AF
+ ENDIF
+.COMMON: ; entry for DEFUSR part, A=number
     DI
 	; save position
 	PUSH HL
@@ -393,11 +407,23 @@ ANIMITEMPTR_CMD:
     RET
 ; *******************************************************************************************************
 
+ IF (DEFUSR_EXTENSION == 1)
+; *******************************************************************************************************
+; same as MAXANIMDEFS but for DEFUSR approach
+; input IX=pointer to input array, real data from +2
+; +2 = number
+MAXANIMDEFS_DEFUSR:
+    LD A,(IX+2)
+    JR MAXANIMDEFS.COMMON
+; *******************************************************************************************************
+ ENDIF
+
 ; *******************************************************************************************************
 ; function to handle CALL MAXANIMDEFS basic extension
 ; MAXANIMDEFS (BYTE number)
 ; sets new number and moves memory buffers as needed
 MAXANIMDEFS:
+ IF (BASIC_EXTENSION == 1)
 	; opening (
 	CALL CHKCHAR
 	DB '('
@@ -409,6 +435,8 @@ MAXANIMDEFS:
 	CALL CHKCHAR
 	DB ')'
     POP AF
+ ENDIF
+.COMMON:
     DI
 	; save position
 	PUSH HL
@@ -505,11 +533,23 @@ ANIMDEF:
     RET
 ; *******************************************************************************************************
 
+ IF (DEFUSR_EXTENSION == 1)
+; *******************************************************************************************************
+; same as MAXANIMSPRS but for DEFUSR approach
+; input IX=pointer to input array, real data from +2
+; +2 = number
+MAXANIMSPRS_DEFUSR:
+    LD A,(IX+2)
+    JR MAXANIMSPRS.COMMON
+; *******************************************************************************************************
+ ENDIF
+
 ; *******************************************************************************************************
 ; function to handle CALL MAXANIMSPRS basic extension
 ; MAXANIMSPRS (BYTE number)
 ; sets new number and moves memory buffers as needed
 MAXANIMSPRS:
+ IF (BASIC_EXTENSION == 1)
 	; opening (
 	CALL CHKCHAR
 	DB '('
@@ -521,6 +561,8 @@ MAXANIMSPRS:
 	CALL CHKCHAR
 	DB ')'
     POP AF
+ ENDIF
+.COMMON:
     DI
 	; save position
 	PUSH HL
@@ -730,11 +772,23 @@ ANIMCHAR:
     RET
 ; *******************************************************************************************************
 
+ IF (DEFUSR_EXTENSION == 1)
+; *******************************************************************************************************
+; same as MAXAUTOSGAMS but for DEFUSR approach
+; input IX=pointer to input array, real data from +2
+; +2 = number
+MAXAUTOSGAMS_DEFUSR:
+    LD A,(IX+2)
+    JR MAXAUTOSGAMS.COMMON
+; *******************************************************************************************************
+ ENDIF
+
 ; *******************************************************************************************************
 ; function to handle CALL MAXAUTOSGAMS basic extension
 ; MAXAUTOSGAMS (BYTE number)
 ; sets new number and moves memory buffers as needed
 MAXAUTOSGAMS:
+ IF (BASIC_EXTENSION == 1)
 	; opening (
 	CALL CHKCHAR
 	DB '('
@@ -746,6 +800,8 @@ MAXAUTOSGAMS:
 	CALL CHKCHAR
 	DB ')'
     POP AF
+ ENDIF
+.COMMON:
     DI
 	; save position
 	PUSH HL
