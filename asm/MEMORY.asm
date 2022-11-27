@@ -123,17 +123,8 @@ FILRAM:
 	POP BC ; count
 	POP HL ; start address
 	LD A, B
-	OR A
-	JR NZ, .L1 ; >=256 bytes to fill
 	OR C
 	JR Z, .EXIT ; 0 bytes to fill, skip
-	LD A, C
-	DEC A
-	JR NZ, .L1 ; ; >1 byte to fill
-	; one byte to fill
-	LD (HL), D
-	JR .EXIT
-.L1:
 	EXX
 	; enable page 0
 	DI
@@ -157,6 +148,9 @@ FILRAM:
     LD E, L
     INC DE
     DEC BC
+	LD A,B
+	OR C
+	RET Z ; if count was 1
     LDIR
     RET
 ; *******************************************************************************************************

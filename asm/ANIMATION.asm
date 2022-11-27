@@ -272,6 +272,7 @@ MAXANIMITEMS:
     RET
 ; *******************************************************************************************************
 
+ IF (BASIC_EXTENSION == 1)
 ; *******************************************************************************************************
 ; function to handle CALL ANIMITEMPAT basic extension
 ; ANIMITEMPAT ( BYTE id,
@@ -343,7 +344,44 @@ ANIMITEMPAT:
     POP HL
     RET
 ; *******************************************************************************************************
+ ENDIF
 
+ IF (DEFUSR_EXTENSION == 1)
+; *******************************************************************************************************
+; same as ANIMITEMPAT but for DEFUSR approach
+; input IX=pointer to input array, real data from +2
+; +02 = ID
+; +04 = ticks
+; +06 = pattern
+; +08 = color
+ANIMITEMPAT_DEFUSR:
+    ; check if out of bounds
+    LD C,(IX+2)
+    INC C
+    LD A,(ANIMITEMNUM)
+    CP C
+    RET C ; out of bounds, prevent memory corruption
+    LD A,C
+    DEC A
+    CALL GETnthANIMITEM
+    LD (HL),0 ; type=0
+    INC HL
+    LD A,(IX+4) ; ticks low
+    LD (HL),A
+    INC HL
+    LD A,(IX+5) ; ticks high
+    LD (HL),A
+    INC HL
+    LD A,(IX+6) ; pattern
+    LD (HL),A
+    INC HL
+    LD A,(IX+8) ; color
+    LD (HL),A
+    RET
+; *******************************************************************************************************
+ ENDIF
+
+ IF (BASIC_EXTENSION == 1)
 ; *******************************************************************************************************
 ; function to handle CALL ANIMITEMPTR basic extension
 ; ANIMITEMPTR ( BYTE id,
@@ -406,6 +444,41 @@ ANIMITEMPTR_CMD:
     POP HL
     RET
 ; *******************************************************************************************************
+ ENDIF
+
+ IF (DEFUSR_EXTENSION == 1)
+; *******************************************************************************************************
+; same as ANIMITEMPTR but for DEFUSR approach
+; input IX=pointer to input array, real data from +2
+; +02 = ID
+; +04 = ticks
+; +06 = pointer
+ANIMITEMPTR_DEFUSR:
+    ; check if out of bounds
+    LD C,(IX+2)
+    INC C
+    LD A,(ANIMITEMNUM)
+    CP C
+    RET C ; out of bounds, prevent memory corruption
+    LD A,C
+    DEC A
+    CALL GETnthANIMITEM
+    LD (HL),1 ; type=1
+    INC HL
+    LD A,(IX+4) ; ticks low
+    LD (HL),A
+    INC HL
+    LD A,(IX+5) ; ticks high
+    LD (HL),A
+    INC HL
+    LD A,(IX+6) ; pointer low
+    LD (HL),A
+    INC HL
+    LD A,(IX+7) ; pointer high
+    LD (HL),A
+    RET
+; *******************************************************************************************************
+ ENDIF
 
  IF (DEFUSR_EXTENSION == 1)
 ; *******************************************************************************************************
@@ -467,6 +540,7 @@ MAXANIMDEFS:
     RET ; BC=size difference in bytes
 ; *******************************************************************************************************
 
+ IF (BASIC_EXTENSION == 1)
 ; *******************************************************************************************************
 ; function to handle CALL ANIMDEF basic extension
 ; ANIMITEMPAT ( BYTE id,
@@ -532,6 +606,44 @@ ANIMDEF:
     POP HL
     RET
 ; *******************************************************************************************************
+ ENDIF
+
+ IF (DEFUSR_EXTENSION == 1)
+; *******************************************************************************************************
+; same as ANIMDEF but for DEFUSR approach
+; input IX=pointer to input array, real data from +2
+; +02 = ID
+; +04 = list size
+; +06 = list pointer
+ANIMDEF_DEFUSR:
+    ; check if out of bounds
+    LD C,(IX+2)
+    INC C
+    LD A,(ANIMDEFNUM)
+    CP C
+    RET C ; invalid id
+	; get size
+    LD A,(IX+4)
+    CP 16
+    RET NC ; overflow
+    OR A
+    RET Z ; ID=0, invalid
+    LD B,A
+    LD A,C
+    DEC A
+    CALL GETnthANIMDEF
+    LD (HL),B
+    LD E,(IX+6)
+    LD D,(IX+7)
+.L1:
+    INC HL
+    LD A,(DE)
+    .2 INC DE
+    LD (HL),A
+    DJNZ .L1
+    RET   
+; *******************************************************************************************************
+ ENDIF
 
  IF (DEFUSR_EXTENSION == 1)
 ; *******************************************************************************************************
@@ -607,6 +719,7 @@ MAXANIMSPRS:
     RET ; BC=size difference in bytes
 ; *******************************************************************************************************
 
+ IF (BASIC_EXTENSION == 1)
 ; *******************************************************************************************************
 ; function to handle CALL ANIMSPRITE basic extension
 ; ANIMSPRITE ( BYTE id,
@@ -688,7 +801,58 @@ ANIMSPRITE:
     POP HL
     RET
 ; *******************************************************************************************************
+ ENDIF
 
+ IF (DEFUSR_EXTENSION == 1)
+; *******************************************************************************************************
+; same as ANIMSPRITE but for DEFUSR approach
+; input IX=pointer to input array, real data from +2
+; +02 = ID
+; +04 = sprite number
+; +06 = animation definition id
+; +08 = cyclic flag
+ANIMSPRITE_DEFUSR:
+    LD C,(IX+2)
+    INC C
+    LD A,(ANIMSPRNUM)
+    CP C
+    RET C ; invalid id
+	; get sprite number
+    LD A,(IX+4)
+    CP 32
+    RET NC ; invalid sprite id
+    LD B,(IX+6)
+    INC B
+    LD A,(ANIMDEFNUM)
+    CP B
+    RET C ; invalid animation definition id
+    LD A,C
+    DEC A
+    CALL GETnthSPRANIM
+    PUSH HL
+    LD A,(IX+4)
+    LD (HL),A ; +0
+    INC HL
+    LD (HL),1 ; +1
+    INC HL
+    LD (HL),0 ; +2
+    INC HL
+    LD (HL),255 ; +3
+    INC HL
+    DEC B
+    LD (HL),B ; +4
+    INC HL
+    LD A,(IX+8) ; +5
+    LD (HL),A
+    INC HL
+    INC HL
+    LD (HL),0 ; +7
+    RET
+; *******************************************************************************************************
+ ENDIF
+
+
+ IF (BASIC_EXTENSION == 1)
 ; *******************************************************************************************************
 ; function to handle CALL ANIMCHAR basic extension
 ; ANIMCHAR ( BYTE id,
@@ -771,6 +935,57 @@ ANIMCHAR:
     POP HL
     RET
 ; *******************************************************************************************************
+ ENDIF
+
+ IF (DEFUSR_EXTENSION == 1)
+; *******************************************************************************************************
+; same as ANIMCHAR but for DEFUSR approach
+; input IX=pointer to input array, real data from +2
+; +02 = ID
+; +04 = character number
+; +06 = animation definition id
+; +08 = cyclic flag
+ANIMCHAR_DEFUSR:
+    LD C,(IX+2)
+    INC C
+    LD A,(ANIMSPRNUM)
+    CP C
+    RET C ; invalid id
+	; get sprite number
+    LD A,(IX+5)
+    CP 3
+    RET NC ; invalid character (>767)
+    LD B,(IX+6)
+    INC B
+    LD A,(ANIMDEFNUM)
+    CP B
+    RET C ; invalid animation definition id
+    LD A,C
+    DEC A
+    CALL GETnthSPRANIM
+    PUSH HL
+    LD A,(IX+4)
+    LD (HL),A ; +0
+    INC HL
+    LD (HL),1 ; +1
+    INC HL
+    LD (HL),0 ; +2
+    INC HL
+    LD (HL),255 ; +3
+    INC HL
+    DEC B
+    LD (HL),B ; +4
+    INC HL
+    LD A,(IX+8) ; +5
+    LD (HL),A
+    INC HL
+    INC HL
+    LD A,(IX+5)
+    INC A
+    LD (HL),A ; +7
+    RET
+; *******************************************************************************************************
+ ENDIF
 
  IF (DEFUSR_EXTENSION == 1)
 ; *******************************************************************************************************
@@ -850,6 +1065,7 @@ MAXAUTOSGAMS:
     RET ; BC=size difference in bytes
 ; *******************************************************************************************************
 
+ IF (BASIC_EXTENSION == 1)
 ; *******************************************************************************************************
 ; function to handle CALL AUTOSGAMDEF basic extension
 ; AUTOSGAMDEF ( BYTE id,
@@ -933,7 +1149,6 @@ AUTOSGAMDEF:
 	CALL CALBAS
 	LD IX,(BLIT_TMP)
     LD (IX+10),E
-    LD (IX+11),D
 	; comma
 	CALL CHKCHAR
 	DB ','
@@ -1005,7 +1220,94 @@ AUTOSGAMDEF:
 	DB ')'
     RET 
 ; *******************************************************************************************************
+ ENDIF
 
+ IF (DEFUSR_EXTENSION == 1)
+; *******************************************************************************************************
+; same as AUTOSGAMDEF but for DEFUSR approach
+; input IX=pointer to input array, real data from +2
+; +02 = ID
+; +04 = pointer to X variable
+; +06 = pointer to Y variable
+; +08 = minimum
+; +10 = maximum
+; +12 = delta
+; +14 = direction
+; +16 = ticks
+; +18 = sprite group count
+; +20 = sprite group array pointer
+; +22 = item number
+; +24 = sprite animations negative direction array pointer
+; +26 = sprite animations positive direction array pointer
+AUTOSGAMDEF_DEFUSR:
+    LD C,(IX+2)
+    INC C
+    LD A,(AUTOSGAMNUM)
+    CP C
+    RET C ; invalid id
+    LD A,C
+    DEC A
+    CALL GETnthAUTOSGAM
+    PUSH HL
+    POP IY
+    ; X variable
+    LD A,(IX+4)
+    LD (IY+0),A
+    LD A,(IX+5)
+    LD (IY+1),A
+	; Y variable
+    LD A,(IX+6)
+    LD (IY+2),A
+    LD A,(IX+7)
+    LD (IY+3),A
+	; get minimum value
+    LD A,(IX+8)
+    LD (IY+4),A
+    LD A,(IX+9)
+    LD (IY+5),A
+	; get maximum value
+    LD A,(IX+10)
+    LD (IY+6),A
+    LD A,(IX+11)
+    LD (IY+7),A
+	; get delta value
+    LD A,(IX+12)
+    LD (IY+8),A
+    LD A,(IX+13)
+    LD (IY+9),A
+	; get direction value
+    LD A,(IX+14)
+    LD (IY+10),A
+	; get ticks value
+    LD A,(IX+16)
+    LD (IY+20),A
+    LD A,(IX+17)
+    LD (IY+21),A
+	; get sprite group count
+    LD A,(IX+18)
+    LD (IY+11),A
+	; get sprite group definition array data pointer
+    LD A,(IX+20)
+    LD (IY+12),A
+    LD A,(IX+21)
+    LD (IY+13),A
+	; get sprite animation array size
+    LD A,(IX+22)
+    LD (IY+14),A
+    ; get array pointer for negative direction
+    LD A,(IX+24)
+    LD (IY+15),A
+    LD A,(IX+25)
+    LD (IY+16),A
+    ; get array pointer for positive direction
+    LD A,(IX+26)
+    LD (IY+17),A
+    LD A,(IX+27)
+    LD (IY+18),A
+; *******************************************************************************************************
+ ENDIF
+
+ IF (BASIC_EXTENSION == 1)
 ; *******************************************************************************************************
 ; function to handle CALL AUTOSGAMSTART basic extension
 ; AUTOSGAMSTART ( BYTE id )
@@ -1055,6 +1357,46 @@ AUTOSGAMSTOP:
     XOR A
     JR AUTOSGAMSTART.COMMON
 ; *******************************************************************************************************
+ ENDIF
+
+ IF (DEFUSR_EXTENSION == 1)
+; *******************************************************************************************************
+; function to handle CALL AUTOSGAMSTART basic extension in DEFUSR mode
+; input IX=pointer to input array, real data from +2
+; +2 = source address
+AUTOSGAMSTART_DEFUSR:
+    LD A,1
+.COMMON:
+    LD (.SETVALUE+3),A
+    LD C,(IX+2)
+    INC C
+    LD A,(AUTOSGAMNUM)
+    CP C
+    RET C ; invalid id
+    LD A,C
+    DEC A
+    CALL GETnthAUTOSGAM
+    PUSH HL
+    POP IX
+.SETVALUE:
+    LD (IX+19),1 ; active flag
+    ; set initial timer
+    LD A,(IX+20)
+    LD (IX+22),A
+    LD A,(IX+21)
+    LD (IX+23),A    
+    RET
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; function to handle CALL AUTOSGAMSTOP basic extension in DEFUSR mode
+; input IX=pointer to input array, real data from +2
+; +2 = source address
+AUTOSGAMSTOP_DEFUSR:
+    XOR A
+    JR AUTOSGAMSTART_DEFUSR.COMMON
+; *******************************************************************************************************
+ ENDIF
 
  IF (BASIC_EXTENSION == 1)
 ; *******************************************************************************************************

@@ -764,6 +764,7 @@ THROW_ERROR:
  
 ;---------------------------
 
+ IF (BASIC_EXTENSION == 1)
 ; *******************************************************************************************************
 ; helper function to get pointer to BASIC array data
 ; input A=data type (2=INT,4=SINGLE,8=DOUBLE)
@@ -806,6 +807,7 @@ GET_BASIC_ARRAY_DATA_POINTER:
 	JP C,SUBSCRIPT_OUT_OF_RANGE
 	RET	
 ; ******************************************************************************************************* 
+ ENDIF
 
 ; *******************************************************************************************************
 ; function to handle CALL ARTINFO basic extension
