@@ -50,60 +50,63 @@ TILE:
 	RET
 ; *******************************************************************************************************
 
- IFNDEF CMDS_WITH_PARAMETERS
+ IF (DEFUSR_EXTENSION == 1)
 ; *******************************************************************************************************
-; function to handle CALL TILERAM basic extension
-; fills memory with tiles
-; TILERAM ( INT request_data_ptr )
-; request_data_ptr described in TILE
-; will put ram in page 0 also, page 1 is already there
-TILERAM:
-	; opening (
-	CALL CHKCHAR
-	DB '('
-	; get pointer to request struct
-	LD IX, FRMQNT
-	CALL CALBAS
-	PUSH DE
-	; ending )
-	CALL CHKCHAR
-	DB ')'
-
-	POP IX ; pointer to request struct
-
-	PUSH HL ; save position in BASIC buffer
-	DI
-	LD IY, .RET
-	JP ENABLE_PAGE0
-.RET:
-	EI
-	; set RAM functions to call
-	LD HL, .TILECOPY
-	LD (TILE.CALL2+1), HL
-	LD HL, .SETDESTROW
-	LD (TILE.CALL1+1), HL
-	LD A,1
-	LD (VRAM_UPDATE_IN_PROGRESS),A
-	CALL TILE
-	XOR A
-	LD (VRAM_UPDATE_IN_PROGRESS),A
-
-    POP DE
-    POP BC
-    CALL RESTORE_PAGE_INFO
-
-	POP HL
-	RET
-.TILECOPY:
-	.8 LDI
-	RET	
-.SETDESTROW:
-	LD DE, (TILETMP1)
-	RET
+; same as TILERAM but for DEFUSR approach
+; input IX=pointer to input array, real data from +2
+; +02 = tile data pointer
+; +04 = tile columns
+; +06 = tile rows
+; +08 = destination pointer
+; +10 = destination columns
+; +12 = destination rows
+; +14 = destination begin column
+; +16 = destination begin row
+; +18 = number of tiles horizontally
+; +20 = number of tiles vertically
 ; *******************************************************************************************************
+TILERAM_DEFUSR:
+	; tile data pointer
+	LD L,(IX+2)
+	LD H,(IX+3)
+	LD (BLIT_STRUCT+0),HL
+	; tile columns
+	LD L,(IX+4)
+	LD H,(IX+5)
+	LD (BLIT_STRUCT+4),HL
+	; tile rows
+	LD L,(IX+6)
+	LD H,(IX+7)
+	LD (BLIT_STRUCT+2),HL
+	; destintion pointer
+	LD L,(IX+8)
+	LD H,(IX+9)
+	LD (BLIT_STRUCT+6),HL
+	; destination columns
+	LD A,(IX+10)
+	LD (BLIT_TMP+0),A
+	; destination rows
+	LD A,(IX+12)
+	LD (BLIT_TMP+1),A
+	; destination begin column
+	LD A,(IX+14)
+	LD (BLIT_TMP+2),A
+	; destination begin row
+	LD A,(IX+16)
+	LD (BLIT_TMP+3),A
+	; number of tiles horizontally
+	LD L,(IX+18)
+	LD H,(IX+19)
+	LD (BLIT_STRUCT+10),HL
+	; number of tiles vertically
+	LD L,(IX+20)
+	LD H,(IX+21)
+	LD (BLIT_STRUCT+12),HL
+ IF (BASIC_EXTENSION == 1) ; otherwise we just continue with code below
+	JP TILERAM.COMMON
+ ENDIF
  ENDIF
 
- IFDEF CMDS_WITH_PARAMETERS
 ; *******************************************************************************************************
 ; function to handle CALL TILERAM basic extension
 ; fills memory with tiles
@@ -119,6 +122,7 @@ TILERAM:
 ;			INT	number_of_tiles_vertically )
 ; will put ram in page 0 also, page 1 is already there
 TILERAM:
+ IF (BASIC_EXTENSION == 1)
 	; opening (
 	CALL CHKCHAR
 	DB '('
@@ -196,7 +200,8 @@ TILERAM:
 	; ending )
 	CALL CHKCHAR
 	DB ')'
-
+ ENDIF
+.COMMON:
 	PUSH HL ; save position in BASIC buffer
 
 	; calculate destination add to value
@@ -251,9 +256,7 @@ TILERAM:
 	LD DE, (TILETMP1)
 	RET
 ; *******************************************************************************************************
- ENDIF
 
- IFDEF CMDS_WITH_PARAMETERS
 ; *******************************************************************************************************
 ; function to handle CALL TILEVRM basic extension
 ; fills vram with tiles
@@ -267,6 +270,7 @@ TILERAM:
 ; will put ram in page 0 also, page 1 is already there
 ; for destination uses address of SCREEN 2 pattern buffer and 32x24 size
 TILEVRM:
+ IF (BASIC_EXTENSION == 1)
 	; opening (
 	CALL CHKCHAR
 	DB '('
@@ -321,7 +325,9 @@ TILEVRM:
 	; ending )
 	CALL CHKCHAR
 	DB ')'
+ ENDIF
 
+.COMMON:
 	PUSH HL ; save position in BASIC buffer
 
 	; calculate destination add to value
@@ -369,56 +375,3 @@ TILEVRM:
 	EI
 	RET
 ; *******************************************************************************************************
- ENDIF
-
- IFNDEF CMDS_WITH_PARAMETERS
-; *******************************************************************************************************
-; function to handle CALL TILEVRM basic extension
-; fills vram with tiles
-; TILEVRM ( INT request_data_ptr )
-; request_data_ptr described in TILE
-; will put ram in page 0 also, page 1 is already there
-TILEVRM:
-	; opening (
-	CALL CHKCHAR
-	DB '('
-	; get pointer to request struct
-	LD IX, FRMQNT
-	CALL CALBAS
-	PUSH DE
-	; ending )
-	CALL CHKCHAR
-	DB ')'
-
-	POP IX ; pointer to request struct
-
-	PUSH HL ; save position in BASIC buffer
-	DI
-	LD IY, .RET
-	JP ENABLE_PAGE0
-.RET:
-	EI
-	; set RAM functions to call
-	LD HL, .TILECOPY
-	LD (TILE.CALL2+1), HL
-	LD HL, .SETDESTROW
-	LD (TILE.CALL1+1), HL
-	CALL TILE
-
-    POP DE
-    POP BC
-    CALL RESTORE_PAGE_INFO
-
-	POP HL
-	RET
-.TILECOPY:
-	LD BC, #0898
-	JP BBYTECOPY_NO_C	
-.SETDESTROW:
-	LD HL, (TILETMP1)
-	DI
-	CALL SETWRT_LOCAL
-	EI
-	RET
-; *******************************************************************************************************
- ENDIF

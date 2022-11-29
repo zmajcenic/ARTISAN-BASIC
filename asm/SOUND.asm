@@ -5,6 +5,7 @@ SFX_INIT_STATUS:
 SOUND_ENABLED:
  DB 0
 
+ IF (BASIC_EXTENSION == 1)
 ; *******************************************************************************************************
 ; function to handle CALL SNDPLYINIT basic extension
 ; initializes sound player
@@ -70,6 +71,44 @@ SNDPLYINIT:
 	POP HL
 	RET
 ; *******************************************************************************************************
+ ENDIF
+
+ IF (DEFUSR_EXTENSION == 1)
+; *******************************************************************************************************
+; same as SNDPLYINI but for DEFUSR approach
+; input IX=pointer to input array, real data from +2
+; +2 = music address
+; +4 = sfx address
+SNDPLYINI_DEFUSR:
+	LD IY, .RET
+	JP ENABLE_PAGE0
+.RET:
+	XOR A
+	LD L,(IX+2)
+	LD H,(IX+3)
+	PUSH IX
+	CALL PLY_AKG_INIT
+	POP IX
+	LD A, 1
+	LD (MUSIC_INIT_STATUS), A
+
+	LD L,(IX+4)
+	LD H,(IX+5)
+	; check if SFX address -1
+	INC HL
+	LD A, L
+	OR H
+	JR Z,.L1
+	DEC HL
+	CALL PLY_AKG_INITSOUNDEFFECTS
+	LD A, 1
+	LD (SFX_INIT_STATUS), A
+.L1:
+    POP DE
+    POP BC
+    JP RESTORE_PAGE_INFO
+; *******************************************************************************************************
+ ENDIF
 
 ; *******************************************************************************************************
 ; function to handle CALL SNDPLYON basic extension
@@ -77,6 +116,7 @@ SNDPLYINIT:
 ; _SNDPLYON
 ; sets SOUND_ENABLED variable to 1 if init call was done
 ; if not throws out of data error
+SNDPLYON_DEFUSR:
 SNDPLYON:
 	LD A, (MUSIC_INIT_STATUS)
 	OR A
@@ -98,6 +138,7 @@ SNDPLYON:
 ; _SNDPLYOFF
 ; sets SOUND_ENABLED variable to 0
 ; calls AKG to stop music and SFX on all channels if initialized
+SNDPLYOFF_DEFUSR:
 SNDPLYOFF:
 	LD A, (SOUND_ENABLED)
 	OR A

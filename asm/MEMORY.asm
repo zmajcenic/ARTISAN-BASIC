@@ -83,6 +83,7 @@ MEMCPY_DEFUSR:
 ; *******************************************************************************************************
  ENDIF
 
+ IF (BASIC_EXTENSION == 1)
 ; *******************************************************************************************************
 ; function to handle CALL FILRAM basic extension
 ; FILRAM ( INT start address, 
@@ -133,7 +134,7 @@ FILRAM:
 .RET:
 	EI
 	EXX
-	CALL .FILLVALUE
+	CALL FILVRM_FILLVALUE
     POP DE
     POP BC
     CALL RESTORE_PAGE_INFO
@@ -141,8 +142,42 @@ FILRAM:
 	PUSH IX
 	POP HL
 	RET
+; *******************************************************************************************************
+ ENDIF
 
-.FILLVALUE:
+ IF (DEFUSR_EXTENSION == 1)
+; *******************************************************************************************************
+; same as FILVRM but for DEFUSR approach
+; input IX=pointer to input array, real data from +2
+; +2 = start address
+; +4 = count
+; +6 = value 
+FILRAM_DEFUSR:
+	; enable page 0
+	DI
+	LD IY, .RET
+	JP ENABLE_PAGE0
+.RET:
+	EI
+	LD L,(IX+2)
+	LD H,(IX+3)
+	LD C,(IX+4)
+	LD B,(IX+5)
+	LD A,B
+	OR C
+	JR Z,.EXIT
+	LD D,(IX+6)
+	CALL FILVRM_FILLVALUE
+.EXIT:
+    POP DE
+    POP BC
+    JP RESTORE_PAGE_INFO
+; *******************************************************************************************************
+ ENDIF	
+
+; *******************************************************************************************************
+; common function to fill RAM
+FILVRM_FILLVALUE:
     LD (HL), D
     LD D, H
     LD E, L
@@ -154,4 +189,3 @@ FILRAM:
     LDIR
     RET
 ; *******************************************************************************************************
-

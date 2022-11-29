@@ -1,9 +1,27 @@
+ IF (DEFUSR_EXTENSION == 1)
+; *******************************************************************************************************
+; same as GENCAL but for DEFUSR approach
+; input IX=pointer to input array, real data from +2
+; +2 = function address to call
+; +4 = register list array pointer
+GENCAL_DEFUSR:
+    LD L,(IX+2)
+    LD H,(IX+3)
+    PUSH HL
+    LD L,(IX+4)
+    LD H,(IX+5)
+    PUSH HL
+    JR GENCAL.COMMON
+; *******************************************************************************************************
+ ENDIF
+
 ; *******************************************************************************************************
 ; function to handle CALL GENCAL basic extension
 ; GENCAL ( INT fn_addr, = address of the function to call
 ;		   INT[] reg_list_ptr, = array holding register values (AF,BC,DE,HL,IX,IY)
 ; output values of registers will also be stored at reg_list_ptr
 GENCAL:
+ IF (BASIC_EXTENSION == 1)
 	; opening (
 	CALL CHKCHAR
 	DB '('
@@ -23,7 +41,8 @@ GENCAL:
 	; ending )
 	CALL CHKCHAR
 	DB ')'
-
+ ENDIF
+.COMMON:
 	; save BASIC token position
 	PUSH HL
     EXX

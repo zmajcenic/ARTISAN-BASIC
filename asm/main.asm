@@ -15,8 +15,6 @@ COLL_CMD       EQU 1
 BASIC_EXTENSION   EQU 1
 DEFUSR_EXTENSION  EQU 1
 
- DEFINE CMDS_WITH_PARAMETERS
-
 CHPUT   EQU    #A2
 CALBAS  EQU		#159
 ERRHAND EQU    #406F
@@ -179,10 +177,8 @@ BLIT_TMP1:
 TILETMP2:
 BLIT_TMP2:
  DW 0
-  IFDEF CMDS_WITH_PARAMETERS
 BLIT_STRUCT:
  DS 17
-  ENDIF
  ENDIF
 
  IF (VRAM_CMDS + TILE_CMDS + BOX_CMDS + SPRITE_CMDS + ANIM_CMDS > 0)
@@ -405,12 +401,12 @@ CMDS_A:
 ; input HL=address
 ; modifies AF
 SETWRT_LOCAL:
-	LD	A, L
-	OUT	(099H), A
-	LD	A, H
-	AND	03FH
+	LD	A,L
+	OUT (099H),A
+	LD	A,H
+	AND 03FH
 	OR	040H
-	OUT	(099H), A
+	OUT (099H),A
 	RET
 ; ****************************************************************************************************
  ENDIF
