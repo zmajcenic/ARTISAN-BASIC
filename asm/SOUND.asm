@@ -251,7 +251,6 @@ SNDSFX_DEFUSR:
 	LD A, (SFX_INIT_STATUS)
 	OR A
 	RET Z ; sfx data not initialized, just exit
-	DI
 	LD IY, .RET
 	JP ENABLE_PAGE0
 .RET:

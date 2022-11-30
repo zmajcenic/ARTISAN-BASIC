@@ -6,13 +6,13 @@
 ; input DE=list pointer
 SGAM_PROCESS_ANIM_LIST:
     LD HL,.STEP
-    LD (ANIMSTARTSTOP_COMMON.FN+1),HL
+    LD (ANIM_SETVALUE.FN+1),HL
 .L1:
     PUSH BC
     LD A,(DE)
     .2 INC DE
     PUSH DE
-    CALL ANIMSTARTSTOP_COMMON.SETVALUE
+    CALL ANIM_SETVALUE
     POP DE
     POP BC
     DJNZ .L1
@@ -96,7 +96,6 @@ SGAM:
 	DB ')'
 .ENTRY:
     PUSH HL
-    DI
 
 	; enable page 0
 	LD IY, .RET
@@ -137,7 +136,6 @@ SGAM:
 ; +12 = sprite animations
 SGAM_DEFUSR:
 	; enable page 0
-	DI
 	LD IY, .RET
 	JP ENABLE_PAGE0
 .RET:

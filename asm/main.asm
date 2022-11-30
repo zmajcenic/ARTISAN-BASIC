@@ -12,7 +12,7 @@ BOX_CMDS		   EQU 1
 ANIM_CMDS		EQU 1
 COLL_CMD       EQU 1
 
-BASIC_EXTENSION   EQU 1
+BASIC_EXTENSION   EQU 0
 DEFUSR_EXTENSION  EQU 1
 
 CHPUT   EQU    #A2
@@ -504,11 +504,11 @@ GET_PAGE_INFO_L3:
 ; input E = subslot value if present
 ; modifies AF, disables interrupts
 RESTORE_PAGE_INFO:
+   DI
    LD A, D
    OR A
    JR Z, RESTORE_PAGE_INFO_L1
    LD A, C
-	DI
    OUT (0A8H), A
    LD A, E
    LD (0FFFFH), A
@@ -627,6 +627,7 @@ L0390:
 ; some common code to activate page 0 and place values needed to restore original page on stack
 ; input IY=return address
 ENABLE_PAGE0:
+   DI
    XOR A
    CALL GET_PAGE_INFO
    PUSH BC

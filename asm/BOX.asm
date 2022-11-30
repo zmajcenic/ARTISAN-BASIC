@@ -139,7 +139,6 @@ BOX_EXTENSION_PARAMS_COMMON:
  ENDIF
 BOXCOMMON_DEFUSR:
 	PUSH HL ; save position in BASIC buffer
-	DI
 .ADDR:
 	LD IY, 0 ; modified by code
 	JP ENABLE_PAGE0

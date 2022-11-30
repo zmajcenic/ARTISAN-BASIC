@@ -230,7 +230,6 @@ TILERAM:
 	LD DE,(BLIT_STRUCT+6)
 	ADD HL,DE
 	LD (BLIT_STRUCT+6),HL
-	DI
 	LD IY, .RET
 	JP ENABLE_PAGE0
 .RET:
@@ -256,6 +255,50 @@ TILERAM:
 	LD DE, (TILETMP1)
 	RET
 ; *******************************************************************************************************
+
+ IF (DEFUSR_EXTENSION == 1)
+; *******************************************************************************************************
+; same as TILEVRM but for DEFUSR approach
+; input IX=pointer to input array, real data from +2
+; +02 = tile data pointer
+; +04 = tile columns
+; +06 = tile rows
+; +08 = destination begin column
+; +10 = destination begin row
+; +12 = number of tiles horizontally
+; +14 = number of tiles vertically
+; *******************************************************************************************************
+TILEVRM_DEFUSR:
+	; tile data pointer
+	LD L,(IX+2)
+	LD H,(IX+3)
+	LD (BLIT_STRUCT+0),HL
+	; tile columns
+	LD L,(IX+4)
+	LD H,(IX+5)
+	LD (BLIT_STRUCT+4),HL
+	; tile rows
+	LD L,(IX+6)
+	LD H,(IX+7)
+	LD (BLIT_STRUCT+2),HL
+	; destination begin column
+	LD A,(IX+8)
+	LD (BLIT_TMP+2),A
+	; destination begin row
+	LD A,(IX+10)
+	LD (BLIT_TMP+3),A
+	; number of tiles horizontally
+	LD L,(IX+12)
+	LD H,(IX+13)
+	LD (BLIT_STRUCT+10),HL
+	; number of tiles vertically
+	LD L,(IX+14)
+	LD H,(IX+15)
+	LD (BLIT_STRUCT+12),HL
+ IF (BASIC_EXTENSION == 1) ; otherwise we just continue with code below
+	JP TILEVRM.COMMON
+ ENDIF
+ ENDIF
 
 ; *******************************************************************************************************
 ; function to handle CALL TILEVRM basic extension
@@ -346,7 +389,6 @@ TILEVRM:
 	LD DE,(GRPCGP)
 	ADD HL,DE
 	LD (BLIT_STRUCT+6),HL
-	DI
 	LD IY, .RET
 	JP ENABLE_PAGE0
 .RET:

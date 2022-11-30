@@ -40,7 +40,6 @@ MEMCPY:
 	POP HL ; source
 	EXX
 	; enable page 0
-	DI
 	LD IY, .RET
 	JP ENABLE_PAGE0
 .RET:
@@ -65,7 +64,6 @@ MEMCPY:
 ; +6 = lenght
 MEMCPY_DEFUSR:
 	; enable page 0
-	DI
 	LD IY, .RET
 	JP ENABLE_PAGE0
 .RET:
@@ -128,7 +126,6 @@ FILRAM:
 	JR Z, .EXIT ; 0 bytes to fill, skip
 	EXX
 	; enable page 0
-	DI
 	LD IY, .RET
 	JP ENABLE_PAGE0
 .RET:
@@ -154,7 +151,6 @@ FILRAM:
 ; +6 = value 
 FILRAM_DEFUSR:
 	; enable page 0
-	DI
 	LD IY, .RET
 	JP ENABLE_PAGE0
 .RET:

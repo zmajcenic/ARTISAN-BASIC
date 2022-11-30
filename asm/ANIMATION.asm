@@ -1515,10 +1515,10 @@ ANIMSTARTSTOP_COMMON:
 ; *******************************************************************************************************
  ENDIF
 
- IF (DEFUSR_EXTENSION == 1)
 ; *******************************************************************************************************
 ; helper function to locate single animation and execute operation
 ; needs to have jump set to a correct function
+; used by SGAM helper routines so always needed
 ; input A=animation item
 ANIM_SETVALUE:
     LD B,A
@@ -1535,6 +1535,7 @@ ANIM_SETVALUE:
     JP 0
 ; *******************************************************************************************************
 
+ IF (DEFUSR_EXTENSION == 1)
 ; *******************************************************************************************************
 ; helper function to set values of multiple animations
 ; needs to have jump set to a correct function

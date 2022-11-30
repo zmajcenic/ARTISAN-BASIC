@@ -1,3 +1,4 @@
+ IF (BASIC_EXTENSION == 1)
 ; *******************************************************************************************************
 ; function to handle CALL FILVRM basic extension
 ; FILVRM ( INT offset, 
@@ -64,6 +65,35 @@ FILVRM:
 	POP HL
 	RET 
 ; *******************************************************************************************************
+ ENDIF
+
+ IF (DEFUSR_EXTENSION == 1)
+; *******************************************************************************************************
+; same as FILVRM but for DEFUSR approach
+; input IX=pointer to input array, real data from +2
+; +2 = offset
+; +4 = count
+; +6 = value
+; +8 = halt flag
+FILVRM_DEFUSR:
+	LD A,(IX+8)
+	OR A
+	JR Z,.L0
+	HALT
+.L0:
+	LD A,1
+	LD (VRAM_UPDATE_IN_PROGRESS),A
+	LD L,(IX+2)
+	LD H,(IX+3)
+	LD C,(IX+4)
+	LD B,(IX+5)
+	LD A,(IX+6)
+	CALL BIOS_FILVRM
+	XOR A
+	LD (VRAM_UPDATE_IN_PROGRESS),A
+	RET
+; *******************************************************************************************************
+ ENDIF
 
  IF (BASIC_EXTENSION == 1)
 ; *******************************************************************************************************
@@ -117,7 +147,6 @@ MEMVRM:
 	JR Z, .L1
 	HALT
 .L1:
-	DI
 	; pop LDIR parameters and store away for later
 	POP BC ; count
 	POP DE ; vram destination
@@ -153,7 +182,6 @@ MEMVRM_DEFUSR:
 	HALT
 .L0:
 	; enable page 0
-	DI
 	LD IY, .RET
 	JP ENABLE_PAGE0
 .RET:
@@ -208,6 +236,7 @@ VRAM_LDIRVM:
 	RET
 ; *******************************************************************************************************
 
+ IF (BASIC_EXTENSION == 1)
 ; *******************************************************************************************************
 ; function to handle CALL VRMMEM basic extension
 ; copies from RAM to VRAM
@@ -250,25 +279,54 @@ VRMMEM:
 	POP HL ; source
 	EXX
 	LD IY, .RET
-	DI
 	JP ENABLE_PAGE0
 .RET:	
 	EI
 	EXX
-	LD A,1
-	LD (VRAM_UPDATE_IN_PROGRESS),A
-	CALL .LDIRMV
-	XOR A
-	LD (VRAM_UPDATE_IN_PROGRESS),A
+	CALL VRAM_LDIRMV
     POP DE
     POP BC
     CALL RESTORE_PAGE_INFO
 	PUSH IX
 	POP HL
 	RET
+; *******************************************************************************************************
+ ENDIF
 
-.LDIRMV:
-	; set VRAM address *exactly* as in ROM, otherwise corruption
+ IF (DEFUSR_EXTENSION == 1)
+; *******************************************************************************************************
+; same as VRMMEM but for DEFUSR approach
+; input IX=pointer to input array, real data from +2
+; +2 = source address
+; +4 = destination address
+; +6 = count
+VRMMEM_DEFUSR:
+	; enable page 0
+	LD IY, .RET
+	JP ENABLE_PAGE0
+.RET:
+	EI
+	LD L,(IX+2)
+	LD H,(IX+3)
+	LD E,(IX+4)
+	LD D,(IX+5)
+	LD C,(IX+6)
+	LD B,(IX+7)
+	CALL VRAM_LDIRMV
+    POP DE
+    POP BC
+    JP RESTORE_PAGE_INFO
+; *******************************************************************************************************
+ ENDIF
+
+; *******************************************************************************************************
+; common code to copy from VRAM to RAM
+; input HL=VRAM source
+; input DE=RAM destination
+; BC=count
+VRAM_LDIRMV:
+	LD A,1
+	LD (VRAM_UPDATE_IN_PROGRESS),A
 	LD	A, L
 	DI
 	OUT	(099H), A
@@ -276,10 +334,6 @@ VRMMEM:
 	AND	03FH
 	OUT	(099H), A
 	EI
-	;EX (SP), HL
-	;EX (SP), HL
-	;NOP
-	;NOP
 .L4:
     IN A, (#98)
 	LD (DE), A
@@ -288,5 +342,7 @@ VRMMEM:
     LD A, C
     OR B
     JR NZ, .L4
+	XOR A
+	LD (VRAM_UPDATE_IN_PROGRESS),A
     RET
 ; *******************************************************************************************************
