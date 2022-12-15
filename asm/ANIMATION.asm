@@ -829,7 +829,6 @@ ANIMSPRITE_DEFUSR:
     LD A,C
     DEC A
     CALL GETnthSPRANIM
-    PUSH HL
     LD A,(IX+4)
     LD (HL),A ; +0
     INC HL
@@ -963,7 +962,6 @@ ANIMCHAR_DEFUSR:
     LD A,C
     DEC A
     CALL GETnthSPRANIM
-    PUSH HL
     LD A,(IX+4)
     LD (HL),A ; +0
     INC HL
@@ -1304,6 +1302,7 @@ AUTOSGAMDEF_DEFUSR:
     LD (IY+17),A
     LD A,(IX+27)
     LD (IY+18),A
+    RET
 ; *******************************************************************************************************
  ENDIF
 

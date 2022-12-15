@@ -2117,1004 +2117,1003 @@
  829+ 5297 ~                LD A,C
  830+ 5297 ~                DEC A
  831+ 5297 ~                CALL GETnthSPRANIM
- 832+ 5297 ~                PUSH HL
- 833+ 5297 ~                LD A,(IX+4)
- 834+ 5297 ~                LD (HL),A ; +0
- 835+ 5297 ~                INC HL
- 836+ 5297 ~                LD (HL),1 ; +1
- 837+ 5297 ~                INC HL
- 838+ 5297 ~                LD (HL),0 ; +2
- 839+ 5297 ~                INC HL
- 840+ 5297 ~                LD (HL),255 ; +3
- 841+ 5297 ~                INC HL
- 842+ 5297 ~                DEC B
- 843+ 5297 ~                LD (HL),B ; +4
- 844+ 5297 ~                INC HL
- 845+ 5297 ~                LD A,(IX+8) ; +5
- 846+ 5297 ~                LD (HL),A
+ 832+ 5297 ~                LD A,(IX+4)
+ 833+ 5297 ~                LD (HL),A ; +0
+ 834+ 5297 ~                INC HL
+ 835+ 5297 ~                LD (HL),1 ; +1
+ 836+ 5297 ~                INC HL
+ 837+ 5297 ~                LD (HL),0 ; +2
+ 838+ 5297 ~                INC HL
+ 839+ 5297 ~                LD (HL),255 ; +3
+ 840+ 5297 ~                INC HL
+ 841+ 5297 ~                DEC B
+ 842+ 5297 ~                LD (HL),B ; +4
+ 843+ 5297 ~                INC HL
+ 844+ 5297 ~                LD A,(IX+8) ; +5
+ 845+ 5297 ~                LD (HL),A
+ 846+ 5297 ~                INC HL
  847+ 5297 ~                INC HL
- 848+ 5297 ~                INC HL
- 849+ 5297 ~                LD (HL),0 ; +7
- 850+ 5297 ~                RET
- 851+ 5297 ~            ; *******************************************************************************************************
- 852+ 5297               ENDIF
+ 848+ 5297 ~                LD (HL),0 ; +7
+ 849+ 5297 ~                RET
+ 850+ 5297 ~            ; *******************************************************************************************************
+ 851+ 5297               ENDIF
+ 852+ 5297
  853+ 5297
- 854+ 5297
- 855+ 5297               IF (1 == 1)
- 856+ 5297              ; *******************************************************************************************************
- 857+ 5297              ; function to handle CALL ANIMCHAR basic extension
- 858+ 5297              ; ANIMCHAR ( BYTE id,
- 859+ 5297              ;            INT character number 0-767,
- 860+ 5297              ;            BYTE animation_definition_id,
- 861+ 5297              ;            BYTE cyclic_flag )
- 862+ 5297              ; fills sprite animation data, returns an error if out of bounds, or invalid type
- 863+ 5297              ANIMCHAR:
- 864+ 5297                  ; opening (
- 865+ 5297 CD 45 65     	CALL CHKCHAR
- 866+ 529A 28           	DB '('
- 867+ 529B              	; get sprite animation id
- 868+ 529B DD 21 1C 52  	LD IX, GETBYT
- 869+ 529F CD 59 01     	CALL CALBAS
- 870+ 52A2 F5               PUSH AF
- 871+ 52A3 3C               INC A
- 872+ 52A4 4F               LD C,A
- 873+ 52A5 3A 60 4F         LD A,(ANIMSPRNUM)
- 874+ 52A8 B9               CP C
- 875+ 52A9 DA 5D 65         JP C,SUBSCRIPT_OUT_OF_RANGE
- 876+ 52AC              	; comma
- 877+ 52AC CD 45 65     	CALL CHKCHAR
- 878+ 52AF 2C           	DB ','
- 879+ 52B0              	; get character number
- 880+ 52B0 DD 21 2F 54  	LD IX, FRMQNT
- 881+ 52B4 CD 59 01     	CALL CALBAS
- 882+ 52B7 D5               PUSH DE
- 883+ 52B8                  ; check if out of bounds
- 884+ 52B8 7A               LD A,D
- 885+ 52B9 FE 03            CP 3
- 886+ 52BB D2 5D 65         JP NC, SUBSCRIPT_OUT_OF_RANGE
- 887+ 52BE              	; comma
- 888+ 52BE CD 45 65     	CALL CHKCHAR
- 889+ 52C1 2C           	DB ','
- 890+ 52C2              	; get animation definition id
- 891+ 52C2 DD 21 1C 52  	LD IX, GETBYT
- 892+ 52C6 CD 59 01     	CALL CALBAS
- 893+ 52C9 F5               PUSH AF
- 894+ 52CA 3C               INC A
- 895+ 52CB 4F               LD C,A
- 896+ 52CC 3A 5D 4F         LD A,(ANIMDEFNUM)
- 897+ 52CF B9               CP C
- 898+ 52D0 DA 5D 65         JP C,SUBSCRIPT_OUT_OF_RANGE
- 899+ 52D3              	; comma
- 900+ 52D3 CD 45 65     	CALL CHKCHAR
- 901+ 52D6 2C           	DB ','
- 902+ 52D7              	; get cyclic flag
- 903+ 52D7 DD 21 1C 52  	LD IX, GETBYT
- 904+ 52DB CD 59 01         CALL CALBAS
- 905+ 52DE F5           	PUSH AF
- 906+ 52DF              	; ending )
- 907+ 52DF CD 45 65     	CALL CHKCHAR
- 908+ 52E2 29           	DB ')'
- 909+ 52E3              .ENTRY:
- 910+ 52E3 E5               PUSH HL
- 911+ 52E4 DD E1            POP IX
- 912+ 52E6 D9               EXX
- 913+ 52E7 D1               POP DE ; cyclic
- 914+ 52E8 C1               POP BC ; animation definition id
- 915+ 52E9 E1               POP HL ; character number
- 916+ 52EA D9               EXX
- 917+ 52EB F1               POP AF ; sprite animation id
- 918+ 52EC CD 84 4F         CALL GETnthSPRANIM
- 919+ 52EF E5               PUSH HL
- 920+ 52F0 FD E1            POP IY
- 921+ 52F2 D9               EXX
- 922+ 52F3 FD 75 00         LD (IY),L
- 923+ 52F6 24               INC H ; save character bank+1
- 924+ 52F7 FD 74 07         LD (IY+7),H
- 925+ 52FA FD 70 04         LD (IY+4),B
- 926+ 52FD FD 72 05         LD (IY+5),D
- 927+ 5300                  ;LD (IY+6),0 -- not needed as set in MAXANIMSPRS
- 928+ 5300                  ; following will do preparation for ANIMSTEP situation
- 929+ 5300                  ; current item set to above limit and timer to 1
- 930+ 5300                  ; any call to ANIMSTEP will switch and setup to first item for cyclic
- 931+ 5300 FD 36 03 FF      LD (IY+3),255
- 932+ 5304 FD 36 01 01      LD (IY+1),1
- 933+ 5308 FD 36 02 00      LD (IY+2),0
- 934+ 530C DD E5            PUSH IX
- 935+ 530E E1               POP HL
- 936+ 530F C9               RET
- 937+ 5310              ; *******************************************************************************************************
- 938+ 5310               ENDIF
- 939+ 5310
- 940+ 5310               IF (0 == 1)
- 941+ 5310 ~            ; *******************************************************************************************************
- 942+ 5310 ~            ; same as ANIMCHAR but for DEFUSR approach
- 943+ 5310 ~            ; input IX=pointer to input array, real data from +2
- 944+ 5310 ~            ; +02 = ID
- 945+ 5310 ~            ; +04 = character number
- 946+ 5310 ~            ; +06 = animation definition id
- 947+ 5310 ~            ; +08 = cyclic flag
- 948+ 5310 ~            ANIMCHAR_DEFUSR:
- 949+ 5310 ~                LD C,(IX+2)
- 950+ 5310 ~                INC C
- 951+ 5310 ~                LD A,(ANIMSPRNUM)
- 952+ 5310 ~                CP C
- 953+ 5310 ~                RET C ; invalid id
- 954+ 5310 ~            	; get sprite number
- 955+ 5310 ~                LD A,(IX+5)
- 956+ 5310 ~                CP 3
- 957+ 5310 ~                RET NC ; invalid character (>767)
- 958+ 5310 ~                LD B,(IX+6)
- 959+ 5310 ~                INC B
- 960+ 5310 ~                LD A,(ANIMDEFNUM)
- 961+ 5310 ~                CP B
- 962+ 5310 ~                RET C ; invalid animation definition id
- 963+ 5310 ~                LD A,C
- 964+ 5310 ~                DEC A
- 965+ 5310 ~                CALL GETnthSPRANIM
- 966+ 5310 ~                PUSH HL
- 967+ 5310 ~                LD A,(IX+4)
- 968+ 5310 ~                LD (HL),A ; +0
+ 854+ 5297               IF (1 == 1)
+ 855+ 5297              ; *******************************************************************************************************
+ 856+ 5297              ; function to handle CALL ANIMCHAR basic extension
+ 857+ 5297              ; ANIMCHAR ( BYTE id,
+ 858+ 5297              ;            INT character number 0-767,
+ 859+ 5297              ;            BYTE animation_definition_id,
+ 860+ 5297              ;            BYTE cyclic_flag )
+ 861+ 5297              ; fills sprite animation data, returns an error if out of bounds, or invalid type
+ 862+ 5297              ANIMCHAR:
+ 863+ 5297                  ; opening (
+ 864+ 5297 CD 45 65     	CALL CHKCHAR
+ 865+ 529A 28           	DB '('
+ 866+ 529B              	; get sprite animation id
+ 867+ 529B DD 21 1C 52  	LD IX, GETBYT
+ 868+ 529F CD 59 01     	CALL CALBAS
+ 869+ 52A2 F5               PUSH AF
+ 870+ 52A3 3C               INC A
+ 871+ 52A4 4F               LD C,A
+ 872+ 52A5 3A 60 4F         LD A,(ANIMSPRNUM)
+ 873+ 52A8 B9               CP C
+ 874+ 52A9 DA 5D 65         JP C,SUBSCRIPT_OUT_OF_RANGE
+ 875+ 52AC              	; comma
+ 876+ 52AC CD 45 65     	CALL CHKCHAR
+ 877+ 52AF 2C           	DB ','
+ 878+ 52B0              	; get character number
+ 879+ 52B0 DD 21 2F 54  	LD IX, FRMQNT
+ 880+ 52B4 CD 59 01     	CALL CALBAS
+ 881+ 52B7 D5               PUSH DE
+ 882+ 52B8                  ; check if out of bounds
+ 883+ 52B8 7A               LD A,D
+ 884+ 52B9 FE 03            CP 3
+ 885+ 52BB D2 5D 65         JP NC, SUBSCRIPT_OUT_OF_RANGE
+ 886+ 52BE              	; comma
+ 887+ 52BE CD 45 65     	CALL CHKCHAR
+ 888+ 52C1 2C           	DB ','
+ 889+ 52C2              	; get animation definition id
+ 890+ 52C2 DD 21 1C 52  	LD IX, GETBYT
+ 891+ 52C6 CD 59 01     	CALL CALBAS
+ 892+ 52C9 F5               PUSH AF
+ 893+ 52CA 3C               INC A
+ 894+ 52CB 4F               LD C,A
+ 895+ 52CC 3A 5D 4F         LD A,(ANIMDEFNUM)
+ 896+ 52CF B9               CP C
+ 897+ 52D0 DA 5D 65         JP C,SUBSCRIPT_OUT_OF_RANGE
+ 898+ 52D3              	; comma
+ 899+ 52D3 CD 45 65     	CALL CHKCHAR
+ 900+ 52D6 2C           	DB ','
+ 901+ 52D7              	; get cyclic flag
+ 902+ 52D7 DD 21 1C 52  	LD IX, GETBYT
+ 903+ 52DB CD 59 01         CALL CALBAS
+ 904+ 52DE F5           	PUSH AF
+ 905+ 52DF              	; ending )
+ 906+ 52DF CD 45 65     	CALL CHKCHAR
+ 907+ 52E2 29           	DB ')'
+ 908+ 52E3              .ENTRY:
+ 909+ 52E3 E5               PUSH HL
+ 910+ 52E4 DD E1            POP IX
+ 911+ 52E6 D9               EXX
+ 912+ 52E7 D1               POP DE ; cyclic
+ 913+ 52E8 C1               POP BC ; animation definition id
+ 914+ 52E9 E1               POP HL ; character number
+ 915+ 52EA D9               EXX
+ 916+ 52EB F1               POP AF ; sprite animation id
+ 917+ 52EC CD 84 4F         CALL GETnthSPRANIM
+ 918+ 52EF E5               PUSH HL
+ 919+ 52F0 FD E1            POP IY
+ 920+ 52F2 D9               EXX
+ 921+ 52F3 FD 75 00         LD (IY),L
+ 922+ 52F6 24               INC H ; save character bank+1
+ 923+ 52F7 FD 74 07         LD (IY+7),H
+ 924+ 52FA FD 70 04         LD (IY+4),B
+ 925+ 52FD FD 72 05         LD (IY+5),D
+ 926+ 5300                  ;LD (IY+6),0 -- not needed as set in MAXANIMSPRS
+ 927+ 5300                  ; following will do preparation for ANIMSTEP situation
+ 928+ 5300                  ; current item set to above limit and timer to 1
+ 929+ 5300                  ; any call to ANIMSTEP will switch and setup to first item for cyclic
+ 930+ 5300 FD 36 03 FF      LD (IY+3),255
+ 931+ 5304 FD 36 01 01      LD (IY+1),1
+ 932+ 5308 FD 36 02 00      LD (IY+2),0
+ 933+ 530C DD E5            PUSH IX
+ 934+ 530E E1               POP HL
+ 935+ 530F C9               RET
+ 936+ 5310              ; *******************************************************************************************************
+ 937+ 5310               ENDIF
+ 938+ 5310
+ 939+ 5310               IF (0 == 1)
+ 940+ 5310 ~            ; *******************************************************************************************************
+ 941+ 5310 ~            ; same as ANIMCHAR but for DEFUSR approach
+ 942+ 5310 ~            ; input IX=pointer to input array, real data from +2
+ 943+ 5310 ~            ; +02 = ID
+ 944+ 5310 ~            ; +04 = character number
+ 945+ 5310 ~            ; +06 = animation definition id
+ 946+ 5310 ~            ; +08 = cyclic flag
+ 947+ 5310 ~            ANIMCHAR_DEFUSR:
+ 948+ 5310 ~                LD C,(IX+2)
+ 949+ 5310 ~                INC C
+ 950+ 5310 ~                LD A,(ANIMSPRNUM)
+ 951+ 5310 ~                CP C
+ 952+ 5310 ~                RET C ; invalid id
+ 953+ 5310 ~            	; get sprite number
+ 954+ 5310 ~                LD A,(IX+5)
+ 955+ 5310 ~                CP 3
+ 956+ 5310 ~                RET NC ; invalid character (>767)
+ 957+ 5310 ~                LD B,(IX+6)
+ 958+ 5310 ~                INC B
+ 959+ 5310 ~                LD A,(ANIMDEFNUM)
+ 960+ 5310 ~                CP B
+ 961+ 5310 ~                RET C ; invalid animation definition id
+ 962+ 5310 ~                LD A,C
+ 963+ 5310 ~                DEC A
+ 964+ 5310 ~                CALL GETnthSPRANIM
+ 965+ 5310 ~                LD A,(IX+4)
+ 966+ 5310 ~                LD (HL),A ; +0
+ 967+ 5310 ~                INC HL
+ 968+ 5310 ~                LD (HL),1 ; +1
  969+ 5310 ~                INC HL
- 970+ 5310 ~                LD (HL),1 ; +1
+ 970+ 5310 ~                LD (HL),0 ; +2
  971+ 5310 ~                INC HL
- 972+ 5310 ~                LD (HL),0 ; +2
+ 972+ 5310 ~                LD (HL),255 ; +3
  973+ 5310 ~                INC HL
- 974+ 5310 ~                LD (HL),255 ; +3
- 975+ 5310 ~                INC HL
- 976+ 5310 ~                DEC B
- 977+ 5310 ~                LD (HL),B ; +4
- 978+ 5310 ~                INC HL
- 979+ 5310 ~                LD A,(IX+8) ; +5
- 980+ 5310 ~                LD (HL),A
- 981+ 5310 ~                INC HL
- 982+ 5310 ~                INC HL
- 983+ 5310 ~                LD A,(IX+5)
- 984+ 5310 ~                INC A
- 985+ 5310 ~                LD (HL),A ; +7
- 986+ 5310 ~                RET
- 987+ 5310 ~            ; *******************************************************************************************************
- 988+ 5310               ENDIF
- 989+ 5310
- 990+ 5310               IF (0 == 1)
- 991+ 5310 ~            ; *******************************************************************************************************
- 992+ 5310 ~            ; same as MAXAUTOSGAMS but for DEFUSR approach
- 993+ 5310 ~            ; input IX=pointer to input array, real data from +2
- 994+ 5310 ~            ; +2 = number
- 995+ 5310 ~            MAXAUTOSGAMS_DEFUSR:
- 996+ 5310 ~                LD A,(IX+2)
- 997+ 5310 ~                JR MAXAUTOSGAMS.COMMON
- 998+ 5310 ~            ; *******************************************************************************************************
- 999+ 5310               ENDIF
-1000+ 5310
-1001+ 5310              ; *******************************************************************************************************
-1002+ 5310              ; function to handle CALL MAXAUTOSGAMS basic extension
-1003+ 5310              ; MAXAUTOSGAMS (BYTE number)
-1004+ 5310              ; sets new number and moves memory buffers as needed
-1005+ 5310              MAXAUTOSGAMS:
-1006+ 5310               IF (1 == 1)
-1007+ 5310              	; opening (
-1008+ 5310 CD 45 65     	CALL CHKCHAR
-1009+ 5313 28           	DB '('
-1010+ 5314              	; get value
-1011+ 5314 DD 21 1C 52  	LD IX, GETBYT
-1012+ 5318 CD 59 01     	CALL CALBAS
-1013+ 531B F5               PUSH AF
-1014+ 531C              	; ending )
-1015+ 531C CD 45 65     	CALL CHKCHAR
-1016+ 531F 29           	DB ')'
-1017+ 5320 F1               POP AF
-1018+ 5321               ENDIF
-1019+ 5321              .COMMON:
-1020+ 5321 F3               DI
-1021+ 5322              	; save position
-1022+ 5322 E5           	PUSH HL
-1023+ 5323              .ENTRY:
-1024+ 5323 47               LD B,A
-1025+ 5324 3A 63 4F         LD A,(AUTOSGAMNUM)
-1026+ 5327 90               SUB B
-1027+ 5328 CA E2 4F         JP Z, MAXANIMITEMS.EXIT; same value as before
-1028+ 532B FD 21 10 40      LD IY,FREEMEMPTR
-1029+ 532F FA 3B 53         JP M, .INCREASE
-1030+ 5332                  ; new value is lower than previous one
-1031+ 5332 CD 5C 53         CALL .SIZEDIFF
-1032+ 5335 CD 1F 50         CALL MAXANIMITEMS.DECREASE_COMMON
-1033+ 5338 C3 E2 4F         JP MAXANIMITEMS.EXIT
-1034+ 533B              .INCREASE:
-1035+ 533B ED 44            NEG
-1036+ 533D F5               PUSH AF; save difference for later to set active flag to 0 of new entires
-1037+ 533E CD 5C 53         CALL .SIZEDIFF
-1038+ 5341 CD 4B 50         CALL MAXANIMITEMS.INCREASE_COMMON
-1039+ 5344 AF               XOR A
-1040+ 5345 ED 42            SBC HL,BC ; location of new stuff
-1041+ 5347 F1               POP AF
-1042+ 5348 C5               PUSH BC
-1043+ 5349 47               LD B,A
-1044+ 534A 11 18 00         LD DE,24
-1045+ 534D E5               PUSH HL
-1046+ 534E DD E1            POP IX
-1047+ 5350              .L1:
-1048+ 5350 DD 36 13 00      LD (IX+19),0 ; active flag
-1049+ 5354 DD 19            ADD IX,DE
-1050+ 5356 10 F8            DJNZ .L1
-1051+ 5358 C1               POP BC
-1052+ 5359 C3 E2 4F         JP MAXANIMITEMS.EXIT
-1053+ 535C              .SIZEDIFF:
-1054+ 535C 26 00            LD H,0
-1055+ 535E 6F               LD L,A
-1056+ 535F CD 32 64         CALL HLx8
-1057+ 5362 54               LD D,H
-1058+ 5363 5D               LD E,L
-1059+ 5364 29               ADD HL,HL
-1060+ 5365 19               ADD HL,DE
-1061+ 5366 78               LD A,B
-1062+ 5367 32 63 4F         LD (AUTOSGAMNUM),A
-1063+ 536A 44               LD B,H
-1064+ 536B 4D               LD C,L
-1065+ 536C C9               RET ; BC=size difference in bytes
-1066+ 536D              ; *******************************************************************************************************
-1067+ 536D
-1068+ 536D               IF (1 == 1)
-1069+ 536D              ; *******************************************************************************************************
-1070+ 536D              ; function to handle CALL AUTOSGAMDEF basic extension
-1071+ 536D              ; AUTOSGAMDEF ( BYTE id,
-1072+ 536D              ;               INT VARIABLE x, INT VARIABLE y,
-1073+ 536D              ;               INT minimum, INT maximum, INT delta,
-1074+ 536D              ;               INT direction =0 horizontal,
-1075+ 536D              ;               INT ticks,
-1076+ 536D              ;               BYTE sprite_group_count,
-1077+ 536D              ;               INT[2][sprite_group_count] VARIABLE sprite_group,
-1078+ 536D              ;               BYTE item_number,
-1079+ 536D              ;               INT[] VARIABLE sprite_animations_negative_direction,
-1080+ 536D              ;               INT[] VARIABLE sprite_animations_positive_direction
-1081+ 536D              AUTOSGAMDEF:
-1082+ 536D                  ; opening (
-1083+ 536D CD 45 65     	CALL CHKCHAR
-1084+ 5370 28           	DB '('
-1085+ 5371              	; get sprite animation id
-1086+ 5371 DD 21 1C 52  	LD IX, GETBYT
-1087+ 5375 CD 59 01     	CALL CALBAS
-1088+ 5378 F5               PUSH AF
-1089+ 5379 3C               INC A
-1090+ 537A 4F               LD C,A
-1091+ 537B 3A 63 4F         LD A,(AUTOSGAMNUM)
-1092+ 537E B9               CP C
-1093+ 537F DA 5D 65         JP C,SUBSCRIPT_OUT_OF_RANGE
-1094+ 5382 F1               POP AF
-1095+ 5383 E5               PUSH HL
-1096+ 5384 CD 90 4F         CALL GETnthAUTOSGAM
-1097+ 5387 22 31 62         LD (BLIT_TMP),HL ; for later
-1098+ 538A E1               POP HL
-1099+ 538B              	; comma
-1100+ 538B CD 45 65     	CALL CHKCHAR
-1101+ 538E 2C           	DB ','
-1102+ 538F              	; get address of the X coordinate variable
-1103+ 538F DD 21 A4 5E  	LD IX, PTRGET
-1104+ 5393 CD 59 01     	CALL CALBAS
-1105+ 5396 DD 2A 31 62  	LD IX,(BLIT_TMP)
-1106+ 539A DD 73 00         LD (IX+0),E
-1107+ 539D DD 72 01         LD (IX+1),D
-1108+ 53A0              	; comma
-1109+ 53A0 CD 45 65     	CALL CHKCHAR
-1110+ 53A3 2C           	DB ','
-1111+ 53A4              	; get address of the Y coordinate variable
-1112+ 53A4 DD 21 A4 5E  	LD IX, PTRGET
-1113+ 53A8 CD 59 01     	CALL CALBAS
-1114+ 53AB DD 2A 31 62  	LD IX,(BLIT_TMP)
-1115+ 53AF DD 73 02         LD (IX+2),E
-1116+ 53B2 DD 72 03         LD (IX+3),D
-1117+ 53B5              	; comma
-1118+ 53B5 CD 45 65     	CALL CHKCHAR
-1119+ 53B8 2C           	DB ','
-1120+ 53B9              	; get minimum value
-1121+ 53B9 DD 21 2F 54  	LD IX, FRMQNT
-1122+ 53BD CD 59 01     	CALL CALBAS
-1123+ 53C0 DD 2A 31 62  	LD IX,(BLIT_TMP)
-1124+ 53C4 DD 73 04         LD (IX+4),E
-1125+ 53C7 DD 72 05         LD (IX+5),D
-1126+ 53CA              	; comma
-1127+ 53CA CD 45 65     	CALL CHKCHAR
-1128+ 53CD 2C           	DB ','
-1129+ 53CE              	; get maximum value
-1130+ 53CE DD 21 2F 54  	LD IX, FRMQNT
-1131+ 53D2 CD 59 01     	CALL CALBAS
-1132+ 53D5 DD 2A 31 62  	LD IX,(BLIT_TMP)
-1133+ 53D9 DD 73 06         LD (IX+6),E
-1134+ 53DC DD 72 07         LD (IX+7),D
-1135+ 53DF              	; comma
-1136+ 53DF CD 45 65     	CALL CHKCHAR
-1137+ 53E2 2C           	DB ','
-1138+ 53E3              	; get delta value
-1139+ 53E3 DD 21 2F 54  	LD IX, FRMQNT
-1140+ 53E7 CD 59 01     	CALL CALBAS
-1141+ 53EA DD 2A 31 62  	LD IX,(BLIT_TMP)
-1142+ 53EE DD 73 08         LD (IX+8),E
-1143+ 53F1 DD 72 09         LD (IX+9),D
-1144+ 53F4              	; comma
-1145+ 53F4 CD 45 65     	CALL CHKCHAR
-1146+ 53F7 2C           	DB ','
-1147+ 53F8              	; get direction value
-1148+ 53F8 DD 21 2F 54  	LD IX, FRMQNT
-1149+ 53FC CD 59 01     	CALL CALBAS
-1150+ 53FF DD 2A 31 62  	LD IX,(BLIT_TMP)
-1151+ 5403 DD 73 0A         LD (IX+10),E
-1152+ 5406              	; comma
-1153+ 5406 CD 45 65     	CALL CHKCHAR
-1154+ 5409 2C           	DB ','
-1155+ 540A              	; get ticks value
-1156+ 540A DD 21 2F 54  	LD IX, FRMQNT
-1157+ 540E CD 59 01     	CALL CALBAS
-1158+ 5411 DD 2A 31 62  	LD IX,(BLIT_TMP)
-1159+ 5415 DD 73 14         LD (IX+20),E
-1160+ 5418 DD 72 15         LD (IX+21),D
-1161+ 541B              	; comma
-1162+ 541B CD 45 65     	CALL CHKCHAR
-1163+ 541E 2C           	DB ','
-1164+ 541F              	; get sprite group count
-1165+ 541F DD 21 1C 52  	LD IX, GETBYT
-1166+ 5423 CD 59 01     	CALL CALBAS
-1167+ 5426 B7               OR A
-1168+ 5427 CA 5D 65         JP Z,SUBSCRIPT_OUT_OF_RANGE
-1169+ 542A DD 2A 31 62  	LD IX,(BLIT_TMP)
-1170+ 542E DD 77 0B         LD (IX+11),A
-1171+ 5431              	; comma
-1172+ 5431 CD 45 65     	CALL CHKCHAR
-1173+ 5434 2C           	DB ','
-1174+ 5435              	; get sprite group definition array data pointer
-1175+ 5435 DD 2A 31 62  	LD IX,(BLIT_TMP)
-1176+ 5439 DD 5E 0B         LD E,(IX+11)
-1177+ 543C 16 03        	LD D,3
-1178+ 543E 3E 02        	LD A,2
-1179+ 5440 47           	LD B,A
-1180+ 5441 CD 72 65     	CALL GET_BASIC_ARRAY_DATA_POINTER
-1181+ 5444 DD 2A 31 62  	LD IX,(BLIT_TMP)
-1182+ 5448 DD 71 0C     	LD (IX+12),C
-1183+ 544B DD 70 0D         LD (IX+13),B
-1184+ 544E              	; comma
-1185+ 544E CD 45 65     	CALL CHKCHAR
-1186+ 5451 2C           	DB ','
-1187+ 5452              	; get sprite animation array size
-1188+ 5452 DD 21 1C 52  	LD IX,GETBYT
-1189+ 5456 CD 59 01     	CALL CALBAS
-1190+ 5459 DD 2A 31 62  	LD IX,(BLIT_TMP)
-1191+ 545D DD 77 0E         LD (IX+14),A
-1192+ 5460 B7               OR A
-1193+ 5461 CA 5D 65         JP Z,SUBSCRIPT_OUT_OF_RANGE
-1194+ 5464              	; comma
-1195+ 5464 CD 45 65     	CALL CHKCHAR
-1196+ 5467 2C           	DB ','
-1197+ 5468                  ; get array pointer for negative direction
-1198+ 5468 DD 2A 31 62  	LD IX,(BLIT_TMP)
-1199+ 546C DD 56 0E         LD D,(IX+14)
-1200+ 546F 3E 02            LD A,2
-1201+ 5471 06 01            LD B,1
-1202+ 5473 CD 72 65         CALL GET_BASIC_ARRAY_DATA_POINTER
-1203+ 5476 DD 2A 31 62  	LD IX,(BLIT_TMP)
-1204+ 547A DD 71 0F         LD (IX+15),C
-1205+ 547D DD 70 10         LD (IX+16),B
-1206+ 5480              	; comma
-1207+ 5480 CD 45 65     	CALL CHKCHAR
-1208+ 5483 2C           	DB ','
-1209+ 5484                  ; get array pointer for positive direction
-1210+ 5484 DD 2A 31 62  	LD IX,(BLIT_TMP)
-1211+ 5488 DD 56 0E         LD D,(IX+14)
-1212+ 548B 3E 02            LD A,2
-1213+ 548D 06 01            LD B,1
-1214+ 548F CD 72 65         CALL GET_BASIC_ARRAY_DATA_POINTER
-1215+ 5492 DD 2A 31 62  	LD IX,(BLIT_TMP)
-1216+ 5496 DD 71 11         LD (IX+17),C
-1217+ 5499 DD 70 12         LD (IX+18),B
-1218+ 549C              	; ending )
-1219+ 549C CD 45 65     	CALL CHKCHAR
-1220+ 549F 29           	DB ')'
-1221+ 54A0 C9               RET
-1222+ 54A1              ; *******************************************************************************************************
-1223+ 54A1               ENDIF
-1224+ 54A1
-1225+ 54A1               IF (0 == 1)
-1226+ 54A1 ~            ; *******************************************************************************************************
-1227+ 54A1 ~            ; same as AUTOSGAMDEF but for DEFUSR approach
-1228+ 54A1 ~            ; input IX=pointer to input array, real data from +2
-1229+ 54A1 ~            ; +02 = ID
-1230+ 54A1 ~            ; +04 = pointer to X variable
-1231+ 54A1 ~            ; +06 = pointer to Y variable
-1232+ 54A1 ~            ; +08 = minimum
-1233+ 54A1 ~            ; +10 = maximum
-1234+ 54A1 ~            ; +12 = delta
-1235+ 54A1 ~            ; +14 = direction
-1236+ 54A1 ~            ; +16 = ticks
-1237+ 54A1 ~            ; +18 = sprite group count
-1238+ 54A1 ~            ; +20 = sprite group array pointer
-1239+ 54A1 ~            ; +22 = item number
-1240+ 54A1 ~            ; +24 = sprite animations negative direction array pointer
-1241+ 54A1 ~            ; +26 = sprite animations positive direction array pointer
-1242+ 54A1 ~            AUTOSGAMDEF_DEFUSR:
-1243+ 54A1 ~                LD C,(IX+2)
-1244+ 54A1 ~                INC C
-1245+ 54A1 ~                LD A,(AUTOSGAMNUM)
-1246+ 54A1 ~                CP C
-1247+ 54A1 ~                RET C ; invalid id
-1248+ 54A1 ~                LD A,C
-1249+ 54A1 ~                DEC A
-1250+ 54A1 ~                CALL GETnthAUTOSGAM
-1251+ 54A1 ~                PUSH HL
-1252+ 54A1 ~                POP IY
-1253+ 54A1 ~                ; X variable
-1254+ 54A1 ~                LD A,(IX+4)
-1255+ 54A1 ~                LD (IY+0),A
-1256+ 54A1 ~                LD A,(IX+5)
-1257+ 54A1 ~                LD (IY+1),A
-1258+ 54A1 ~            	; Y variable
-1259+ 54A1 ~                LD A,(IX+6)
-1260+ 54A1 ~                LD (IY+2),A
-1261+ 54A1 ~                LD A,(IX+7)
-1262+ 54A1 ~                LD (IY+3),A
-1263+ 54A1 ~            	; get minimum value
-1264+ 54A1 ~                LD A,(IX+8)
-1265+ 54A1 ~                LD (IY+4),A
-1266+ 54A1 ~                LD A,(IX+9)
-1267+ 54A1 ~                LD (IY+5),A
-1268+ 54A1 ~            	; get maximum value
-1269+ 54A1 ~                LD A,(IX+10)
-1270+ 54A1 ~                LD (IY+6),A
-1271+ 54A1 ~                LD A,(IX+11)
-1272+ 54A1 ~                LD (IY+7),A
-1273+ 54A1 ~            	; get delta value
-1274+ 54A1 ~                LD A,(IX+12)
-1275+ 54A1 ~                LD (IY+8),A
-1276+ 54A1 ~                LD A,(IX+13)
-1277+ 54A1 ~                LD (IY+9),A
-1278+ 54A1 ~            	; get direction value
-1279+ 54A1 ~                LD A,(IX+14)
-1280+ 54A1 ~                LD (IY+10),A
-1281+ 54A1 ~            	; get ticks value
-1282+ 54A1 ~                LD A,(IX+16)
-1283+ 54A1 ~                LD (IY+20),A
-1284+ 54A1 ~                LD A,(IX+17)
-1285+ 54A1 ~                LD (IY+21),A
-1286+ 54A1 ~            	; get sprite group count
-1287+ 54A1 ~                LD A,(IX+18)
-1288+ 54A1 ~                LD (IY+11),A
-1289+ 54A1 ~            	; get sprite group definition array data pointer
-1290+ 54A1 ~                LD A,(IX+20)
-1291+ 54A1 ~                LD (IY+12),A
-1292+ 54A1 ~                LD A,(IX+21)
-1293+ 54A1 ~                LD (IY+13),A
-1294+ 54A1 ~            	; get sprite animation array size
-1295+ 54A1 ~                LD A,(IX+22)
-1296+ 54A1 ~                LD (IY+14),A
-1297+ 54A1 ~                ; get array pointer for negative direction
-1298+ 54A1 ~                LD A,(IX+24)
-1299+ 54A1 ~                LD (IY+15),A
-1300+ 54A1 ~                LD A,(IX+25)
-1301+ 54A1 ~                LD (IY+16),A
-1302+ 54A1 ~                ; get array pointer for positive direction
-1303+ 54A1 ~                LD A,(IX+26)
-1304+ 54A1 ~                LD (IY+17),A
-1305+ 54A1 ~                LD A,(IX+27)
-1306+ 54A1 ~                LD (IY+18),A
-1307+ 54A1 ~            ; *******************************************************************************************************
-1308+ 54A1               ENDIF
-1309+ 54A1
-1310+ 54A1               IF (1 == 1)
-1311+ 54A1              ; *******************************************************************************************************
-1312+ 54A1              ; function to handle CALL AUTOSGAMSTART basic extension
-1313+ 54A1              ; AUTOSGAMSTART ( BYTE id )
-1314+ 54A1              AUTOSGAMSTART:
-1315+ 54A1 3E 01            LD A,1
-1316+ 54A3              .COMMON:
-1317+ 54A3 32 CF 54         LD (.SETVALUE+3),A
-1318+ 54A6                  ; opening (
-1319+ 54A6 CD 45 65     	CALL CHKCHAR
-1320+ 54A9 28           	DB '('
-1321+ 54AA              	; get sprite animation id
-1322+ 54AA DD 21 1C 52  	LD IX, GETBYT
-1323+ 54AE CD 59 01     	CALL CALBAS
-1324+ 54B1 F5               PUSH AF
-1325+ 54B2 3C               INC A
-1326+ 54B3 4F               LD C,A
-1327+ 54B4 3A 63 4F         LD A,(AUTOSGAMNUM)
-1328+ 54B7 B9               CP C
-1329+ 54B8 DA 5D 65         JP C,SUBSCRIPT_OUT_OF_RANGE
-1330+ 54BB F1               POP AF
-1331+ 54BC E5               PUSH HL
-1332+ 54BD CD 90 4F         CALL GETnthAUTOSGAM
-1333+ 54C0 E5               PUSH HL
-1334+ 54C1 DD E1            POP IX
-1335+ 54C3 E1               POP HL
-1336+ 54C4 DD E5            PUSH IX
-1337+ 54C6              	; ending )
-1338+ 54C6 CD 45 65     	CALL CHKCHAR
-1339+ 54C9 29           	DB ')'
-1340+ 54CA
-1341+ 54CA                  ; so syntax is fine
-1342+ 54CA DD E1            POP IX
-1343+ 54CC              .SETVALUE:
-1344+ 54CC DD 36 13 01      LD (IX+19),1 ; active flag
-1345+ 54D0                  ; set initial timer
-1346+ 54D0 DD 7E 14         LD A,(IX+20)
-1347+ 54D3 DD 77 16         LD (IX+22),A
-1348+ 54D6 DD 7E 15         LD A,(IX+21)
-1349+ 54D9 DD 77 17         LD (IX+23),A
-1350+ 54DC C9               RET
-1351+ 54DD              ; *******************************************************************************************************
-1352+ 54DD
-1353+ 54DD              ; *******************************************************************************************************
-1354+ 54DD              ; function to handle CALL AUTOSGAMSTOP basic extension
-1355+ 54DD              ; AUTOSGAMSTOP ( BYTE id )
-1356+ 54DD              AUTOSGAMSTOP:
-1357+ 54DD AF               XOR A
-1358+ 54DE 18 C3            JR AUTOSGAMSTART.COMMON
-1359+ 54E0              ; *******************************************************************************************************
-1360+ 54E0               ENDIF
-1361+ 54E0
-1362+ 54E0               IF (0 == 1)
-1363+ 54E0 ~            ; *******************************************************************************************************
-1364+ 54E0 ~            ; function to handle CALL AUTOSGAMSTART basic extension in DEFUSR mode
-1365+ 54E0 ~            ; input IX=pointer to input array, real data from +2
-1366+ 54E0 ~            ; +2 = source address
-1367+ 54E0 ~            AUTOSGAMSTART_DEFUSR:
-1368+ 54E0 ~                LD A,1
-1369+ 54E0 ~            .COMMON:
-1370+ 54E0 ~                LD (.SETVALUE+3),A
-1371+ 54E0 ~                LD C,(IX+2)
-1372+ 54E0 ~                INC C
-1373+ 54E0 ~                LD A,(AUTOSGAMNUM)
-1374+ 54E0 ~                CP C
-1375+ 54E0 ~                RET C ; invalid id
-1376+ 54E0 ~                LD A,C
-1377+ 54E0 ~                DEC A
-1378+ 54E0 ~                CALL GETnthAUTOSGAM
-1379+ 54E0 ~                PUSH HL
-1380+ 54E0 ~                POP IX
-1381+ 54E0 ~            .SETVALUE:
-1382+ 54E0 ~                LD (IX+19),1 ; active flag
-1383+ 54E0 ~                ; set initial timer
-1384+ 54E0 ~                LD A,(IX+20)
-1385+ 54E0 ~                LD (IX+22),A
-1386+ 54E0 ~                LD A,(IX+21)
-1387+ 54E0 ~                LD (IX+23),A
-1388+ 54E0 ~                RET
-1389+ 54E0 ~            ; *******************************************************************************************************
-1390+ 54E0 ~
-1391+ 54E0 ~            ; *******************************************************************************************************
-1392+ 54E0 ~            ; function to handle CALL AUTOSGAMSTOP basic extension in DEFUSR mode
-1393+ 54E0 ~            ; input IX=pointer to input array, real data from +2
-1394+ 54E0 ~            ; +2 = source address
-1395+ 54E0 ~            AUTOSGAMSTOP_DEFUSR:
-1396+ 54E0 ~                XOR A
-1397+ 54E0 ~                JR AUTOSGAMSTART_DEFUSR.COMMON
-1398+ 54E0 ~            ; *******************************************************************************************************
-1399+ 54E0               ENDIF
-1400+ 54E0
-1401+ 54E0               IF (1 == 1)
-1402+ 54E0              ; *******************************************************************************************************
-1403+ 54E0              ; function to handle CALL ANIMSTEP basic extension
-1404+ 54E0              ; two forms
-1405+ 54E0              ; ANIMSTEP ( BYTE id )
-1406+ 54E0              ; or
-1407+ 54E0              ; ANIMSTEP ( BYTE item_number,
-1408+ 54E0              ;            INT[] sprite_animations )
-1409+ 54E0              ANIMSTEP:
-1410+ 54E0 11 5F 55         LD DE,ANIMSTARTSTOP_COMMON.STEP
-1411+ 54E3 18 08            JR ANIMSTARTSTOP_COMMON
+ 974+ 5310 ~                DEC B
+ 975+ 5310 ~                LD (HL),B ; +4
+ 976+ 5310 ~                INC HL
+ 977+ 5310 ~                LD A,(IX+8) ; +5
+ 978+ 5310 ~                LD (HL),A
+ 979+ 5310 ~                INC HL
+ 980+ 5310 ~                INC HL
+ 981+ 5310 ~                LD A,(IX+5)
+ 982+ 5310 ~                INC A
+ 983+ 5310 ~                LD (HL),A ; +7
+ 984+ 5310 ~                RET
+ 985+ 5310 ~            ; *******************************************************************************************************
+ 986+ 5310               ENDIF
+ 987+ 5310
+ 988+ 5310               IF (0 == 1)
+ 989+ 5310 ~            ; *******************************************************************************************************
+ 990+ 5310 ~            ; same as MAXAUTOSGAMS but for DEFUSR approach
+ 991+ 5310 ~            ; input IX=pointer to input array, real data from +2
+ 992+ 5310 ~            ; +2 = number
+ 993+ 5310 ~            MAXAUTOSGAMS_DEFUSR:
+ 994+ 5310 ~                LD A,(IX+2)
+ 995+ 5310 ~                JR MAXAUTOSGAMS.COMMON
+ 996+ 5310 ~            ; *******************************************************************************************************
+ 997+ 5310               ENDIF
+ 998+ 5310
+ 999+ 5310              ; *******************************************************************************************************
+1000+ 5310              ; function to handle CALL MAXAUTOSGAMS basic extension
+1001+ 5310              ; MAXAUTOSGAMS (BYTE number)
+1002+ 5310              ; sets new number and moves memory buffers as needed
+1003+ 5310              MAXAUTOSGAMS:
+1004+ 5310               IF (1 == 1)
+1005+ 5310              	; opening (
+1006+ 5310 CD 45 65     	CALL CHKCHAR
+1007+ 5313 28           	DB '('
+1008+ 5314              	; get value
+1009+ 5314 DD 21 1C 52  	LD IX, GETBYT
+1010+ 5318 CD 59 01     	CALL CALBAS
+1011+ 531B F5               PUSH AF
+1012+ 531C              	; ending )
+1013+ 531C CD 45 65     	CALL CHKCHAR
+1014+ 531F 29           	DB ')'
+1015+ 5320 F1               POP AF
+1016+ 5321               ENDIF
+1017+ 5321              .COMMON:
+1018+ 5321 F3               DI
+1019+ 5322              	; save position
+1020+ 5322 E5           	PUSH HL
+1021+ 5323              .ENTRY:
+1022+ 5323 47               LD B,A
+1023+ 5324 3A 63 4F         LD A,(AUTOSGAMNUM)
+1024+ 5327 90               SUB B
+1025+ 5328 CA E2 4F         JP Z, MAXANIMITEMS.EXIT; same value as before
+1026+ 532B FD 21 10 40      LD IY,FREEMEMPTR
+1027+ 532F FA 3B 53         JP M, .INCREASE
+1028+ 5332                  ; new value is lower than previous one
+1029+ 5332 CD 5C 53         CALL .SIZEDIFF
+1030+ 5335 CD 1F 50         CALL MAXANIMITEMS.DECREASE_COMMON
+1031+ 5338 C3 E2 4F         JP MAXANIMITEMS.EXIT
+1032+ 533B              .INCREASE:
+1033+ 533B ED 44            NEG
+1034+ 533D F5               PUSH AF; save difference for later to set active flag to 0 of new entires
+1035+ 533E CD 5C 53         CALL .SIZEDIFF
+1036+ 5341 CD 4B 50         CALL MAXANIMITEMS.INCREASE_COMMON
+1037+ 5344 AF               XOR A
+1038+ 5345 ED 42            SBC HL,BC ; location of new stuff
+1039+ 5347 F1               POP AF
+1040+ 5348 C5               PUSH BC
+1041+ 5349 47               LD B,A
+1042+ 534A 11 18 00         LD DE,24
+1043+ 534D E5               PUSH HL
+1044+ 534E DD E1            POP IX
+1045+ 5350              .L1:
+1046+ 5350 DD 36 13 00      LD (IX+19),0 ; active flag
+1047+ 5354 DD 19            ADD IX,DE
+1048+ 5356 10 F8            DJNZ .L1
+1049+ 5358 C1               POP BC
+1050+ 5359 C3 E2 4F         JP MAXANIMITEMS.EXIT
+1051+ 535C              .SIZEDIFF:
+1052+ 535C 26 00            LD H,0
+1053+ 535E 6F               LD L,A
+1054+ 535F CD 32 64         CALL HLx8
+1055+ 5362 54               LD D,H
+1056+ 5363 5D               LD E,L
+1057+ 5364 29               ADD HL,HL
+1058+ 5365 19               ADD HL,DE
+1059+ 5366 78               LD A,B
+1060+ 5367 32 63 4F         LD (AUTOSGAMNUM),A
+1061+ 536A 44               LD B,H
+1062+ 536B 4D               LD C,L
+1063+ 536C C9               RET ; BC=size difference in bytes
+1064+ 536D              ; *******************************************************************************************************
+1065+ 536D
+1066+ 536D               IF (1 == 1)
+1067+ 536D              ; *******************************************************************************************************
+1068+ 536D              ; function to handle CALL AUTOSGAMDEF basic extension
+1069+ 536D              ; AUTOSGAMDEF ( BYTE id,
+1070+ 536D              ;               INT VARIABLE x, INT VARIABLE y,
+1071+ 536D              ;               INT minimum, INT maximum, INT delta,
+1072+ 536D              ;               INT direction =0 horizontal,
+1073+ 536D              ;               INT ticks,
+1074+ 536D              ;               BYTE sprite_group_count,
+1075+ 536D              ;               INT[2][sprite_group_count] VARIABLE sprite_group,
+1076+ 536D              ;               BYTE item_number,
+1077+ 536D              ;               INT[] VARIABLE sprite_animations_negative_direction,
+1078+ 536D              ;               INT[] VARIABLE sprite_animations_positive_direction
+1079+ 536D              AUTOSGAMDEF:
+1080+ 536D                  ; opening (
+1081+ 536D CD 45 65     	CALL CHKCHAR
+1082+ 5370 28           	DB '('
+1083+ 5371              	; get sprite animation id
+1084+ 5371 DD 21 1C 52  	LD IX, GETBYT
+1085+ 5375 CD 59 01     	CALL CALBAS
+1086+ 5378 F5               PUSH AF
+1087+ 5379 3C               INC A
+1088+ 537A 4F               LD C,A
+1089+ 537B 3A 63 4F         LD A,(AUTOSGAMNUM)
+1090+ 537E B9               CP C
+1091+ 537F DA 5D 65         JP C,SUBSCRIPT_OUT_OF_RANGE
+1092+ 5382 F1               POP AF
+1093+ 5383 E5               PUSH HL
+1094+ 5384 CD 90 4F         CALL GETnthAUTOSGAM
+1095+ 5387 22 31 62         LD (BLIT_TMP),HL ; for later
+1096+ 538A E1               POP HL
+1097+ 538B              	; comma
+1098+ 538B CD 45 65     	CALL CHKCHAR
+1099+ 538E 2C           	DB ','
+1100+ 538F              	; get address of the X coordinate variable
+1101+ 538F DD 21 A4 5E  	LD IX, PTRGET
+1102+ 5393 CD 59 01     	CALL CALBAS
+1103+ 5396 DD 2A 31 62  	LD IX,(BLIT_TMP)
+1104+ 539A DD 73 00         LD (IX+0),E
+1105+ 539D DD 72 01         LD (IX+1),D
+1106+ 53A0              	; comma
+1107+ 53A0 CD 45 65     	CALL CHKCHAR
+1108+ 53A3 2C           	DB ','
+1109+ 53A4              	; get address of the Y coordinate variable
+1110+ 53A4 DD 21 A4 5E  	LD IX, PTRGET
+1111+ 53A8 CD 59 01     	CALL CALBAS
+1112+ 53AB DD 2A 31 62  	LD IX,(BLIT_TMP)
+1113+ 53AF DD 73 02         LD (IX+2),E
+1114+ 53B2 DD 72 03         LD (IX+3),D
+1115+ 53B5              	; comma
+1116+ 53B5 CD 45 65     	CALL CHKCHAR
+1117+ 53B8 2C           	DB ','
+1118+ 53B9              	; get minimum value
+1119+ 53B9 DD 21 2F 54  	LD IX, FRMQNT
+1120+ 53BD CD 59 01     	CALL CALBAS
+1121+ 53C0 DD 2A 31 62  	LD IX,(BLIT_TMP)
+1122+ 53C4 DD 73 04         LD (IX+4),E
+1123+ 53C7 DD 72 05         LD (IX+5),D
+1124+ 53CA              	; comma
+1125+ 53CA CD 45 65     	CALL CHKCHAR
+1126+ 53CD 2C           	DB ','
+1127+ 53CE              	; get maximum value
+1128+ 53CE DD 21 2F 54  	LD IX, FRMQNT
+1129+ 53D2 CD 59 01     	CALL CALBAS
+1130+ 53D5 DD 2A 31 62  	LD IX,(BLIT_TMP)
+1131+ 53D9 DD 73 06         LD (IX+6),E
+1132+ 53DC DD 72 07         LD (IX+7),D
+1133+ 53DF              	; comma
+1134+ 53DF CD 45 65     	CALL CHKCHAR
+1135+ 53E2 2C           	DB ','
+1136+ 53E3              	; get delta value
+1137+ 53E3 DD 21 2F 54  	LD IX, FRMQNT
+1138+ 53E7 CD 59 01     	CALL CALBAS
+1139+ 53EA DD 2A 31 62  	LD IX,(BLIT_TMP)
+1140+ 53EE DD 73 08         LD (IX+8),E
+1141+ 53F1 DD 72 09         LD (IX+9),D
+1142+ 53F4              	; comma
+1143+ 53F4 CD 45 65     	CALL CHKCHAR
+1144+ 53F7 2C           	DB ','
+1145+ 53F8              	; get direction value
+1146+ 53F8 DD 21 2F 54  	LD IX, FRMQNT
+1147+ 53FC CD 59 01     	CALL CALBAS
+1148+ 53FF DD 2A 31 62  	LD IX,(BLIT_TMP)
+1149+ 5403 DD 73 0A         LD (IX+10),E
+1150+ 5406              	; comma
+1151+ 5406 CD 45 65     	CALL CHKCHAR
+1152+ 5409 2C           	DB ','
+1153+ 540A              	; get ticks value
+1154+ 540A DD 21 2F 54  	LD IX, FRMQNT
+1155+ 540E CD 59 01     	CALL CALBAS
+1156+ 5411 DD 2A 31 62  	LD IX,(BLIT_TMP)
+1157+ 5415 DD 73 14         LD (IX+20),E
+1158+ 5418 DD 72 15         LD (IX+21),D
+1159+ 541B              	; comma
+1160+ 541B CD 45 65     	CALL CHKCHAR
+1161+ 541E 2C           	DB ','
+1162+ 541F              	; get sprite group count
+1163+ 541F DD 21 1C 52  	LD IX, GETBYT
+1164+ 5423 CD 59 01     	CALL CALBAS
+1165+ 5426 B7               OR A
+1166+ 5427 CA 5D 65         JP Z,SUBSCRIPT_OUT_OF_RANGE
+1167+ 542A DD 2A 31 62  	LD IX,(BLIT_TMP)
+1168+ 542E DD 77 0B         LD (IX+11),A
+1169+ 5431              	; comma
+1170+ 5431 CD 45 65     	CALL CHKCHAR
+1171+ 5434 2C           	DB ','
+1172+ 5435              	; get sprite group definition array data pointer
+1173+ 5435 DD 2A 31 62  	LD IX,(BLIT_TMP)
+1174+ 5439 DD 5E 0B         LD E,(IX+11)
+1175+ 543C 16 03        	LD D,3
+1176+ 543E 3E 02        	LD A,2
+1177+ 5440 47           	LD B,A
+1178+ 5441 CD 72 65     	CALL GET_BASIC_ARRAY_DATA_POINTER
+1179+ 5444 DD 2A 31 62  	LD IX,(BLIT_TMP)
+1180+ 5448 DD 71 0C     	LD (IX+12),C
+1181+ 544B DD 70 0D         LD (IX+13),B
+1182+ 544E              	; comma
+1183+ 544E CD 45 65     	CALL CHKCHAR
+1184+ 5451 2C           	DB ','
+1185+ 5452              	; get sprite animation array size
+1186+ 5452 DD 21 1C 52  	LD IX,GETBYT
+1187+ 5456 CD 59 01     	CALL CALBAS
+1188+ 5459 DD 2A 31 62  	LD IX,(BLIT_TMP)
+1189+ 545D DD 77 0E         LD (IX+14),A
+1190+ 5460 B7               OR A
+1191+ 5461 CA 5D 65         JP Z,SUBSCRIPT_OUT_OF_RANGE
+1192+ 5464              	; comma
+1193+ 5464 CD 45 65     	CALL CHKCHAR
+1194+ 5467 2C           	DB ','
+1195+ 5468                  ; get array pointer for negative direction
+1196+ 5468 DD 2A 31 62  	LD IX,(BLIT_TMP)
+1197+ 546C DD 56 0E         LD D,(IX+14)
+1198+ 546F 3E 02            LD A,2
+1199+ 5471 06 01            LD B,1
+1200+ 5473 CD 72 65         CALL GET_BASIC_ARRAY_DATA_POINTER
+1201+ 5476 DD 2A 31 62  	LD IX,(BLIT_TMP)
+1202+ 547A DD 71 0F         LD (IX+15),C
+1203+ 547D DD 70 10         LD (IX+16),B
+1204+ 5480              	; comma
+1205+ 5480 CD 45 65     	CALL CHKCHAR
+1206+ 5483 2C           	DB ','
+1207+ 5484                  ; get array pointer for positive direction
+1208+ 5484 DD 2A 31 62  	LD IX,(BLIT_TMP)
+1209+ 5488 DD 56 0E         LD D,(IX+14)
+1210+ 548B 3E 02            LD A,2
+1211+ 548D 06 01            LD B,1
+1212+ 548F CD 72 65         CALL GET_BASIC_ARRAY_DATA_POINTER
+1213+ 5492 DD 2A 31 62  	LD IX,(BLIT_TMP)
+1214+ 5496 DD 71 11         LD (IX+17),C
+1215+ 5499 DD 70 12         LD (IX+18),B
+1216+ 549C              	; ending )
+1217+ 549C CD 45 65     	CALL CHKCHAR
+1218+ 549F 29           	DB ')'
+1219+ 54A0 C9               RET
+1220+ 54A1              ; *******************************************************************************************************
+1221+ 54A1               ENDIF
+1222+ 54A1
+1223+ 54A1               IF (0 == 1)
+1224+ 54A1 ~            ; *******************************************************************************************************
+1225+ 54A1 ~            ; same as AUTOSGAMDEF but for DEFUSR approach
+1226+ 54A1 ~            ; input IX=pointer to input array, real data from +2
+1227+ 54A1 ~            ; +02 = ID
+1228+ 54A1 ~            ; +04 = pointer to X variable
+1229+ 54A1 ~            ; +06 = pointer to Y variable
+1230+ 54A1 ~            ; +08 = minimum
+1231+ 54A1 ~            ; +10 = maximum
+1232+ 54A1 ~            ; +12 = delta
+1233+ 54A1 ~            ; +14 = direction
+1234+ 54A1 ~            ; +16 = ticks
+1235+ 54A1 ~            ; +18 = sprite group count
+1236+ 54A1 ~            ; +20 = sprite group array pointer
+1237+ 54A1 ~            ; +22 = item number
+1238+ 54A1 ~            ; +24 = sprite animations negative direction array pointer
+1239+ 54A1 ~            ; +26 = sprite animations positive direction array pointer
+1240+ 54A1 ~            AUTOSGAMDEF_DEFUSR:
+1241+ 54A1 ~                LD C,(IX+2)
+1242+ 54A1 ~                INC C
+1243+ 54A1 ~                LD A,(AUTOSGAMNUM)
+1244+ 54A1 ~                CP C
+1245+ 54A1 ~                RET C ; invalid id
+1246+ 54A1 ~                LD A,C
+1247+ 54A1 ~                DEC A
+1248+ 54A1 ~                CALL GETnthAUTOSGAM
+1249+ 54A1 ~                PUSH HL
+1250+ 54A1 ~                POP IY
+1251+ 54A1 ~                ; X variable
+1252+ 54A1 ~                LD A,(IX+4)
+1253+ 54A1 ~                LD (IY+0),A
+1254+ 54A1 ~                LD A,(IX+5)
+1255+ 54A1 ~                LD (IY+1),A
+1256+ 54A1 ~            	; Y variable
+1257+ 54A1 ~                LD A,(IX+6)
+1258+ 54A1 ~                LD (IY+2),A
+1259+ 54A1 ~                LD A,(IX+7)
+1260+ 54A1 ~                LD (IY+3),A
+1261+ 54A1 ~            	; get minimum value
+1262+ 54A1 ~                LD A,(IX+8)
+1263+ 54A1 ~                LD (IY+4),A
+1264+ 54A1 ~                LD A,(IX+9)
+1265+ 54A1 ~                LD (IY+5),A
+1266+ 54A1 ~            	; get maximum value
+1267+ 54A1 ~                LD A,(IX+10)
+1268+ 54A1 ~                LD (IY+6),A
+1269+ 54A1 ~                LD A,(IX+11)
+1270+ 54A1 ~                LD (IY+7),A
+1271+ 54A1 ~            	; get delta value
+1272+ 54A1 ~                LD A,(IX+12)
+1273+ 54A1 ~                LD (IY+8),A
+1274+ 54A1 ~                LD A,(IX+13)
+1275+ 54A1 ~                LD (IY+9),A
+1276+ 54A1 ~            	; get direction value
+1277+ 54A1 ~                LD A,(IX+14)
+1278+ 54A1 ~                LD (IY+10),A
+1279+ 54A1 ~            	; get ticks value
+1280+ 54A1 ~                LD A,(IX+16)
+1281+ 54A1 ~                LD (IY+20),A
+1282+ 54A1 ~                LD A,(IX+17)
+1283+ 54A1 ~                LD (IY+21),A
+1284+ 54A1 ~            	; get sprite group count
+1285+ 54A1 ~                LD A,(IX+18)
+1286+ 54A1 ~                LD (IY+11),A
+1287+ 54A1 ~            	; get sprite group definition array data pointer
+1288+ 54A1 ~                LD A,(IX+20)
+1289+ 54A1 ~                LD (IY+12),A
+1290+ 54A1 ~                LD A,(IX+21)
+1291+ 54A1 ~                LD (IY+13),A
+1292+ 54A1 ~            	; get sprite animation array size
+1293+ 54A1 ~                LD A,(IX+22)
+1294+ 54A1 ~                LD (IY+14),A
+1295+ 54A1 ~                ; get array pointer for negative direction
+1296+ 54A1 ~                LD A,(IX+24)
+1297+ 54A1 ~                LD (IY+15),A
+1298+ 54A1 ~                LD A,(IX+25)
+1299+ 54A1 ~                LD (IY+16),A
+1300+ 54A1 ~                ; get array pointer for positive direction
+1301+ 54A1 ~                LD A,(IX+26)
+1302+ 54A1 ~                LD (IY+17),A
+1303+ 54A1 ~                LD A,(IX+27)
+1304+ 54A1 ~                LD (IY+18),A
+1305+ 54A1 ~                RET
+1306+ 54A1 ~            ; *******************************************************************************************************
+1307+ 54A1               ENDIF
+1308+ 54A1
+1309+ 54A1               IF (1 == 1)
+1310+ 54A1              ; *******************************************************************************************************
+1311+ 54A1              ; function to handle CALL AUTOSGAMSTART basic extension
+1312+ 54A1              ; AUTOSGAMSTART ( BYTE id )
+1313+ 54A1              AUTOSGAMSTART:
+1314+ 54A1 3E 01            LD A,1
+1315+ 54A3              .COMMON:
+1316+ 54A3 32 CF 54         LD (.SETVALUE+3),A
+1317+ 54A6                  ; opening (
+1318+ 54A6 CD 45 65     	CALL CHKCHAR
+1319+ 54A9 28           	DB '('
+1320+ 54AA              	; get sprite animation id
+1321+ 54AA DD 21 1C 52  	LD IX, GETBYT
+1322+ 54AE CD 59 01     	CALL CALBAS
+1323+ 54B1 F5               PUSH AF
+1324+ 54B2 3C               INC A
+1325+ 54B3 4F               LD C,A
+1326+ 54B4 3A 63 4F         LD A,(AUTOSGAMNUM)
+1327+ 54B7 B9               CP C
+1328+ 54B8 DA 5D 65         JP C,SUBSCRIPT_OUT_OF_RANGE
+1329+ 54BB F1               POP AF
+1330+ 54BC E5               PUSH HL
+1331+ 54BD CD 90 4F         CALL GETnthAUTOSGAM
+1332+ 54C0 E5               PUSH HL
+1333+ 54C1 DD E1            POP IX
+1334+ 54C3 E1               POP HL
+1335+ 54C4 DD E5            PUSH IX
+1336+ 54C6              	; ending )
+1337+ 54C6 CD 45 65     	CALL CHKCHAR
+1338+ 54C9 29           	DB ')'
+1339+ 54CA
+1340+ 54CA                  ; so syntax is fine
+1341+ 54CA DD E1            POP IX
+1342+ 54CC              .SETVALUE:
+1343+ 54CC DD 36 13 01      LD (IX+19),1 ; active flag
+1344+ 54D0                  ; set initial timer
+1345+ 54D0 DD 7E 14         LD A,(IX+20)
+1346+ 54D3 DD 77 16         LD (IX+22),A
+1347+ 54D6 DD 7E 15         LD A,(IX+21)
+1348+ 54D9 DD 77 17         LD (IX+23),A
+1349+ 54DC C9               RET
+1350+ 54DD              ; *******************************************************************************************************
+1351+ 54DD
+1352+ 54DD              ; *******************************************************************************************************
+1353+ 54DD              ; function to handle CALL AUTOSGAMSTOP basic extension
+1354+ 54DD              ; AUTOSGAMSTOP ( BYTE id )
+1355+ 54DD              AUTOSGAMSTOP:
+1356+ 54DD AF               XOR A
+1357+ 54DE 18 C3            JR AUTOSGAMSTART.COMMON
+1358+ 54E0              ; *******************************************************************************************************
+1359+ 54E0               ENDIF
+1360+ 54E0
+1361+ 54E0               IF (0 == 1)
+1362+ 54E0 ~            ; *******************************************************************************************************
+1363+ 54E0 ~            ; function to handle CALL AUTOSGAMSTART basic extension in DEFUSR mode
+1364+ 54E0 ~            ; input IX=pointer to input array, real data from +2
+1365+ 54E0 ~            ; +2 = source address
+1366+ 54E0 ~            AUTOSGAMSTART_DEFUSR:
+1367+ 54E0 ~                LD A,1
+1368+ 54E0 ~            .COMMON:
+1369+ 54E0 ~                LD (.SETVALUE+3),A
+1370+ 54E0 ~                LD C,(IX+2)
+1371+ 54E0 ~                INC C
+1372+ 54E0 ~                LD A,(AUTOSGAMNUM)
+1373+ 54E0 ~                CP C
+1374+ 54E0 ~                RET C ; invalid id
+1375+ 54E0 ~                LD A,C
+1376+ 54E0 ~                DEC A
+1377+ 54E0 ~                CALL GETnthAUTOSGAM
+1378+ 54E0 ~                PUSH HL
+1379+ 54E0 ~                POP IX
+1380+ 54E0 ~            .SETVALUE:
+1381+ 54E0 ~                LD (IX+19),1 ; active flag
+1382+ 54E0 ~                ; set initial timer
+1383+ 54E0 ~                LD A,(IX+20)
+1384+ 54E0 ~                LD (IX+22),A
+1385+ 54E0 ~                LD A,(IX+21)
+1386+ 54E0 ~                LD (IX+23),A
+1387+ 54E0 ~                RET
+1388+ 54E0 ~            ; *******************************************************************************************************
+1389+ 54E0 ~
+1390+ 54E0 ~            ; *******************************************************************************************************
+1391+ 54E0 ~            ; function to handle CALL AUTOSGAMSTOP basic extension in DEFUSR mode
+1392+ 54E0 ~            ; input IX=pointer to input array, real data from +2
+1393+ 54E0 ~            ; +2 = source address
+1394+ 54E0 ~            AUTOSGAMSTOP_DEFUSR:
+1395+ 54E0 ~                XOR A
+1396+ 54E0 ~                JR AUTOSGAMSTART_DEFUSR.COMMON
+1397+ 54E0 ~            ; *******************************************************************************************************
+1398+ 54E0               ENDIF
+1399+ 54E0
+1400+ 54E0               IF (1 == 1)
+1401+ 54E0              ; *******************************************************************************************************
+1402+ 54E0              ; function to handle CALL ANIMSTEP basic extension
+1403+ 54E0              ; two forms
+1404+ 54E0              ; ANIMSTEP ( BYTE id )
+1405+ 54E0              ; or
+1406+ 54E0              ; ANIMSTEP ( BYTE item_number,
+1407+ 54E0              ;            INT[] sprite_animations )
+1408+ 54E0              ANIMSTEP:
+1409+ 54E0 11 5F 55         LD DE,ANIMSTARTSTOP_COMMON.STEP
+1410+ 54E3 18 08            JR ANIMSTARTSTOP_COMMON
+1411+ 54E5              ; *******************************************************************************************************
 1412+ 54E5              ; *******************************************************************************************************
-1413+ 54E5              ; *******************************************************************************************************
-1414+ 54E5              ; function to handle CALL ANIMSTART basic extension
-1415+ 54E5              ; two forms
-1416+ 54E5              ; ANIMSTART ( BYTE id )
-1417+ 54E5              ; or
-1418+ 54E5              ; ANIMSTART ( BYTE item_number,
-1419+ 54E5              ;             INT[] sprite_animations )
-1420+ 54E5              ; sets active flag to 1
-1421+ 54E5              ANIMSTART:
-1422+ 54E5 11 4D 55         LD DE,ANIMSTARTSTOP_COMMON.START
-1423+ 54E8 18 03            JR ANIMSTARTSTOP_COMMON
+1413+ 54E5              ; function to handle CALL ANIMSTART basic extension
+1414+ 54E5              ; two forms
+1415+ 54E5              ; ANIMSTART ( BYTE id )
+1416+ 54E5              ; or
+1417+ 54E5              ; ANIMSTART ( BYTE item_number,
+1418+ 54E5              ;             INT[] sprite_animations )
+1419+ 54E5              ; sets active flag to 1
+1420+ 54E5              ANIMSTART:
+1421+ 54E5 11 4D 55         LD DE,ANIMSTARTSTOP_COMMON.START
+1422+ 54E8 18 03            JR ANIMSTARTSTOP_COMMON
+1423+ 54EA              ; *******************************************************************************************************
 1424+ 54EA              ; *******************************************************************************************************
-1425+ 54EA              ; *******************************************************************************************************
-1426+ 54EA              ; function to handle CALL ANIMSTOP basic extension
-1427+ 54EA              ; two forms
-1428+ 54EA              ; ANIMSTOP ( BYTE id )
-1429+ 54EA              ; or
-1430+ 54EA              ; ANIMSTOP ( BYTE item_number,
-1431+ 54EA              ;            INT[] sprite_animations )
-1432+ 54EA              ; sets active flag to 0
-1433+ 54EA              ANIMSTOP:
-1434+ 54EA 11 5A 55         LD DE,ANIMSTARTSTOP_COMMON.STOP
-1435+ 54ED              ; *******************************************************************************************************
-1436+ 54ED              ANIMSTARTSTOP_COMMON:
-1437+ 54ED ED 53 4B 55      LD (ANIMSTARTSTOP_COMMON.FN+1),DE
-1438+ 54F1                  ; opening (
-1439+ 54F1 CD 45 65     	CALL CHKCHAR
-1440+ 54F4 28           	DB '('
-1441+ 54F5              	; get sprite animation id or array size
-1442+ 54F5 DD 21 1C 52  	LD IX,GETBYT
-1443+ 54F9 CD 59 01     	CALL CALBAS
-1444+ 54FC F5               PUSH AF
-1445+ 54FD                  ; check if comma present
-1446+ 54FD CD 4F 65         CALL GETPREVCHAR
-1447+ 5500 23               INC HL
-1448+ 5501 FE 2C            CP ','
-1449+ 5503 28 0E            JR Z,.L1
-1450+ 5505 FE 29            CP ')'
-1451+ 5507 C2 69 65         JP NZ,SYNTAX_ERROR
-1452+ 550A                  ; ok so single argument variant
-1453+ 550A F1               POP AF
-1454+ 550B E5               PUSH HL
-1455+ 550C F3               DI
-1456+ 550D CD 39 55         CALL .SETVALUE
-1457+ 5510 FB               EI
-1458+ 5511 E1               POP HL
-1459+ 5512 C9               RET
-1460+ 5513              .L1:
-1461+ 5513                  ; get array pointer
-1462+ 5513 D1               POP DE
-1463+ 5514 D5               PUSH DE
-1464+ 5515 3E 02            LD A,2
-1465+ 5517 06 01            LD B,1
-1466+ 5519 CD 72 65         CALL GET_BASIC_ARRAY_DATA_POINTER
-1467+ 551C C5               PUSH BC
-1468+ 551D              	; ending )
-1469+ 551D CD 45 65     	CALL CHKCHAR
-1470+ 5520 29           	DB ')'
-1471+ 5521 D1               POP DE ; array pointer
-1472+ 5522 C1               POP BC ; number of items
-1473+ 5523 78               LD A,B
-1474+ 5524 B7               OR A
-1475+ 5525 CA 5D 65         JP Z,SUBSCRIPT_OUT_OF_RANGE
-1476+ 5528 E5               PUSH HL
-1477+ 5529 F3               DI
-1478+ 552A              .L2:
-1479+ 552A C5               PUSH BC
-1480+ 552B 1A               LD A,(DE)
-1481+ 552C 13          > INC DE
-1481+ 552D 13          > INC DE
-1482+ 552E D5               PUSH DE
-1483+ 552F CD 39 55         CALL .SETVALUE
-1484+ 5532 D1               POP DE
-1485+ 5533 C1               POP BC
-1486+ 5534 10 F4            DJNZ .L2
-1487+ 5536 FB               EI
-1488+ 5537 E1               POP HL
-1489+ 5538 C9               RET
-1490+ 5539
-1491+ 5539              .SETVALUE:
-1492+ 5539 47               LD B,A
-1493+ 553A 3C               INC A
-1494+ 553B 4F               LD C,A
-1495+ 553C 3A 60 4F         LD A,(ANIMSPRNUM)
-1496+ 553F B9               CP C
-1497+ 5540 DA 5D 65         JP C,SUBSCRIPT_OUT_OF_RANGE
-1498+ 5543 78               LD A,B
-1499+ 5544 CD 84 4F         CALL GETnthSPRANIM
-1500+ 5547 E5               PUSH HL
-1501+ 5548 DD E1            POP IX
-1502+ 554A              .FN:
-1503+ 554A C3 00 00         JP 0
-1504+ 554D              .START:
-1505+ 554D DD 36 06 01      LD (IX+6),1 ; active flag
-1506+ 5551 DD 36 03 00      LD (IX+3),0 ; current item
-1507+ 5555 06 00            LD B,0 ; setup timer
-1508+ 5557 C3 F0 55         JP SETUP_ANIM_STEP
-1509+ 555A              .STOP:
-1510+ 555A DD 36 06 00      LD (IX+6),0 ; active flag
-1511+ 555E C9               RET
-1512+ 555F              .STEP:
-1513+ 555F 06 00            LD B,0
-1514+ 5561 C3 94 55         JP PROCESS_SINGLE_ANIMATION.INACTIVE_TOO
-1515+ 5564              ; *******************************************************************************************************
-1516+ 5564               ENDIF
-1517+ 5564
-1518+ 5564              ; *******************************************************************************************************
-1519+ 5564              ; helper function to locate single animation and execute operation
-1520+ 5564              ; needs to have jump set to a correct function
-1521+ 5564              ; used by SGAM helper routines so always needed
-1522+ 5564              ; input A=animation item
-1523+ 5564              ANIM_SETVALUE:
-1524+ 5564 47               LD B,A
-1525+ 5565 3C               INC A
-1526+ 5566 4F               LD C,A
-1527+ 5567 3A 60 4F         LD A,(ANIMSPRNUM)
-1528+ 556A B9               CP C
-1529+ 556B D8               RET C ; out of range, so do nothing
-1530+ 556C 78               LD A,B
-1531+ 556D CD 84 4F         CALL GETnthSPRANIM
-1532+ 5570 E5               PUSH HL
-1533+ 5571 DD E1            POP IX
-1534+ 5573              .FN:
-1535+ 5573 C3 00 00         JP 0
-1536+ 5576              ; *******************************************************************************************************
-1537+ 5576
-1538+ 5576               IF (0 == 1)
-1539+ 5576 ~            ; *******************************************************************************************************
-1540+ 5576 ~            ; helper function to set values of multiple animations
-1541+ 5576 ~            ; needs to have jump set to a correct function
-1542+ 5576 ~            ; input B=number of animation item
-1543+ 5576 ~            ; input DE=animation item array
-1544+ 5576 ~            ANIM_LIST_SETVALUE:
-1545+ 5576 ~                DI
-1546+ 5576 ~                PUSH BC
-1547+ 5576 ~                LD A,(DE)
-1548+ 5576 ~                .2 INC DE
-1549+ 5576 ~                PUSH DE
-1550+ 5576 ~                CALL ANIM_SETVALUE
-1551+ 5576 ~                POP DE
-1552+ 5576 ~                POP BC
-1553+ 5576 ~                DJNZ ANIM_LIST_SETVALUE
-1554+ 5576 ~                EI
-1555+ 5576 ~                RET
-1556+ 5576 ~            ; *******************************************************************************************************
-1557+ 5576 ~
-1558+ 5576 ~            ; *******************************************************************************************************
-1559+ 5576 ~            ; function to handle single item ANIMSTEP in DEFUSR mode
-1560+ 5576 ~            ; input IX=pointer to input array, real data from +2
-1561+ 5576 ~            ; +2 = animation id
-1562+ 5576 ~            ANIMSTEP_SINGLE_DEFUSR:
-1563+ 5576 ~                LD HL,ANIMSTEP_SINGLE_DEFUSR.STEP
-1564+ 5576 ~            .L1:
-1565+ 5576 ~                LD (ANIM_SETVALUE.FN+1),HL
-1566+ 5576 ~                LD A,(IX+2)
-1567+ 5576 ~                JR ANIM_SETVALUE
-1568+ 5576 ~            .STEP:
-1569+ 5576 ~                LD B,0
-1570+ 5576 ~                JP PROCESS_SINGLE_ANIMATION.INACTIVE_TOO
-1571+ 5576 ~            ; *******************************************************************************************************
-1572+ 5576 ~
-1573+ 5576 ~            ; *******************************************************************************************************
-1574+ 5576 ~            ; function to handle multi item ANIMSTEP in DEFUSR mode
-1575+ 5576 ~            ; input IX=pointer to input array, real data from +2
-1576+ 5576 ~            ; +2 = list size
-1577+ 5576 ~            ; +4 = array pointer holding items
-1578+ 5576 ~            ANIMSTEP_MULTI_DEFUSR:
-1579+ 5576 ~                LD HL,ANIMSTEP_SINGLE_DEFUSR.STEP
-1580+ 5576 ~            .L1:
-1581+ 5576 ~                LD (ANIM_SETVALUE.FN+1),HL
-1582+ 5576 ~                LD B,(IX+2)
-1583+ 5576 ~                LD E,(IX+4)
-1584+ 5576 ~                LD D,(IX+5)
-1585+ 5576 ~                JR ANIM_LIST_SETVALUE
-1586+ 5576 ~            ; *******************************************************************************************************
-1587+ 5576 ~
-1588+ 5576 ~            ; *******************************************************************************************************
-1589+ 5576 ~            ; function to handle single item ANIMSTART in DEFUSR mode
-1590+ 5576 ~            ; input IX=pointer to input array, real data from +2
-1591+ 5576 ~            ; +2 = animation id
-1592+ 5576 ~            ANIMSTART_SINGLE_DEFUSR:
-1593+ 5576 ~                LD HL,ANIMSTART_SINGLE_DEFUSR.START
-1594+ 5576 ~                JR ANIMSTEP_SINGLE_DEFUSR.L1
-1595+ 5576 ~            .START:
-1596+ 5576 ~                LD (IX+6),1 ; active flag
-1597+ 5576 ~                LD (IX+3),0 ; current item
-1598+ 5576 ~                LD B,0 ; setup timer
-1599+ 5576 ~                JP SETUP_ANIM_STEP
-1600+ 5576 ~            ; *******************************************************************************************************
-1601+ 5576 ~
-1602+ 5576 ~            ; *******************************************************************************************************
-1603+ 5576 ~            ; function to handle multi item ANIMSTART in DEFUSR mode
-1604+ 5576 ~            ; input IX=pointer to input array, real data from +2
-1605+ 5576 ~            ; +2 = list size
-1606+ 5576 ~            ; +4 = array pointer holding items
-1607+ 5576 ~            ANIMSTART_MULTI_DEFUSR:
-1608+ 5576 ~                LD HL,ANIMSTART_SINGLE_DEFUSR.START
-1609+ 5576 ~                JR ANIMSTEP_MULTI_DEFUSR.L1
-1610+ 5576 ~            ; *******************************************************************************************************
-1611+ 5576 ~
-1612+ 5576 ~            ; *******************************************************************************************************
-1613+ 5576 ~            ; function to handle single item ANIMSTOP in DEFUSR mode
-1614+ 5576 ~            ; input IX=pointer to input array, real data from +2
-1615+ 5576 ~            ; +2 = animation id
-1616+ 5576 ~            ANIMSTOP_SINGLE_DEFUSR:
-1617+ 5576 ~                LD HL,ANIMSTOP_SINGLE_DEFUSR.STOP
-1618+ 5576 ~                JR ANIMSTEP_SINGLE_DEFUSR.L1
-1619+ 5576 ~            .STOP:
-1620+ 5576 ~                LD (IX+6),0 ; active flag
-1621+ 5576 ~                RET
-1622+ 5576 ~            ; *******************************************************************************************************
-1623+ 5576 ~
-1624+ 5576 ~            ; *******************************************************************************************************
-1625+ 5576 ~            ; function to handle multi item ANIMSTOP in DEFUSR mode
-1626+ 5576 ~            ; input IX=pointer to input array, real data from +2
-1627+ 5576 ~            ; +2 = list size
-1628+ 5576 ~            ; +4 = array pointer holding items
-1629+ 5576 ~            ANIMSTOP_MULTI_DEFUSR:
-1630+ 5576 ~                LD HL,ANIMSTOP_SINGLE_DEFUSR.STOP
-1631+ 5576 ~                JR ANIMSTEP_MULTI_DEFUSR.L1
-1632+ 5576 ~            ; *******************************************************************************************************
-1633+ 5576               ENDIF
-1634+ 5576
-1635+ 5576              ; *******************************************************************************************************
-1636+ 5576              ; function processes animations during vblank period
-1637+ 5576              PROCESS_ANIMATIONS:
-1638+ 5576 3A 60 4F         LD A,(ANIMSPRNUM)
-1639+ 5579 B7               OR A
-1640+ 557A C8               RET Z; no animations defined
-1641+ 557B 47               LD B,A
-1642+ 557C DD 2A 61 4F      LD IX,(ANIMSPRPTR)
-1643+ 5580              .L1:
-1644+ 5580 C5               PUSH BC
-1645+ 5581 06 00            LD B,0 ; normal mode, change on timer expiry only
-1646+ 5583 CD 8F 55         CALL PROCESS_SINGLE_ANIMATION
-1647+ 5586 11 08 00         LD DE,8
-1648+ 5589 DD 19            ADD IX,DE
-1649+ 558B C1               POP BC
-1650+ 558C 10 F2            DJNZ .L1
-1651+ 558E C9               RET
-1652+ 558F              ; *******************************************************************************************************
-1653+ 558F
-1654+ 558F              ; *******************************************************************************************************
-1655+ 558F              ; processes single sprite animation
-1656+ 558F              ; skips inactive ones, but this can be skipped by calling .INACTIVE_TOO entry point
-1657+ 558F              ; on timer expiry goes to next animation item
-1658+ 558F              ; input IX=sprite animation pointer
-1659+ 558F              ; input B=1 force mode, activate animation action regardless of expired timer
-1660+ 558F              PROCESS_SINGLE_ANIMATION:
-1661+ 558F DD 7E 06         LD A,(IX+6); active
-1662+ 5592 B7               OR A
-1663+ 5593 C8               RET Z ; inactive animation
-1664+ 5594              .INACTIVE_TOO:
-1665+ 5594 DD 6E 01         LD L,(IX+1)
-1666+ 5597 DD 66 02         LD H,(IX+2) ; HL=end time
-1667+ 559A 2B               DEC HL
-1668+ 559B DD 75 01         LD (IX+1),L
-1669+ 559E DD 74 02         LD (IX+2),H
-1670+ 55A1 7D               LD A,L
-1671+ 55A2 B4               OR H
-1672+ 55A3 28 06            JR Z,.STEP
-1673+ 55A5 05               DEC B
-1674+ 55A6 04               INC B
-1675+ 55A7 C8               RET Z ; not forced mode, return
-1676+ 55A8 C3 F0 55         JP SETUP_ANIM_STEP; call function with flag to skip timer setup
-1677+ 55AB              .STEP:
-1678+ 55AB 06 00            LD B,0; setup timer
-1679+ 55AD DD 34 03         INC (IX+3) ; current animation item
-1680+ 55B0 C3 F0 55         JP SETUP_ANIM_STEP
-1681+ 55B3              ; *******************************************************************************************************
-1682+ 55B3
-1683+ 55B3              ; *******************************************************************************************************
-1684+ 55B3              ; function will setup sprite animation after current item change
-1685+ 55B3              ; input A=current animation definition
-1686+ 55B3              ; input IX=pointer to sprite animation
-1687+ 55B3              ; input B=1 skip timer setup
-1688+ 55B3              ; output IY=pointer to animation item
-1689+ 55B3              ; CF=1 error or non-cyclic animation ended, in both cases set active flag to 0
-1690+ 55B3              ; basically sets new end time for current animation
-1691+ 55B3              INIT_CURRENT_ANIMATION:
-1692+ 55B3 CD 78 4F         CALL GETnthANIMDEF
-1693+ 55B6 DD 7E 03         LD A,(IX+3) ; current animation item
-1694+ 55B9 BE               CP (HL) ; number of animation items in the animation definition
-1695+ 55BA 38 0A            JR C,.L3 ; last item not reached
-1696+ 55BC                  ; last item reached
-1697+ 55BC DD 7E 05         LD A,(IX+5) ; cyclic flag
-1698+ 55BF B7               OR A
-1699+ 55C0 28 2C            JR Z,.ERROR ; non-cyclic animation
-1700+ 55C2                  ; cyclic animation, restart
-1701+ 55C2 DD 36 03 00      LD (IX+3),0; current item
-1702+ 55C6              .L3:
-1703+ 55C6                  ; HL = animation definition
-1704+ 55C6 23               INC HL ; skip animation definition size field
-1705+ 55C7 16 00            LD D,0
-1706+ 55C9 DD 5E 03         LD E,(IX+3); current item
-1707+ 55CC 19               ADD HL,DE
-1708+ 55CD 4E               LD C,(HL) ; current animation item
-1709+ 55CE 0C               INC C
-1710+ 55CF 3A 5A 4F         LD A,(ANIMITEMNUM)
-1711+ 55D2 B9               CP C
-1712+ 55D3 38 19            JR C,.ERROR ; invalid animation item, stop animation
-1713+ 55D5 0D               DEC C
-1714+ 55D6 79               LD A,C
-1715+ 55D7 CD 6F 4F         CALL GETnthANIMITEM
-1716+ 55DA E5               PUSH HL
-1717+ 55DB FD E1            POP IY ; IY=animation item
-1718+ 55DD 05               DEC B
-1719+ 55DE 28 0C            JR Z,.EXIT
-1720+ 55E0 FD 5E 01         LD E,(IY+1)
-1721+ 55E3 FD 56 02         LD D,(IY+2) ; duration
-1722+ 55E6 DD 73 01         LD (IX+1),E
-1723+ 55E9 DD 72 02         LD (IX+2),D
-1724+ 55EC              .EXIT:
-1725+ 55EC AF               XOR A
-1726+ 55ED C9               RET
-1727+ 55EE              .ERROR:
-1728+ 55EE 37               SCF
-1729+ 55EF C9               RET
-1730+ 55F0              ; *******************************************************************************************************
-1731+ 55F0
-1732+ 55F0              ; *******************************************************************************************************
-1733+ 55F0              ; function will display currect item and set up expiry time
-1734+ 55F0              ; it will also stop the animation if expired
-1735+ 55F0              ; sets sprite update flag if any changes in sprite data made
-1736+ 55F0              ; input IX=current sprite animation
-1737+ 55F0              ; input B=1 skip timer setup
-1738+ 55F0              SETUP_ANIM_STEP:
-1739+ 55F0 DD 4E 04         LD C,(IX+4) ; animation definition ID
-1740+ 55F3 0C               INC C
-1741+ 55F4 3A 5D 4F         LD A,(ANIMDEFNUM)
-1742+ 55F7 B9               CP C
-1743+ 55F8 30 05            JR NC,.L2
-1744+ 55FA                  ; given animation item is outside of bounds, deactivate animation
-1745+ 55FA              .STOPANIM:
-1746+ 55FA DD 36 06 00      LD (IX+6),0
-1747+ 55FE C9               RET
-1748+ 55FF              .L2:
-1749+ 55FF 0D               DEC C
-1750+ 5600 79               LD A,C
-1751+ 5601 CD B3 55         CALL INIT_CURRENT_ANIMATION
-1752+ 5604 38 F4            JR C, .STOPANIM
-1753+ 5606 FD 7E 00         LD A,(IY) ; type of animation item
-1754+ 5609 B7               OR A
-1755+ 560A 28 44            JR Z,.L4 ; change pattern and/or color
-1756+ 560C              .PAT:
-1757+ 560C                  ; change pattern definition
-1758+ 560C                  ; check if sprite or character
-1759+ 560C DD 7E 07         LD A,(IX+7)
-1760+ 560F B7               OR A
-1761+ 5610 20 58            JR NZ,.CHAR
-1762+ 5612 DD 7E 00         LD A,(IX) ; sprite number
-1763+ 5615 CD 89 4D         CALL GETnthSPRATTR
-1764+ 5618 23          > INC HL ; skip y and x
-1764+ 5619 23          > INC HL
-1764+ 561A 23          > INC HL
-1764+ 561B 23          > INC HL
-1765+ 561C 7E               LD A,(HL); current pattern
-1766+ 561D 26 00            LD H,0
-1767+ 561F 6F               LD L,A
-1768+ 5620 3A E0 F3         LD A,(REG1SAV)
-1769+ 5623 E6 02            AND 2
-1770+ 5625 20 07            JR NZ,.L6
-1771+ 5627                  ; 8x8 sprite
-1772+ 5627 CD 32 64         CALL HLx8
-1773+ 562A 06 08            LD B,8
-1774+ 562C 18 05            JR .L5
-1775+ 562E              .L6:
-1776+ 562E CD 30 64         CALL HLx32
-1777+ 5631 06 20            LD B,32
-1778+ 5633              .L5:
-1779+ 5633 3A AF FC         LD A,(SCRMOD)
-1780+ 5636 3D               DEC A
-1781+ 5637 20 06            JR NZ,.L10
-1782+ 5639 ED 5B C5 F3      LD DE,(T32PAT)
-1783+ 563D 18 04            JR .L7
-1784+ 563F              .L10:
-1785+ 563F ED 5B CF F3      LD DE,(GRPPAT)
-1786+ 5643              .L7:
-1787+ 5643 19               ADD HL,DE
-1788+ 5644 CD 1D 64         CALL SETWRT_LOCAL
-1789+ 5647 FD 6E 03         LD L,(IY+3)
-1790+ 564A FD 66 04         LD H,(IY+4) ; pointer to sprite pattern data
-1791+ 564D C3 28 64         JP BBYTECOPY
-1792+ 5650              .L4:
-1793+ 5650                  ; change pattern and color in sprite attributes table
-1794+ 5650 DD 7E 00         LD A,(IX) ; sprite number
-1795+ 5653 CD 89 4D         CALL GETnthSPRATTR
-1796+ 5656 23          > INC HL ; skip y and x
-1796+ 5657 23          > INC HL
-1796+ 5658 23          > INC HL
-1796+ 5659 23          > INC HL
-1797+ 565A FD 7E 03         LD A,(IY+3) ; new pattern
-1798+ 565D 77               LD (HL),A
-1799+ 565E 23          > INC HL
-1799+ 565F 23          > INC HL
-1800+ 5660 FD 7E 04         LD A,(IY+4) ; new color
-1801+ 5663 77               LD (HL),A
-1802+ 5664 2A 80 4D         LD HL,(SPRATR_UPDATE_FLAG)
-1803+ 5667 36 01            LD (HL),1
-1804+ 5669 C9               RET
-1805+ 566A              .CHAR:
-1806+ 566A DD 6E 00         LD L,(IX)
-1807+ 566D 3D               DEC A
-1808+ 566E 67               LD H,A
-1809+ 566F CD 32 64         CALL HLx8
-1810+ 5672 3A AF FC         LD A,(SCRMOD)
-1811+ 5675 3D               DEC A
-1812+ 5676 20 06            JR NZ,.L8
-1813+ 5678 ED 5B C1 F3      LD DE,(T32CGP)
-1814+ 567C 18 04            JR .L9
-1815+ 567E              .L8:
-1816+ 567E ED 5B CB F3      LD DE,(GRPCGP)
-1817+ 5682              .L9:
-1818+ 5682 06 08            LD B,8
-1819+ 5684 18 BD            JR .L7
-1820+ 5686              ; *******************************************************************************************************
-1821+ 5686
+1425+ 54EA              ; function to handle CALL ANIMSTOP basic extension
+1426+ 54EA              ; two forms
+1427+ 54EA              ; ANIMSTOP ( BYTE id )
+1428+ 54EA              ; or
+1429+ 54EA              ; ANIMSTOP ( BYTE item_number,
+1430+ 54EA              ;            INT[] sprite_animations )
+1431+ 54EA              ; sets active flag to 0
+1432+ 54EA              ANIMSTOP:
+1433+ 54EA 11 5A 55         LD DE,ANIMSTARTSTOP_COMMON.STOP
+1434+ 54ED              ; *******************************************************************************************************
+1435+ 54ED              ANIMSTARTSTOP_COMMON:
+1436+ 54ED ED 53 4B 55      LD (ANIMSTARTSTOP_COMMON.FN+1),DE
+1437+ 54F1                  ; opening (
+1438+ 54F1 CD 45 65     	CALL CHKCHAR
+1439+ 54F4 28           	DB '('
+1440+ 54F5              	; get sprite animation id or array size
+1441+ 54F5 DD 21 1C 52  	LD IX,GETBYT
+1442+ 54F9 CD 59 01     	CALL CALBAS
+1443+ 54FC F5               PUSH AF
+1444+ 54FD                  ; check if comma present
+1445+ 54FD CD 4F 65         CALL GETPREVCHAR
+1446+ 5500 23               INC HL
+1447+ 5501 FE 2C            CP ','
+1448+ 5503 28 0E            JR Z,.L1
+1449+ 5505 FE 29            CP ')'
+1450+ 5507 C2 69 65         JP NZ,SYNTAX_ERROR
+1451+ 550A                  ; ok so single argument variant
+1452+ 550A F1               POP AF
+1453+ 550B E5               PUSH HL
+1454+ 550C F3               DI
+1455+ 550D CD 39 55         CALL .SETVALUE
+1456+ 5510 FB               EI
+1457+ 5511 E1               POP HL
+1458+ 5512 C9               RET
+1459+ 5513              .L1:
+1460+ 5513                  ; get array pointer
+1461+ 5513 D1               POP DE
+1462+ 5514 D5               PUSH DE
+1463+ 5515 3E 02            LD A,2
+1464+ 5517 06 01            LD B,1
+1465+ 5519 CD 72 65         CALL GET_BASIC_ARRAY_DATA_POINTER
+1466+ 551C C5               PUSH BC
+1467+ 551D              	; ending )
+1468+ 551D CD 45 65     	CALL CHKCHAR
+1469+ 5520 29           	DB ')'
+1470+ 5521 D1               POP DE ; array pointer
+1471+ 5522 C1               POP BC ; number of items
+1472+ 5523 78               LD A,B
+1473+ 5524 B7               OR A
+1474+ 5525 CA 5D 65         JP Z,SUBSCRIPT_OUT_OF_RANGE
+1475+ 5528 E5               PUSH HL
+1476+ 5529 F3               DI
+1477+ 552A              .L2:
+1478+ 552A C5               PUSH BC
+1479+ 552B 1A               LD A,(DE)
+1480+ 552C 13          > INC DE
+1480+ 552D 13          > INC DE
+1481+ 552E D5               PUSH DE
+1482+ 552F CD 39 55         CALL .SETVALUE
+1483+ 5532 D1               POP DE
+1484+ 5533 C1               POP BC
+1485+ 5534 10 F4            DJNZ .L2
+1486+ 5536 FB               EI
+1487+ 5537 E1               POP HL
+1488+ 5538 C9               RET
+1489+ 5539
+1490+ 5539              .SETVALUE:
+1491+ 5539 47               LD B,A
+1492+ 553A 3C               INC A
+1493+ 553B 4F               LD C,A
+1494+ 553C 3A 60 4F         LD A,(ANIMSPRNUM)
+1495+ 553F B9               CP C
+1496+ 5540 DA 5D 65         JP C,SUBSCRIPT_OUT_OF_RANGE
+1497+ 5543 78               LD A,B
+1498+ 5544 CD 84 4F         CALL GETnthSPRANIM
+1499+ 5547 E5               PUSH HL
+1500+ 5548 DD E1            POP IX
+1501+ 554A              .FN:
+1502+ 554A C3 00 00         JP 0
+1503+ 554D              .START:
+1504+ 554D DD 36 06 01      LD (IX+6),1 ; active flag
+1505+ 5551 DD 36 03 00      LD (IX+3),0 ; current item
+1506+ 5555 06 00            LD B,0 ; setup timer
+1507+ 5557 C3 F0 55         JP SETUP_ANIM_STEP
+1508+ 555A              .STOP:
+1509+ 555A DD 36 06 00      LD (IX+6),0 ; active flag
+1510+ 555E C9               RET
+1511+ 555F              .STEP:
+1512+ 555F 06 00            LD B,0
+1513+ 5561 C3 94 55         JP PROCESS_SINGLE_ANIMATION.INACTIVE_TOO
+1514+ 5564              ; *******************************************************************************************************
+1515+ 5564               ENDIF
+1516+ 5564
+1517+ 5564              ; *******************************************************************************************************
+1518+ 5564              ; helper function to locate single animation and execute operation
+1519+ 5564              ; needs to have jump set to a correct function
+1520+ 5564              ; used by SGAM helper routines so always needed
+1521+ 5564              ; input A=animation item
+1522+ 5564              ANIM_SETVALUE:
+1523+ 5564 47               LD B,A
+1524+ 5565 3C               INC A
+1525+ 5566 4F               LD C,A
+1526+ 5567 3A 60 4F         LD A,(ANIMSPRNUM)
+1527+ 556A B9               CP C
+1528+ 556B D8               RET C ; out of range, so do nothing
+1529+ 556C 78               LD A,B
+1530+ 556D CD 84 4F         CALL GETnthSPRANIM
+1531+ 5570 E5               PUSH HL
+1532+ 5571 DD E1            POP IX
+1533+ 5573              .FN:
+1534+ 5573 C3 00 00         JP 0
+1535+ 5576              ; *******************************************************************************************************
+1536+ 5576
+1537+ 5576               IF (0 == 1)
+1538+ 5576 ~            ; *******************************************************************************************************
+1539+ 5576 ~            ; helper function to set values of multiple animations
+1540+ 5576 ~            ; needs to have jump set to a correct function
+1541+ 5576 ~            ; input B=number of animation item
+1542+ 5576 ~            ; input DE=animation item array
+1543+ 5576 ~            ANIM_LIST_SETVALUE:
+1544+ 5576 ~                DI
+1545+ 5576 ~                PUSH BC
+1546+ 5576 ~                LD A,(DE)
+1547+ 5576 ~                .2 INC DE
+1548+ 5576 ~                PUSH DE
+1549+ 5576 ~                CALL ANIM_SETVALUE
+1550+ 5576 ~                POP DE
+1551+ 5576 ~                POP BC
+1552+ 5576 ~                DJNZ ANIM_LIST_SETVALUE
+1553+ 5576 ~                EI
+1554+ 5576 ~                RET
+1555+ 5576 ~            ; *******************************************************************************************************
+1556+ 5576 ~
+1557+ 5576 ~            ; *******************************************************************************************************
+1558+ 5576 ~            ; function to handle single item ANIMSTEP in DEFUSR mode
+1559+ 5576 ~            ; input IX=pointer to input array, real data from +2
+1560+ 5576 ~            ; +2 = animation id
+1561+ 5576 ~            ANIMSTEP_SINGLE_DEFUSR:
+1562+ 5576 ~                LD HL,ANIMSTEP_SINGLE_DEFUSR.STEP
+1563+ 5576 ~            .L1:
+1564+ 5576 ~                LD (ANIM_SETVALUE.FN+1),HL
+1565+ 5576 ~                LD A,(IX+2)
+1566+ 5576 ~                JR ANIM_SETVALUE
+1567+ 5576 ~            .STEP:
+1568+ 5576 ~                LD B,0
+1569+ 5576 ~                JP PROCESS_SINGLE_ANIMATION.INACTIVE_TOO
+1570+ 5576 ~            ; *******************************************************************************************************
+1571+ 5576 ~
+1572+ 5576 ~            ; *******************************************************************************************************
+1573+ 5576 ~            ; function to handle multi item ANIMSTEP in DEFUSR mode
+1574+ 5576 ~            ; input IX=pointer to input array, real data from +2
+1575+ 5576 ~            ; +2 = list size
+1576+ 5576 ~            ; +4 = array pointer holding items
+1577+ 5576 ~            ANIMSTEP_MULTI_DEFUSR:
+1578+ 5576 ~                LD HL,ANIMSTEP_SINGLE_DEFUSR.STEP
+1579+ 5576 ~            .L1:
+1580+ 5576 ~                LD (ANIM_SETVALUE.FN+1),HL
+1581+ 5576 ~                LD B,(IX+2)
+1582+ 5576 ~                LD E,(IX+4)
+1583+ 5576 ~                LD D,(IX+5)
+1584+ 5576 ~                JR ANIM_LIST_SETVALUE
+1585+ 5576 ~            ; *******************************************************************************************************
+1586+ 5576 ~
+1587+ 5576 ~            ; *******************************************************************************************************
+1588+ 5576 ~            ; function to handle single item ANIMSTART in DEFUSR mode
+1589+ 5576 ~            ; input IX=pointer to input array, real data from +2
+1590+ 5576 ~            ; +2 = animation id
+1591+ 5576 ~            ANIMSTART_SINGLE_DEFUSR:
+1592+ 5576 ~                LD HL,ANIMSTART_SINGLE_DEFUSR.START
+1593+ 5576 ~                JR ANIMSTEP_SINGLE_DEFUSR.L1
+1594+ 5576 ~            .START:
+1595+ 5576 ~                LD (IX+6),1 ; active flag
+1596+ 5576 ~                LD (IX+3),0 ; current item
+1597+ 5576 ~                LD B,0 ; setup timer
+1598+ 5576 ~                JP SETUP_ANIM_STEP
+1599+ 5576 ~            ; *******************************************************************************************************
+1600+ 5576 ~
+1601+ 5576 ~            ; *******************************************************************************************************
+1602+ 5576 ~            ; function to handle multi item ANIMSTART in DEFUSR mode
+1603+ 5576 ~            ; input IX=pointer to input array, real data from +2
+1604+ 5576 ~            ; +2 = list size
+1605+ 5576 ~            ; +4 = array pointer holding items
+1606+ 5576 ~            ANIMSTART_MULTI_DEFUSR:
+1607+ 5576 ~                LD HL,ANIMSTART_SINGLE_DEFUSR.START
+1608+ 5576 ~                JR ANIMSTEP_MULTI_DEFUSR.L1
+1609+ 5576 ~            ; *******************************************************************************************************
+1610+ 5576 ~
+1611+ 5576 ~            ; *******************************************************************************************************
+1612+ 5576 ~            ; function to handle single item ANIMSTOP in DEFUSR mode
+1613+ 5576 ~            ; input IX=pointer to input array, real data from +2
+1614+ 5576 ~            ; +2 = animation id
+1615+ 5576 ~            ANIMSTOP_SINGLE_DEFUSR:
+1616+ 5576 ~                LD HL,ANIMSTOP_SINGLE_DEFUSR.STOP
+1617+ 5576 ~                JR ANIMSTEP_SINGLE_DEFUSR.L1
+1618+ 5576 ~            .STOP:
+1619+ 5576 ~                LD (IX+6),0 ; active flag
+1620+ 5576 ~                RET
+1621+ 5576 ~            ; *******************************************************************************************************
+1622+ 5576 ~
+1623+ 5576 ~            ; *******************************************************************************************************
+1624+ 5576 ~            ; function to handle multi item ANIMSTOP in DEFUSR mode
+1625+ 5576 ~            ; input IX=pointer to input array, real data from +2
+1626+ 5576 ~            ; +2 = list size
+1627+ 5576 ~            ; +4 = array pointer holding items
+1628+ 5576 ~            ANIMSTOP_MULTI_DEFUSR:
+1629+ 5576 ~                LD HL,ANIMSTOP_SINGLE_DEFUSR.STOP
+1630+ 5576 ~                JR ANIMSTEP_MULTI_DEFUSR.L1
+1631+ 5576 ~            ; *******************************************************************************************************
+1632+ 5576               ENDIF
+1633+ 5576
+1634+ 5576              ; *******************************************************************************************************
+1635+ 5576              ; function processes animations during vblank period
+1636+ 5576              PROCESS_ANIMATIONS:
+1637+ 5576 3A 60 4F         LD A,(ANIMSPRNUM)
+1638+ 5579 B7               OR A
+1639+ 557A C8               RET Z; no animations defined
+1640+ 557B 47               LD B,A
+1641+ 557C DD 2A 61 4F      LD IX,(ANIMSPRPTR)
+1642+ 5580              .L1:
+1643+ 5580 C5               PUSH BC
+1644+ 5581 06 00            LD B,0 ; normal mode, change on timer expiry only
+1645+ 5583 CD 8F 55         CALL PROCESS_SINGLE_ANIMATION
+1646+ 5586 11 08 00         LD DE,8
+1647+ 5589 DD 19            ADD IX,DE
+1648+ 558B C1               POP BC
+1649+ 558C 10 F2            DJNZ .L1
+1650+ 558E C9               RET
+1651+ 558F              ; *******************************************************************************************************
+1652+ 558F
+1653+ 558F              ; *******************************************************************************************************
+1654+ 558F              ; processes single sprite animation
+1655+ 558F              ; skips inactive ones, but this can be skipped by calling .INACTIVE_TOO entry point
+1656+ 558F              ; on timer expiry goes to next animation item
+1657+ 558F              ; input IX=sprite animation pointer
+1658+ 558F              ; input B=1 force mode, activate animation action regardless of expired timer
+1659+ 558F              PROCESS_SINGLE_ANIMATION:
+1660+ 558F DD 7E 06         LD A,(IX+6); active
+1661+ 5592 B7               OR A
+1662+ 5593 C8               RET Z ; inactive animation
+1663+ 5594              .INACTIVE_TOO:
+1664+ 5594 DD 6E 01         LD L,(IX+1)
+1665+ 5597 DD 66 02         LD H,(IX+2) ; HL=end time
+1666+ 559A 2B               DEC HL
+1667+ 559B DD 75 01         LD (IX+1),L
+1668+ 559E DD 74 02         LD (IX+2),H
+1669+ 55A1 7D               LD A,L
+1670+ 55A2 B4               OR H
+1671+ 55A3 28 06            JR Z,.STEP
+1672+ 55A5 05               DEC B
+1673+ 55A6 04               INC B
+1674+ 55A7 C8               RET Z ; not forced mode, return
+1675+ 55A8 C3 F0 55         JP SETUP_ANIM_STEP; call function with flag to skip timer setup
+1676+ 55AB              .STEP:
+1677+ 55AB 06 00            LD B,0; setup timer
+1678+ 55AD DD 34 03         INC (IX+3) ; current animation item
+1679+ 55B0 C3 F0 55         JP SETUP_ANIM_STEP
+1680+ 55B3              ; *******************************************************************************************************
+1681+ 55B3
+1682+ 55B3              ; *******************************************************************************************************
+1683+ 55B3              ; function will setup sprite animation after current item change
+1684+ 55B3              ; input A=current animation definition
+1685+ 55B3              ; input IX=pointer to sprite animation
+1686+ 55B3              ; input B=1 skip timer setup
+1687+ 55B3              ; output IY=pointer to animation item
+1688+ 55B3              ; CF=1 error or non-cyclic animation ended, in both cases set active flag to 0
+1689+ 55B3              ; basically sets new end time for current animation
+1690+ 55B3              INIT_CURRENT_ANIMATION:
+1691+ 55B3 CD 78 4F         CALL GETnthANIMDEF
+1692+ 55B6 DD 7E 03         LD A,(IX+3) ; current animation item
+1693+ 55B9 BE               CP (HL) ; number of animation items in the animation definition
+1694+ 55BA 38 0A            JR C,.L3 ; last item not reached
+1695+ 55BC                  ; last item reached
+1696+ 55BC DD 7E 05         LD A,(IX+5) ; cyclic flag
+1697+ 55BF B7               OR A
+1698+ 55C0 28 2C            JR Z,.ERROR ; non-cyclic animation
+1699+ 55C2                  ; cyclic animation, restart
+1700+ 55C2 DD 36 03 00      LD (IX+3),0; current item
+1701+ 55C6              .L3:
+1702+ 55C6                  ; HL = animation definition
+1703+ 55C6 23               INC HL ; skip animation definition size field
+1704+ 55C7 16 00            LD D,0
+1705+ 55C9 DD 5E 03         LD E,(IX+3); current item
+1706+ 55CC 19               ADD HL,DE
+1707+ 55CD 4E               LD C,(HL) ; current animation item
+1708+ 55CE 0C               INC C
+1709+ 55CF 3A 5A 4F         LD A,(ANIMITEMNUM)
+1710+ 55D2 B9               CP C
+1711+ 55D3 38 19            JR C,.ERROR ; invalid animation item, stop animation
+1712+ 55D5 0D               DEC C
+1713+ 55D6 79               LD A,C
+1714+ 55D7 CD 6F 4F         CALL GETnthANIMITEM
+1715+ 55DA E5               PUSH HL
+1716+ 55DB FD E1            POP IY ; IY=animation item
+1717+ 55DD 05               DEC B
+1718+ 55DE 28 0C            JR Z,.EXIT
+1719+ 55E0 FD 5E 01         LD E,(IY+1)
+1720+ 55E3 FD 56 02         LD D,(IY+2) ; duration
+1721+ 55E6 DD 73 01         LD (IX+1),E
+1722+ 55E9 DD 72 02         LD (IX+2),D
+1723+ 55EC              .EXIT:
+1724+ 55EC AF               XOR A
+1725+ 55ED C9               RET
+1726+ 55EE              .ERROR:
+1727+ 55EE 37               SCF
+1728+ 55EF C9               RET
+1729+ 55F0              ; *******************************************************************************************************
+1730+ 55F0
+1731+ 55F0              ; *******************************************************************************************************
+1732+ 55F0              ; function will display currect item and set up expiry time
+1733+ 55F0              ; it will also stop the animation if expired
+1734+ 55F0              ; sets sprite update flag if any changes in sprite data made
+1735+ 55F0              ; input IX=current sprite animation
+1736+ 55F0              ; input B=1 skip timer setup
+1737+ 55F0              SETUP_ANIM_STEP:
+1738+ 55F0 DD 4E 04         LD C,(IX+4) ; animation definition ID
+1739+ 55F3 0C               INC C
+1740+ 55F4 3A 5D 4F         LD A,(ANIMDEFNUM)
+1741+ 55F7 B9               CP C
+1742+ 55F8 30 05            JR NC,.L2
+1743+ 55FA                  ; given animation item is outside of bounds, deactivate animation
+1744+ 55FA              .STOPANIM:
+1745+ 55FA DD 36 06 00      LD (IX+6),0
+1746+ 55FE C9               RET
+1747+ 55FF              .L2:
+1748+ 55FF 0D               DEC C
+1749+ 5600 79               LD A,C
+1750+ 5601 CD B3 55         CALL INIT_CURRENT_ANIMATION
+1751+ 5604 38 F4            JR C, .STOPANIM
+1752+ 5606 FD 7E 00         LD A,(IY) ; type of animation item
+1753+ 5609 B7               OR A
+1754+ 560A 28 44            JR Z,.L4 ; change pattern and/or color
+1755+ 560C              .PAT:
+1756+ 560C                  ; change pattern definition
+1757+ 560C                  ; check if sprite or character
+1758+ 560C DD 7E 07         LD A,(IX+7)
+1759+ 560F B7               OR A
+1760+ 5610 20 58            JR NZ,.CHAR
+1761+ 5612 DD 7E 00         LD A,(IX) ; sprite number
+1762+ 5615 CD 89 4D         CALL GETnthSPRATTR
+1763+ 5618 23          > INC HL ; skip y and x
+1763+ 5619 23          > INC HL
+1763+ 561A 23          > INC HL
+1763+ 561B 23          > INC HL
+1764+ 561C 7E               LD A,(HL); current pattern
+1765+ 561D 26 00            LD H,0
+1766+ 561F 6F               LD L,A
+1767+ 5620 3A E0 F3         LD A,(REG1SAV)
+1768+ 5623 E6 02            AND 2
+1769+ 5625 20 07            JR NZ,.L6
+1770+ 5627                  ; 8x8 sprite
+1771+ 5627 CD 32 64         CALL HLx8
+1772+ 562A 06 08            LD B,8
+1773+ 562C 18 05            JR .L5
+1774+ 562E              .L6:
+1775+ 562E CD 30 64         CALL HLx32
+1776+ 5631 06 20            LD B,32
+1777+ 5633              .L5:
+1778+ 5633 3A AF FC         LD A,(SCRMOD)
+1779+ 5636 3D               DEC A
+1780+ 5637 20 06            JR NZ,.L10
+1781+ 5639 ED 5B C5 F3      LD DE,(T32PAT)
+1782+ 563D 18 04            JR .L7
+1783+ 563F              .L10:
+1784+ 563F ED 5B CF F3      LD DE,(GRPPAT)
+1785+ 5643              .L7:
+1786+ 5643 19               ADD HL,DE
+1787+ 5644 CD 1D 64         CALL SETWRT_LOCAL
+1788+ 5647 FD 6E 03         LD L,(IY+3)
+1789+ 564A FD 66 04         LD H,(IY+4) ; pointer to sprite pattern data
+1790+ 564D C3 28 64         JP BBYTECOPY
+1791+ 5650              .L4:
+1792+ 5650                  ; change pattern and color in sprite attributes table
+1793+ 5650 DD 7E 00         LD A,(IX) ; sprite number
+1794+ 5653 CD 89 4D         CALL GETnthSPRATTR
+1795+ 5656 23          > INC HL ; skip y and x
+1795+ 5657 23          > INC HL
+1795+ 5658 23          > INC HL
+1795+ 5659 23          > INC HL
+1796+ 565A FD 7E 03         LD A,(IY+3) ; new pattern
+1797+ 565D 77               LD (HL),A
+1798+ 565E 23          > INC HL
+1798+ 565F 23          > INC HL
+1799+ 5660 FD 7E 04         LD A,(IY+4) ; new color
+1800+ 5663 77               LD (HL),A
+1801+ 5664 2A 80 4D         LD HL,(SPRATR_UPDATE_FLAG)
+1802+ 5667 36 01            LD (HL),1
+1803+ 5669 C9               RET
+1804+ 566A              .CHAR:
+1805+ 566A DD 6E 00         LD L,(IX)
+1806+ 566D 3D               DEC A
+1807+ 566E 67               LD H,A
+1808+ 566F CD 32 64         CALL HLx8
+1809+ 5672 3A AF FC         LD A,(SCRMOD)
+1810+ 5675 3D               DEC A
+1811+ 5676 20 06            JR NZ,.L8
+1812+ 5678 ED 5B C1 F3      LD DE,(T32CGP)
+1813+ 567C 18 04            JR .L9
+1814+ 567E              .L8:
+1815+ 567E ED 5B CB F3      LD DE,(GRPCGP)
+1816+ 5682              .L9:
+1817+ 5682 06 08            LD B,8
+1818+ 5684 18 BD            JR .L7
+1819+ 5686              ; *******************************************************************************************************
+1820+ 5686
 # file closed: asm\ANIMATION.asm
  132  5686               INCLUDE "SGAM.asm"
 # file opened: asm\SGAM.asm

@@ -16,8 +16,15 @@ RAMAD3	equ	0F344h	; Main-RAM Slot (0C000h~0FFFFh)
 
 LoaderBegin:
 
- INCBIN "bin/main.bin"
- INCLUDE "symbol/main.exp"
+ IF (BASIC_EXTENSION == 1)
+ INCBIN "bin/maine.bin"
+ INCLUDE "symbol/maine.exp"
+ ENDIF
+
+ IF (DEFUSR_EXTENSION == 1)
+ INCBIN "bin/maind.bin"
+ INCLUDE "symbol/maind.exp"
+ ENDIF
 
 DATA_END:
 

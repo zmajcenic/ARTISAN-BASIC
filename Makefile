@@ -16,9 +16,11 @@ sound:
 	cp bin/song.bin bin/sfx.bin dsk/
 
 bin:
-	sjasmplus --fullpath asm\\main.asm --raw=$(BIN_DIR)\\main.bin --sym=$(SYM_DIR)\\main.sym --lst=$(SYM_DIR)\\main.lst --exp=$(SYM_DIR)\\main.exp -I.
-	sjasmplus --fullpath asm\\ARTISAN.asm --raw=$(BIN_DIR)\\ARTISAN.bin --sym=$(SYM_DIR)\\ARTISAN.sym --lst=$(SYM_DIR)\\ARTISAN.lst -I.
-	cp bin/ARTISAN.bin dsk/
+	sjasmplus -DBASIC_EXTENSION=1 -DDEFUSR_EXTENSION=0 --fullpath asm\\main.asm --raw=$(BIN_DIR)\\maine.bin --sym=$(SYM_DIR)\\maine.sym --lst=$(SYM_DIR)\\maine.lst --exp=$(SYM_DIR)\\maine.exp -I.
+	sjasmplus -DBASIC_EXTENSION=1 -DDEFUSR_EXTENSION=0 --fullpath asm\\ARTISAN.asm --raw=$(BIN_DIR)\\ARTISANE.bin --sym=$(SYM_DIR)\\ARTISANE.sym --lst=$(SYM_DIR)\\ARTISANE.lst -I.
+	sjasmplus -DBASIC_EXTENSION=0 -DDEFUSR_EXTENSION=1 --fullpath asm\\main.asm --raw=$(BIN_DIR)\\maind.bin --sym=$(SYM_DIR)\\maind.sym --lst=$(SYM_DIR)\\maind.lst --exp=$(SYM_DIR)\\maind.exp -I.
+	sjasmplus -DBASIC_EXTENSION=0 -DDEFUSR_EXTENSION=1 --fullpath asm\\ARTISAN.asm --raw=$(BIN_DIR)\\ARTISAND.bin --sym=$(SYM_DIR)\\ARTISAND.sym --lst=$(SYM_DIR)\\ARTISAND.lst -I.
+	cp bin/ARTISAN*.bin dsk/
 
 clean:
 	rm $(BIN_DIR)/*.bin dsk/*.BAS dsk/*.ASC
