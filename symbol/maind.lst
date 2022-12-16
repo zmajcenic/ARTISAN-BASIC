@@ -109,7 +109,7 @@
  105  4012              ; this location #4012 stores extension version in DAA format
  106  4012              ; first byte is major version and second minor
  107  4012              VERSION:
- 108  4012 00 81         DB #00, #81
+ 108  4012 00 90         DB #00, #90
  109  4014
  110  4014              ; this location #4014 contains a jump to entry point for DEFUSR approach
  111  4014              ; if excluded it contains 3xRET so that sound player can be at aspecific spot

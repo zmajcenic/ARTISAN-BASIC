@@ -105,7 +105,7 @@ FREEMEMPTR:
 ; this location #4012 stores extension version in DAA format
 ; first byte is major version and second minor
 VERSION:
- DB #00, #81
+ DB #00, #90
 
 ; this location #4014 contains a jump to entry point for DEFUSR approach
 ; if excluded it contains 3xRET so that sound player can be at aspecific spot
