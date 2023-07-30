@@ -7,7 +7,7 @@ all: basic sound bin
 
 basic:
 	cp basic/*.ASC basic/*.BAS dsk/
-	./append_ctrl_z.sh
+#	./append_ctrl_z.sh
 
 sound:
 	rasm -sp -ob bin/AKG.bin -os symbol/AKG.sym AKG/AKG.asm

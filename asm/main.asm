@@ -12,8 +12,9 @@ BOX_CMDS		   EQU 1
 ANIM_CMDS		EQU 1
 COLL_CMD       EQU 1
 
-;BASIC_EXTENSION   EQU 0
-;DEFUSR_EXTENSION  EQU 1
+; what to compile, provided in sjasmplus command line
+;BASIC_EXTENSION   EQU 1
+;DEFUSR_EXTENSION  EQU 0
 
 CHPUT   EQU    #A2
 CALBAS  EQU		#159

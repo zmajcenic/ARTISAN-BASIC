@@ -332,8 +332,12 @@ VRAM_LDIRMV:
 	OUT	(099H), A
 	LD	A, H
 	AND	03FH
+	NOP ; too fast VDP access per openMSX
 	OUT	(099H), A
 	EI
+	NOP
+	NOP
+	NOP ; too fast VDP access per openMSX
 .L4:
     IN A, (#98)
 	LD (DE), A
