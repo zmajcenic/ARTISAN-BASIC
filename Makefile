@@ -22,6 +22,9 @@ bin:
 	sjasmplus -DBASIC_EXTENSION=0 -DDEFUSR_EXTENSION=1 --fullpath asm\\ARTISAN.asm --raw=$(BIN_DIR)\\ARTISAND.bin --sym=$(SYM_DIR)\\ARTISAND.sym --lst=$(SYM_DIR)\\ARTISAND.lst -I.
 	cp bin/ARTISAN*.bin dsk/
 
+pngtool:
+	gcc -g tools\\pngconv.c -o bin\\pngconv.exe -llibpng16 
+
 clean:
 	rm $(BIN_DIR)/*.bin dsk/*.BAS dsk/*.ASC
 
