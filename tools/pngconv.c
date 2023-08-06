@@ -4,13 +4,6 @@
 #include <string.h>
 #include <libpng16/png.h>
 
-struct binheader {
-  unsigned char signature;
-  unsigned short start;
-  unsigned short end;
-  unsigned short exec; 
-};
-
 static int binary=0;
 
 int width, height;
@@ -100,7 +93,7 @@ void extract_data_and_mask (unsigned char* data, unsigned char* mask) {
     for (y = 0; y < height; y++) {
       //printf ("y=%d\n",y);
       p = &(row_pointers[y][x * 4]);
-      l = (y/8)*width+(x/8)*8+(y%8);
+      l = (y>>3)*width+(x>>3)*8+(y%8);
       //printf ("l=%d\n",l);
       // check for mask
       if ((p[0]==mr) && (p[1]==mg) && (p[2]==mb)) {
@@ -111,6 +104,8 @@ void extract_data_and_mask (unsigned char* data, unsigned char* mask) {
         data[l]|=b;
         //printf ("%d\n",data[l]);
       }
+      //printf ("x=%d,y=%d,b=%d,l=%d,mask=%d,data=%d\n",x,y,b,l,mask[l],data[l]);
+      //getchar();
     }
   }
 }
@@ -232,11 +227,15 @@ int main (int argc, char **argv)
     exit (1);
   }
   if (binary) {
-    struct binheader h;
-    h.signature=0xfe;
-    h.start=0;
-    h.end=width*height/4-1;
-    h.exec=0;
+    unsigned char h[7];
+    h[0]=0xfe;
+    h[1]=0;
+    h[2]=0;
+    int size=width*height/4-1;
+    h[3]=size>>8;
+    h[4]=size&0xff;
+    h[5]=0;
+    h[6]=0;
 
     if (fwrite (&h, 7, 1, fo) != 1)
     {
@@ -256,6 +255,36 @@ int main (int argc, char **argv)
   }  
   
   fclose(fo);
+
+  /*
+  int x,y;
+  unsigned char a;
+  unsigned char *p;
+
+  for (y=0; y<height; y++) {
+    for (x=0; x<width; x++) {
+      p=data+(y>>3)*width+(x>>3)*8+(y%8);
+      a=0x80 >> (x%8);
+      if (*p & a)
+        printf ("*");
+      else
+        printf (".");
+    }
+    printf("\n");
+  }
+  printf("\n");
+  for (y=0; y<height; y++) {
+    for (x=0; x<width; x++) {
+      p=mask+(y>>3)*width+(x>>3)*8+(y%8);
+      a=0x80 >> (x%8);
+      if (*p & a)
+        printf ("*");
+      else
+        printf (".");
+    }
+    printf("\n");
+  }
+  */
 
   exit (0);
 }
