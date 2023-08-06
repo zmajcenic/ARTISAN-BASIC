@@ -232,8 +232,8 @@ int main (int argc, char **argv)
     h[1]=0;
     h[2]=0;
     int size=width*height/4-1;
-    h[3]=size>>8;
-    h[4]=size&0xff;
+    h[3]=size&0xff;
+    h[4]=size>>8;
     h[5]=0;
     h[6]=0;
 
