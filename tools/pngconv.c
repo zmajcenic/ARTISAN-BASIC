@@ -4,7 +4,7 @@
 #include <string.h>
 #include <libpng16/png.h>
 
-static int binary=0;
+static int binary=0, verbose=0;
 
 int width, height;
 png_byte color_type;
@@ -14,6 +14,10 @@ png_bytep *row_pointers = NULL;
 int mr,mb,mg,zr,zg,zb;
 unsigned char *mask;
 unsigned char *data;
+int sprite_color_num, sprite_num;
+int sr[14],sg[14],sb[14];
+static unsigned char *sprite_data;
+static int sprite_x_offset[256], sprite_y_offset[256];
 
 void read_png_file(char *filename) {
   FILE *fp = fopen(filename, "rb");
@@ -110,6 +114,82 @@ void extract_data_and_mask (unsigned char* data, unsigned char* mask) {
   }
 }
 
+// locate horizontal starting location for a specified color in a WxH window, but up to width and height global vars
+int locate_color (int start_x, int start_y, int w, int h, int r, int g, int b) {
+  int x, y;
+  png_bytep p;
+
+  for (x = start_x; (x < start_x+w) && (x < width); x++) {
+    for (y = start_y; (y < start_y+h) && (y < height); y++) {
+      p = &(row_pointers[y][x * 4]);
+      if ((p[0]==r) && (p[1]==g) && (p[2]==b))
+        return x;
+    }
+  }
+  return -1;
+}
+
+// grab sprite 16x16 data from a specified location
+void grab_sprite (int start_x, int start_y, int r, int g, int b) {
+  int x, y, i, j, l;
+  png_bytep p;
+  unsigned char bit;
+  unsigned char *s;
+  int *t;
+
+  //printf ("grab entry: (%d,%d), sprite_num=%d\n", start_x, start_y,sprite_num);
+
+  sprite_num++;
+  if (sprite_num>=256) {
+    printf ("Sprite number limit reached\n");
+    exit(1);
+  }
+
+  sprite_x_offset[sprite_num-1]=start_x;
+  sprite_y_offset[sprite_num-1]=start_y;
+  s=sprite_data+(sprite_num-1)*32;
+  for (l=0; l<32; l++)
+    s[l]=0;
+
+  i=0;
+  for (x = start_x; (x < start_x+16) && (x < width); x++) {
+    bit = 0x80 >> (i%8);
+    j=0;
+    for (y = start_y; (y < start_y+16) && (y < height); y++) {
+      p = &(row_pointers[y][x * 4]);
+      l = (i>>3)*16+j;
+      if ((p[0]==r) && (p[1]==g) && (p[2]==b))
+        s[l]|=bit;
+      j++;
+    }
+    i++;
+  }
+  //printf ("grab exit: (%d,%d), sprite_num=%d\n", start_x, start_y,sprite_num);
+}
+
+//locate and grab sprites of specified colors, return number of defined sprites
+int locate_and_grab_sprites (int r, int g, int b) {
+  int x,y, num, l;
+
+  num=sprite_num;
+  for (y=0; y<height; y+=16) {
+    //printf("%d\n",y);
+    x=0;
+    while (x<width) {
+      l=locate_color(x,y,width,16,r,g,b);
+      //printf("l=%d, y=%d\n",l,y);
+      if (l != -1) {
+        grab_sprite(l,y,r,g,b);
+        //printf("l=%d, y=%d\n",l,y);
+        x=l+16;
+      }
+      else
+        break;
+    }
+  }
+  return sprite_num-num;
+}
+
 int main (int argc, char **argv)
 {
   int c;
@@ -118,23 +198,33 @@ int main (int argc, char **argv)
   char *mask_color_str=NULL;
   char *zerobit_color_str=NULL;
 
+  sprite_color_num=0;
+  sprite_num=0;
+  sprite_data=malloc(256*32);
+  if (!sprite_data) {
+    printf ("Error allocating memory for sprite data\n");
+    exit(1);
+  }
+
   while (1)
     {
       static struct option long_options[] =
         {
           {"binary", no_argument, &binary, 1},
+          {"verbose", no_argument, &verbose, 1},
           /* These options don’t set a flag.
              We distinguish them by their indices. */
           {"input", required_argument, 0, 'i'},
           {"output", required_argument, 0, 'o'},
           {"mask_color", required_argument, 0, 'm'},
           {"zerobit_color", required_argument, 0, 'z'},
+          {"sprite_color", required_argument, 0, 's'},
           {0, 0, 0, 0}
         };
       /* getopt_long stores the option index here. */
       int option_index = 0;
 
-      c = getopt_long (argc, argv, "i:o:m:z:",
+      c = getopt_long (argc, argv, "i:o:m:z:s:",
                       long_options, &option_index);
 
       /* Detect the end of the options. */
@@ -170,7 +260,21 @@ int main (int argc, char **argv)
 
         case 'z':
           //printf ("option -z with value `%s'\n", optarg);
-		  zerobit_color_str = strdup(optarg);
+		      zerobit_color_str = strdup(optarg);
+          break;
+
+        case 's':
+          //printf ("option -s with value `%s'\n", optarg);
+          // check if colors correctly passed as 6 char hex string
+          if ((strlen(optarg) != 6) || (sscanf(optarg,"%2x%2x%2x",&sr[sprite_color_num],&sg[sprite_color_num],&sb[sprite_color_num]) <3)) {
+            printf("Invalid color format for mask - %s\n", optarg);
+            exit(1);
+          }
+		      sprite_color_num++;
+          if (sprite_color_num > 14) {
+            printf ("Too many sprite colors specified - 14 maximum\n");
+            exit (1);
+          }
           break;
 
         case '?':
@@ -189,7 +293,9 @@ int main (int argc, char **argv)
 		printf ("-o | --output <filename> specify output .bin file\n");
 		printf ("-m | --mask_color <hex RGB> color defining AND mask\n");
     printf ("-z | --zerobit_color <hex RGB> color defining zero valued bit in data\n");
+    printf ("-s | --sprite_color <hex RGB> generate sprite data for a specific color [optional][multiple]\n");
     printf ("--binary write .BIN header [optional]\n");
+    printf ("--verbose data and mask as ASCII and sprites as BASIC lines [optional]\n");
 		exit (1);
 	}
 
@@ -210,6 +316,12 @@ int main (int argc, char **argv)
     exit(1);
   }
   printf ("Mask color [%02X,%02X,%02X], zero bit color [%02X,%02X,%02X]\n",mr,mg,mb,zr,zg,zb);
+  if (sprite_color_num > 0) {
+    for (int i=0; i<sprite_color_num; i++)
+    {
+      printf ("Sprite color %d = [%02X,%02X,%02X]\n", i+1, sr[i], sg[i], sb[i]);
+    }
+  }
 
   unsigned char *mask = calloc(width*height/8,1);
   unsigned char *data = calloc(width*height/8,1);
@@ -219,6 +331,57 @@ int main (int argc, char **argv)
   }
 
   extract_data_and_mask(data,mask);
+  if (verbose) {
+    int x,y;
+    unsigned char a;
+    unsigned char *p;
+
+    printf("Data:\n");
+    for (y=0; y<height; y++) {
+      for (x=0; x<width; x++) {
+        p=data+(y>>3)*width+(x>>3)*8+(y%8);
+        a=0x80 >> (x%8);
+        if (*p & a)
+          printf ("*");
+        else
+          printf (".");
+      }
+      printf("\n");
+    }
+    printf("Mask:\n");
+    for (y=0; y<height; y++) {
+      for (x=0; x<width; x++) {
+        p=mask+(y>>3)*width+(x>>3)*8+(y%8);
+        a=0x80 >> (x%8);
+        if (*p & a)
+          printf ("*");
+        else
+          printf (".");
+      }
+      printf("\n");
+    }
+  }
+  else
+    printf ("Extracted data and mask\n");
+  
+  for (int i=0; i<sprite_color_num; i++) {
+    int j = locate_and_grab_sprites(sr[i],sg[i],sb[i]);
+    printf ("Sprite color %02d = [%02X,%02X,%02X] - %d sprites found\n", i+1, sr[i], sg[i], sb[i], j);
+    if (verbose) {
+      for (int k=sprite_num-j; k<sprite_num; k++) {
+        printf ("REM OFFSET\n");
+        printf ("DATA %d,%d\n",sprite_x_offset[k],sprite_y_offset[k]);
+        printf ("REM DATA\n");
+        printf ("DATA ");
+        for (int l=0; l<32; l++) {
+          printf ("%d",sprite_data[k*32+l]);
+          if (l<31)
+            printf (",");
+        }
+        printf ("\n");
+      }
+    }
+  }
 
   FILE *fo = fopen (output_file, "wb");
   if (fo == NULL)
@@ -255,36 +418,7 @@ int main (int argc, char **argv)
   }  
   
   fclose(fo);
-
-  /*
-  int x,y;
-  unsigned char a;
-  unsigned char *p;
-
-  for (y=0; y<height; y++) {
-    for (x=0; x<width; x++) {
-      p=data+(y>>3)*width+(x>>3)*8+(y%8);
-      a=0x80 >> (x%8);
-      if (*p & a)
-        printf ("*");
-      else
-        printf (".");
-    }
-    printf("\n");
-  }
-  printf("\n");
-  for (y=0; y<height; y++) {
-    for (x=0; x<width; x++) {
-      p=mask+(y>>3)*width+(x>>3)*8+(y%8);
-      a=0x80 >> (x%8);
-      if (*p & a)
-        printf ("*");
-      else
-        printf (".");
-    }
-    printf("\n");
-  }
-  */
+  printf ("Wrote output file %s\n", output_file);
 
   exit (0);
 }
