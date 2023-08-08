@@ -186,11 +186,21 @@ MEMVRM:
 ; +2 = source address
 ; +4 = destination address
 ; +6 = lenght
-; +8 = vsync wait flag
+; +8 = flag
 MEMVRM_DEFUSR:
 	LD A,(IX+8)
 	OR A
 	JR Z,.L0
+	IF (SPRITE_CMDS == 1)
+		AND 2
+		JR Z,.L2
+		LD A, (SPRATR_INIT_STATUS)
+		OR A
+		JR Z,.L2
+		LD HL,(SPRATR_UPDATE_FLAG)
+		LD (HL),A
+	ENDIF
+.L2:
 	HALT
 .L0:
 	; enable page 0

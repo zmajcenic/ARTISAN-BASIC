@@ -4089,182 +4089,192 @@
  186+ 5A57 ~            ; +2 = source address
  187+ 5A57 ~            ; +4 = destination address
  188+ 5A57 ~            ; +6 = lenght
- 189+ 5A57 ~            ; +8 = vsync wait flag
+ 189+ 5A57 ~            ; +8 = flag
  190+ 5A57 ~            MEMVRM_DEFUSR:
  191+ 5A57 ~            	LD A,(IX+8)
  192+ 5A57 ~            	OR A
  193+ 5A57 ~            	JR Z,.L0
- 194+ 5A57 ~            	HALT
- 195+ 5A57 ~            .L0:
- 196+ 5A57 ~            	; enable page 0
- 197+ 5A57 ~            	LD IY, .RET
- 198+ 5A57 ~            	JP ENABLE_PAGE0
- 199+ 5A57 ~            .RET:
- 200+ 5A57 ~            	EI
- 201+ 5A57 ~            	LD L,(IX+2)
- 202+ 5A57 ~            	LD H,(IX+3)
- 203+ 5A57 ~            	LD E,(IX+4)
- 204+ 5A57 ~            	LD D,(IX+5)
- 205+ 5A57 ~            	LD C,(IX+6)
- 206+ 5A57 ~            	LD B,(IX+7)
- 207+ 5A57 ~            	CALL VRAM_LDIRVM
- 208+ 5A57 ~                POP DE
- 209+ 5A57 ~                POP BC
- 210+ 5A57 ~                JP RESTORE_PAGE_INFO
- 211+ 5A57 ~            ; *******************************************************************************************************
- 212+ 5A57               ENDIF
- 213+ 5A57
- 214+ 5A57              ; *******************************************************************************************************
- 215+ 5A57              ; common code to copy from memory to VRAM
- 216+ 5A57              ; input HL=RAM source
- 217+ 5A57              ; input DE=VRAM destination
- 218+ 5A57              ; BC=count
- 219+ 5A57              VRAM_LDIRVM:
- 220+ 5A57 3E 01        	LD A,1
- 221+ 5A59 32 58 62     	LD (VRAM_UPDATE_IN_PROGRESS),A
- 222+ 5A5C EB           	EX DE, HL
- 223+ 5A5D F3           	DI
- 224+ 5A5E CD 2F 64     	CALL SETWRT_LOCAL
- 225+ 5A61 FB           	EI
- 226+ 5A62 EB           	EX DE, HL
- 227+ 5A63 78           	LD A, B
- 228+ 5A64 B7           	OR A
- 229+ 5A65 28 0D        	JR Z, .L3
- 230+ 5A67 C5           	PUSH BC
- 231+ 5A68 0E 98        	LD C, #98
- 232+ 5A6A              .L2:
- 233+ 5A6A 50           	LD D, B
- 234+ 5A6B 06 00        	LD B, 0
- 235+ 5A6D CD 3C 64     	CALL BBYTECOPY_NO_C
- 236+ 5A70 42           	LD B, D
- 237+ 5A71 10 F7        	DJNZ .L2
- 238+ 5A73 C1           	POP BC
- 239+ 5A74              .L3:
- 240+ 5A74 79           	LD A, C
- 241+ 5A75 B7           	OR A
- 242+ 5A76 28 04        	JR Z,.L4
- 243+ 5A78 41           	LD B, C
- 244+ 5A79 CD 3A 64     	CALL BBYTECOPY
- 245+ 5A7C              .L4:
- 246+ 5A7C AF           	XOR A
- 247+ 5A7D 32 58 62     	LD (VRAM_UPDATE_IN_PROGRESS),A
- 248+ 5A80 C9           	RET
- 249+ 5A81              ; *******************************************************************************************************
- 250+ 5A81
- 251+ 5A81               IF (1 == 1)
- 252+ 5A81              ; *******************************************************************************************************
- 253+ 5A81              ; function to handle CALL VRMMEM basic extension
- 254+ 5A81              ; copies from VRAM to RAM
- 255+ 5A81              ; _VRMMEM ( INT source,
- 256+ 5A81              ;			INT destination,
- 257+ 5A81              ;			INT count
- 258+ 5A81              ; will put ram in page 0 also, page 1 is already there
- 259+ 5A81              VRMMEM:
- 260+ 5A81              	; opening (
- 261+ 5A81 CD 57 65     	CALL CHKCHAR
- 262+ 5A84 28           	DB '('
- 263+ 5A85              	; get source address
- 264+ 5A85 DD 21 2F 54  	LD IX, FRMQNT
- 265+ 5A89 CD 59 01     	CALL CALBAS
- 266+ 5A8C D5           	PUSH DE
- 267+ 5A8D              	; comma
- 268+ 5A8D CD 57 65     	CALL CHKCHAR
- 269+ 5A90 2C           	DB ','
- 270+ 5A91              	; get destination address
- 271+ 5A91 DD 21 2F 54  	LD IX, FRMQNT
- 272+ 5A95 CD 59 01     	CALL CALBAS
- 273+ 5A98 D5           	PUSH DE
- 274+ 5A99              	; comma
- 275+ 5A99 CD 57 65     	CALL CHKCHAR
- 276+ 5A9C 2C           	DB ','
- 277+ 5A9D              	; get length
- 278+ 5A9D DD 21 2F 54  	LD IX, FRMQNT
- 279+ 5AA1 CD 59 01     	CALL CALBAS
- 280+ 5AA4 D5           	PUSH DE
- 281+ 5AA5              	; ending )
- 282+ 5AA5 CD 57 65     	CALL CHKCHAR
- 283+ 5AA8 29           	DB ')'
- 284+ 5AA9
- 285+ 5AA9                  ; save position in BASIC text
- 286+ 5AA9 E5           	PUSH HL
- 287+ 5AAA DD E1        	POP IX
- 288+ 5AAC
- 289+ 5AAC C1           	POP BC ; count
- 290+ 5AAD D1           	POP DE ; destination
- 291+ 5AAE E1           	POP HL ; source
- 292+ 5AAF D9           	EXX
- 293+ 5AB0 FD 21 B7 5A  	LD IY, .RET
- 294+ 5AB4 C3 08 65     	JP ENABLE_PAGE0
- 295+ 5AB7              .RET:
- 296+ 5AB7 FB           	EI
- 297+ 5AB8 D9           	EXX
- 298+ 5AB9 CD C5 5A     	CALL VRAM_LDIRMV
- 299+ 5ABC D1               POP DE
- 300+ 5ABD C1               POP BC
- 301+ 5ABE CD 7F 64         CALL RESTORE_PAGE_INFO
- 302+ 5AC1 DD E5        	PUSH IX
- 303+ 5AC3 E1           	POP HL
- 304+ 5AC4 C9           	RET
- 305+ 5AC5              ; *******************************************************************************************************
- 306+ 5AC5               ENDIF
- 307+ 5AC5
- 308+ 5AC5               IF (0 == 1)
- 309+ 5AC5 ~            ; *******************************************************************************************************
- 310+ 5AC5 ~            ; same as VRMMEM but for DEFUSR approach
- 311+ 5AC5 ~            ; input IX=pointer to input array, real data from +2
- 312+ 5AC5 ~            ; +2 = source address
- 313+ 5AC5 ~            ; +4 = destination address
- 314+ 5AC5 ~            ; +6 = count
- 315+ 5AC5 ~            VRMMEM_DEFUSR:
- 316+ 5AC5 ~            	; enable page 0
- 317+ 5AC5 ~            	LD IY, .RET
- 318+ 5AC5 ~            	JP ENABLE_PAGE0
- 319+ 5AC5 ~            .RET:
- 320+ 5AC5 ~            	EI
- 321+ 5AC5 ~            	LD L,(IX+2)
- 322+ 5AC5 ~            	LD H,(IX+3)
- 323+ 5AC5 ~            	LD E,(IX+4)
- 324+ 5AC5 ~            	LD D,(IX+5)
- 325+ 5AC5 ~            	LD C,(IX+6)
- 326+ 5AC5 ~            	LD B,(IX+7)
- 327+ 5AC5 ~            	CALL VRAM_LDIRMV
- 328+ 5AC5 ~                POP DE
- 329+ 5AC5 ~                POP BC
- 330+ 5AC5 ~                JP RESTORE_PAGE_INFO
- 331+ 5AC5 ~            ; *******************************************************************************************************
- 332+ 5AC5               ENDIF
- 333+ 5AC5
- 334+ 5AC5              ; *******************************************************************************************************
- 335+ 5AC5              ; common code to copy from VRAM to RAM
- 336+ 5AC5              ; input HL=VRAM source
- 337+ 5AC5              ; input DE=RAM destination
- 338+ 5AC5              ; BC=count
- 339+ 5AC5              VRAM_LDIRMV:
- 340+ 5AC5 3E 01        	LD A,1
- 341+ 5AC7 32 58 62     	LD (VRAM_UPDATE_IN_PROGRESS),A
- 342+ 5ACA 7D           	LD	A, L
- 343+ 5ACB F3           	DI
- 344+ 5ACC D3 99        	OUT	(099H), A
- 345+ 5ACE 7C           	LD	A, H
- 346+ 5ACF E6 3F        	AND	03FH
- 347+ 5AD1 00           	NOP ; too fast VDP access per openMSX
- 348+ 5AD2 D3 99        	OUT	(099H), A
- 349+ 5AD4 FB           	EI
- 350+ 5AD5 00           	NOP
- 351+ 5AD6 00           	NOP
- 352+ 5AD7 00           	NOP ; too fast VDP access per openMSX
- 353+ 5AD8              .L4:
- 354+ 5AD8 DB 98            IN A, (#98)
- 355+ 5ADA 12           	LD (DE), A
- 356+ 5ADB 13               INC DE
- 357+ 5ADC 0B               DEC BC
- 358+ 5ADD 79               LD A, C
- 359+ 5ADE B0               OR B
- 360+ 5ADF 20 F7            JR NZ, .L4
- 361+ 5AE1 AF           	XOR A
- 362+ 5AE2 32 58 62     	LD (VRAM_UPDATE_IN_PROGRESS),A
- 363+ 5AE5 C9               RET
- 364+ 5AE6              ; *******************************************************************************************************
+ 194+ 5A57 ~            	IF (SPRITE_CMDS == 1)
+ 195+ 5A57 ~            		AND 2
+ 196+ 5A57 ~            		JR Z,.L2
+ 197+ 5A57 ~            		LD A, (SPRATR_INIT_STATUS)
+ 198+ 5A57 ~            		OR A
+ 199+ 5A57 ~            		JR Z,.L2
+ 200+ 5A57 ~            		LD HL,(SPRATR_UPDATE_FLAG)
+ 201+ 5A57 ~            		LD (HL),A
+ 202+ 5A57 ~            	ENDIF
+ 203+ 5A57 ~            .L2:
+ 204+ 5A57 ~            	HALT
+ 205+ 5A57 ~            .L0:
+ 206+ 5A57 ~            	; enable page 0
+ 207+ 5A57 ~            	LD IY, .RET
+ 208+ 5A57 ~            	JP ENABLE_PAGE0
+ 209+ 5A57 ~            .RET:
+ 210+ 5A57 ~            	EI
+ 211+ 5A57 ~            	LD L,(IX+2)
+ 212+ 5A57 ~            	LD H,(IX+3)
+ 213+ 5A57 ~            	LD E,(IX+4)
+ 214+ 5A57 ~            	LD D,(IX+5)
+ 215+ 5A57 ~            	LD C,(IX+6)
+ 216+ 5A57 ~            	LD B,(IX+7)
+ 217+ 5A57 ~            	CALL VRAM_LDIRVM
+ 218+ 5A57 ~                POP DE
+ 219+ 5A57 ~                POP BC
+ 220+ 5A57 ~                JP RESTORE_PAGE_INFO
+ 221+ 5A57 ~            ; *******************************************************************************************************
+ 222+ 5A57               ENDIF
+ 223+ 5A57
+ 224+ 5A57              ; *******************************************************************************************************
+ 225+ 5A57              ; common code to copy from memory to VRAM
+ 226+ 5A57              ; input HL=RAM source
+ 227+ 5A57              ; input DE=VRAM destination
+ 228+ 5A57              ; BC=count
+ 229+ 5A57              VRAM_LDIRVM:
+ 230+ 5A57 3E 01        	LD A,1
+ 231+ 5A59 32 58 62     	LD (VRAM_UPDATE_IN_PROGRESS),A
+ 232+ 5A5C EB           	EX DE, HL
+ 233+ 5A5D F3           	DI
+ 234+ 5A5E CD 2F 64     	CALL SETWRT_LOCAL
+ 235+ 5A61 FB           	EI
+ 236+ 5A62 EB           	EX DE, HL
+ 237+ 5A63 78           	LD A, B
+ 238+ 5A64 B7           	OR A
+ 239+ 5A65 28 0D        	JR Z, .L3
+ 240+ 5A67 C5           	PUSH BC
+ 241+ 5A68 0E 98        	LD C, #98
+ 242+ 5A6A              .L2:
+ 243+ 5A6A 50           	LD D, B
+ 244+ 5A6B 06 00        	LD B, 0
+ 245+ 5A6D CD 3C 64     	CALL BBYTECOPY_NO_C
+ 246+ 5A70 42           	LD B, D
+ 247+ 5A71 10 F7        	DJNZ .L2
+ 248+ 5A73 C1           	POP BC
+ 249+ 5A74              .L3:
+ 250+ 5A74 79           	LD A, C
+ 251+ 5A75 B7           	OR A
+ 252+ 5A76 28 04        	JR Z,.L4
+ 253+ 5A78 41           	LD B, C
+ 254+ 5A79 CD 3A 64     	CALL BBYTECOPY
+ 255+ 5A7C              .L4:
+ 256+ 5A7C AF           	XOR A
+ 257+ 5A7D 32 58 62     	LD (VRAM_UPDATE_IN_PROGRESS),A
+ 258+ 5A80 C9           	RET
+ 259+ 5A81              ; *******************************************************************************************************
+ 260+ 5A81
+ 261+ 5A81               IF (1 == 1)
+ 262+ 5A81              ; *******************************************************************************************************
+ 263+ 5A81              ; function to handle CALL VRMMEM basic extension
+ 264+ 5A81              ; copies from VRAM to RAM
+ 265+ 5A81              ; _VRMMEM ( INT source,
+ 266+ 5A81              ;			INT destination,
+ 267+ 5A81              ;			INT count
+ 268+ 5A81              ; will put ram in page 0 also, page 1 is already there
+ 269+ 5A81              VRMMEM:
+ 270+ 5A81              	; opening (
+ 271+ 5A81 CD 57 65     	CALL CHKCHAR
+ 272+ 5A84 28           	DB '('
+ 273+ 5A85              	; get source address
+ 274+ 5A85 DD 21 2F 54  	LD IX, FRMQNT
+ 275+ 5A89 CD 59 01     	CALL CALBAS
+ 276+ 5A8C D5           	PUSH DE
+ 277+ 5A8D              	; comma
+ 278+ 5A8D CD 57 65     	CALL CHKCHAR
+ 279+ 5A90 2C           	DB ','
+ 280+ 5A91              	; get destination address
+ 281+ 5A91 DD 21 2F 54  	LD IX, FRMQNT
+ 282+ 5A95 CD 59 01     	CALL CALBAS
+ 283+ 5A98 D5           	PUSH DE
+ 284+ 5A99              	; comma
+ 285+ 5A99 CD 57 65     	CALL CHKCHAR
+ 286+ 5A9C 2C           	DB ','
+ 287+ 5A9D              	; get length
+ 288+ 5A9D DD 21 2F 54  	LD IX, FRMQNT
+ 289+ 5AA1 CD 59 01     	CALL CALBAS
+ 290+ 5AA4 D5           	PUSH DE
+ 291+ 5AA5              	; ending )
+ 292+ 5AA5 CD 57 65     	CALL CHKCHAR
+ 293+ 5AA8 29           	DB ')'
+ 294+ 5AA9
+ 295+ 5AA9                  ; save position in BASIC text
+ 296+ 5AA9 E5           	PUSH HL
+ 297+ 5AAA DD E1        	POP IX
+ 298+ 5AAC
+ 299+ 5AAC C1           	POP BC ; count
+ 300+ 5AAD D1           	POP DE ; destination
+ 301+ 5AAE E1           	POP HL ; source
+ 302+ 5AAF D9           	EXX
+ 303+ 5AB0 FD 21 B7 5A  	LD IY, .RET
+ 304+ 5AB4 C3 08 65     	JP ENABLE_PAGE0
+ 305+ 5AB7              .RET:
+ 306+ 5AB7 FB           	EI
+ 307+ 5AB8 D9           	EXX
+ 308+ 5AB9 CD C5 5A     	CALL VRAM_LDIRMV
+ 309+ 5ABC D1               POP DE
+ 310+ 5ABD C1               POP BC
+ 311+ 5ABE CD 7F 64         CALL RESTORE_PAGE_INFO
+ 312+ 5AC1 DD E5        	PUSH IX
+ 313+ 5AC3 E1           	POP HL
+ 314+ 5AC4 C9           	RET
+ 315+ 5AC5              ; *******************************************************************************************************
+ 316+ 5AC5               ENDIF
+ 317+ 5AC5
+ 318+ 5AC5               IF (0 == 1)
+ 319+ 5AC5 ~            ; *******************************************************************************************************
+ 320+ 5AC5 ~            ; same as VRMMEM but for DEFUSR approach
+ 321+ 5AC5 ~            ; input IX=pointer to input array, real data from +2
+ 322+ 5AC5 ~            ; +2 = source address
+ 323+ 5AC5 ~            ; +4 = destination address
+ 324+ 5AC5 ~            ; +6 = count
+ 325+ 5AC5 ~            VRMMEM_DEFUSR:
+ 326+ 5AC5 ~            	; enable page 0
+ 327+ 5AC5 ~            	LD IY, .RET
+ 328+ 5AC5 ~            	JP ENABLE_PAGE0
+ 329+ 5AC5 ~            .RET:
+ 330+ 5AC5 ~            	EI
+ 331+ 5AC5 ~            	LD L,(IX+2)
+ 332+ 5AC5 ~            	LD H,(IX+3)
+ 333+ 5AC5 ~            	LD E,(IX+4)
+ 334+ 5AC5 ~            	LD D,(IX+5)
+ 335+ 5AC5 ~            	LD C,(IX+6)
+ 336+ 5AC5 ~            	LD B,(IX+7)
+ 337+ 5AC5 ~            	CALL VRAM_LDIRMV
+ 338+ 5AC5 ~                POP DE
+ 339+ 5AC5 ~                POP BC
+ 340+ 5AC5 ~                JP RESTORE_PAGE_INFO
+ 341+ 5AC5 ~            ; *******************************************************************************************************
+ 342+ 5AC5               ENDIF
+ 343+ 5AC5
+ 344+ 5AC5              ; *******************************************************************************************************
+ 345+ 5AC5              ; common code to copy from VRAM to RAM
+ 346+ 5AC5              ; input HL=VRAM source
+ 347+ 5AC5              ; input DE=RAM destination
+ 348+ 5AC5              ; BC=count
+ 349+ 5AC5              VRAM_LDIRMV:
+ 350+ 5AC5 3E 01        	LD A,1
+ 351+ 5AC7 32 58 62     	LD (VRAM_UPDATE_IN_PROGRESS),A
+ 352+ 5ACA 7D           	LD	A, L
+ 353+ 5ACB F3           	DI
+ 354+ 5ACC D3 99        	OUT	(099H), A
+ 355+ 5ACE 7C           	LD	A, H
+ 356+ 5ACF E6 3F        	AND	03FH
+ 357+ 5AD1 00           	NOP ; too fast VDP access per openMSX
+ 358+ 5AD2 D3 99        	OUT	(099H), A
+ 359+ 5AD4 FB           	EI
+ 360+ 5AD5 00           	NOP
+ 361+ 5AD6 00           	NOP
+ 362+ 5AD7 00           	NOP ; too fast VDP access per openMSX
+ 363+ 5AD8              .L4:
+ 364+ 5AD8 DB 98            IN A, (#98)
+ 365+ 5ADA 12           	LD (DE), A
+ 366+ 5ADB 13               INC DE
+ 367+ 5ADC 0B               DEC BC
+ 368+ 5ADD 79               LD A, C
+ 369+ 5ADE B0               OR B
+ 370+ 5ADF 20 F7            JR NZ, .L4
+ 371+ 5AE1 AF           	XOR A
+ 372+ 5AE2 32 58 62     	LD (VRAM_UPDATE_IN_PROGRESS),A
+ 373+ 5AE5 C9               RET
+ 374+ 5AE6              ; *******************************************************************************************************
 # file closed: asm\VRAM.asm
  146  5AE6               ENDIF
  147  5AE6
