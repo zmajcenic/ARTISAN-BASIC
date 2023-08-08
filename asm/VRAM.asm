@@ -145,6 +145,9 @@ MEMVRM:
 	POP AF ; wait vsync
 	OR A
 	JR Z, .L1
+	; TEST
+	LD HL,(SPRATR_UPDATE_FLAG)
+	LD (HL),A
 	HALT
 .L1:
 	; pop LDIR parameters and store away for later
