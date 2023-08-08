@@ -99,12 +99,13 @@ FILVRM_DEFUSR:
 ; *******************************************************************************************************
 ; function to handle CALL MEMVRM basic extension
 ; copies from RAM to VRAM
+; if flag != 0 it will issue HALT before copying
+; if bit 1 of flag set and sprite system initialized it will set sprite update flag
 ; _MEMVRM ( INT source, 
 ;			INT destination, 
 ;			INT count, 
-;			BYTE wait_vsync) >0 = true
+;			BYTE flag) 
 ; will put ram in page 0 also, page 1 is already there
-; wait_vsync will issue HALT before copying
 MEMVRM:
 	; opening (
 	CALL CHKCHAR
@@ -145,9 +146,17 @@ MEMVRM:
 	POP AF ; wait vsync
 	OR A
 	JR Z, .L1
-	; TEST
-	LD HL,(SPRATR_UPDATE_FLAG)
-	LD (HL),A
+	; check for special case to set sprite update flag
+	IF (SPRITE_CMDS == 1)
+		AND 2
+		JR Z,.L2
+		LD A, (SPRATR_INIT_STATUS)
+		OR A
+		JR Z,.L2
+		LD HL,(SPRATR_UPDATE_FLAG)
+		LD (HL),A
+	ENDIF
+.L2:
 	HALT
 .L1:
 	; pop LDIR parameters and store away for later
@@ -242,7 +251,7 @@ VRAM_LDIRVM:
  IF (BASIC_EXTENSION == 1)
 ; *******************************************************************************************************
 ; function to handle CALL VRMMEM basic extension
-; copies from RAM to VRAM
+; copies from VRAM to RAM
 ; _VRMMEM ( INT source, 
 ;			INT destination, 
 ;			INT count
