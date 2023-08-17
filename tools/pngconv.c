@@ -369,10 +369,10 @@ int main (int argc, char **argv)
     printf ("Sprite color %02d = [%02X,%02X,%02X] - %d sprites found\n", i+1, sr[i], sg[i], sb[i], j);
     if (verbose) {
       for (int k=sprite_num-j; k<sprite_num; k++) {
-        printf ("REM OFFSET\n");
-        printf ("DATA %d,%d\n",sprite_x_offset[k],sprite_y_offset[k]);
-        printf ("REM DATA\n");
-        printf ("DATA ");
+        //printf ("REM OFFSET\n");
+        printf ("DATA %d,%d,",sprite_x_offset[k],sprite_y_offset[k]);
+        //printf ("REM DATA\n");
+        //printf ("DATA ");
         for (int l=0; l<32; l++) {
           printf ("%d",sprite_data[k*32+l]);
           if (l<31)
