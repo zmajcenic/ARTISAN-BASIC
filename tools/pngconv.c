@@ -3,6 +3,7 @@
 #include <getopt.h>
 #include <string.h>
 #include <libpng16/png.h>
+#include <stdbool.h>
 
 static int binary=0, verbose=0;
 
@@ -168,7 +169,8 @@ void grab_sprite (int start_x, int start_y, int r, int g, int b) {
 }
 
 //locate and grab sprites of specified colors, return number of defined sprites
-int locate_and_grab_sprites (int r, int g, int b) {
+//this function starts looking for sprites from row 0 in 16 row increments
+int locate_and_grab_sprites1 (int r, int g, int b) {
   int x,y, num, l;
 
   num=sprite_num;
@@ -190,6 +192,45 @@ int locate_and_grab_sprites (int r, int g, int b) {
   return sprite_num-num;
 }
 
+//locate and grab sprites of specified colors, return number of defined sprites
+//this function skips lines where target color is not present and then starts looking for 16x16 sprites
+int locate_and_grab_sprites2 (int r, int g, int b) {
+  int x, y, y0, num, l;
+  png_bytep p;
+  bool a;
+
+  num=sprite_num;
+  y0=0;
+  while (y0 < height)
+  {
+    // skip empty rows
+    a=false;
+    for (y=y0; (y<height) && (!a); y++)
+      for (x=0; (x<width) && (!a); x++)
+      {
+        p = &(row_pointers[y][x * 4]);
+        a=(p[0]==r) && (p[1]==g) && (p[2]==b);
+      }
+    if (y == height) break;
+    y0=--y;
+  
+    x=0;
+    while (x<width) {
+      l=locate_color(x,y,width,16,r,g,b);
+      //printf("l=%d, y=%d\n",l,y);
+      if (l != -1) {
+        grab_sprite(l,y,r,g,b);
+        //printf("l=%d, y=%d\n",l,y);
+        x=l+16;
+      }
+      else
+        break;
+    }
+    y0+=16;
+  }
+  return sprite_num-num;
+}
+
 int main (int argc, char **argv)
 {
   int c;
@@ -197,6 +238,7 @@ int main (int argc, char **argv)
   char *output_file=NULL;
   char *mask_color_str=NULL;
   char *zerobit_color_str=NULL;
+  int algorithm=0;
 
   sprite_color_num=0;
   sprite_num=0;
@@ -219,12 +261,13 @@ int main (int argc, char **argv)
           {"mask_color", required_argument, 0, 'm'},
           {"zerobit_color", required_argument, 0, 'z'},
           {"sprite_color", required_argument, 0, 's'},
+          {"algorithm", required_argument, 0, 'a'},
           {0, 0, 0, 0}
         };
       /* getopt_long stores the option index here. */
       int option_index = 0;
 
-      c = getopt_long (argc, argv, "i:o:m:z:s:",
+      c = getopt_long (argc, argv, "i:o:m:z:s:a:",
                       long_options, &option_index);
 
       /* Detect the end of the options. */
@@ -245,17 +288,17 @@ int main (int argc, char **argv)
 
         case 'i':
           //printf ("option -i with value `%s'\n", optarg);
-		  input_file = strdup(optarg);
+		      input_file = strdup(optarg);
           break;
 
         case 'o':
           //printf ("option -o with value `%s'\n", optarg);
-		  output_file = strdup(optarg);
+		      output_file = strdup(optarg);
           break;
 
         case 'm':
           //printf ("option -e with value `%s'\n", optarg);
-		  mask_color_str = strdup(optarg);
+		      mask_color_str = strdup(optarg);
           break;
 
         case 'z':
@@ -277,6 +320,12 @@ int main (int argc, char **argv)
           }
           break;
 
+        case 'a':
+          if ((strlen(optarg) != 1) || (sscanf(optarg,"%d",&algorithm) < 1) || (algorithm < 1) || (algorithm > 2)) {
+            printf("Invalid algorithm specified - %s\n", optarg);
+            exit(1);
+          }
+
         case '?':
           /* getopt_long already printed an error message. */
           break;
@@ -286,7 +335,7 @@ int main (int argc, char **argv)
         }
     }
 
-	if ((input_file == NULL) || (output_file == NULL) || (mask_color_str == NULL) || (zerobit_color_str == NULL))
+	if ((input_file == NULL) || (output_file == NULL) || (mask_color_str == NULL) || (zerobit_color_str == NULL) || (algorithm == 0))
 	{
 		printf ("Usage:\n");
 		printf ("-i | --input <filename> specify input .png file\n");
@@ -294,6 +343,7 @@ int main (int argc, char **argv)
 		printf ("-m | --mask_color <hex RGB> color defining AND mask\n");
     printf ("-z | --zerobit_color <hex RGB> color defining zero valued bit in data\n");
     printf ("-s | --sprite_color <hex RGB> generate sprite data for a specific color [optional][multiple]\n");
+    printf ("-a | --algorithm <1|2> select sprite search algorithm, can provide different results\n");
     printf ("--binary write .BIN header [optional]\n");
     printf ("--verbose data and mask as ASCII and sprites as BASIC lines [optional]\n");
 		exit (1);
@@ -365,7 +415,12 @@ int main (int argc, char **argv)
     printf ("Extracted data and mask\n");
   
   for (int i=0; i<sprite_color_num; i++) {
-    int j = locate_and_grab_sprites(sr[i],sg[i],sb[i]);
+    int j;
+    
+    if (algorithm==1)
+      j=locate_and_grab_sprites1(sr[i],sg[i],sb[i]);
+    else
+      j=locate_and_grab_sprites2(sr[i],sg[i],sb[i]);
     printf ("Sprite color %02d = [%02X,%02X,%02X] - %d sprites found\n", i+1, sr[i], sg[i], sb[i], j);
     if (verbose) {
       for (int k=sprite_num-j; k<sprite_num; k++) {
