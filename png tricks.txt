@@ -12,4 +12,4 @@ for background color use either
 
 PNG Converter
 -------------
-bin/pngconv -i png/sword\ fight-1r.png -o dsk/sword1r.bin -m e908f7 -z 000000 -s ded087 --binary --verbose
+bin/pngconv -i png/sword\ fight-1r.png -o dsk/sword1r.bin -a 1 -m e908f7 -z 000000 -s ded087 --binary --verbose
