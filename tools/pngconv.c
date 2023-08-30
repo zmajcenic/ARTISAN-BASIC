@@ -238,7 +238,7 @@ int main (int argc, char **argv)
   char *output_file=NULL;
   char *mask_color_str=NULL;
   char *zerobit_color_str=NULL;
-  int algorithm=0;
+  int algorithm=0, basic_start_line=10;
 
   sprite_color_num=0;
   sprite_num=0;
@@ -262,12 +262,13 @@ int main (int argc, char **argv)
           {"zerobit_color", required_argument, 0, 'z'},
           {"sprite_color", required_argument, 0, 's'},
           {"algorithm", required_argument, 0, 'a'},
+          {"line", required_argument, 0, 'l'},
           {0, 0, 0, 0}
         };
       /* getopt_long stores the option index here. */
       int option_index = 0;
 
-      c = getopt_long (argc, argv, "i:o:m:z:s:a:",
+      c = getopt_long (argc, argv, "i:o:m:z:s:a:l:",
                       long_options, &option_index);
 
       /* Detect the end of the options. */
@@ -326,6 +327,12 @@ int main (int argc, char **argv)
             exit(1);
           }
 
+        case 'l':
+          if ((sscanf(optarg,"%d",&basic_start_line) < 1) || (basic_start_line < 1) || (basic_start_line > 65500)) {
+            printf("Invalid BASIC start line specified - %s\n", optarg);
+            exit(1);
+          }
+
         case '?':
           /* getopt_long already printed an error message. */
           break;
@@ -344,8 +351,9 @@ int main (int argc, char **argv)
     printf ("-z | --zerobit_color <hex RGB> color defining zero valued bit in data\n");
     printf ("-s | --sprite_color <hex RGB> generate sprite data for a specific color [optional][multiple]\n");
     printf ("-a | --algorithm <1|2> select sprite search algorithm, can provide different results\n");
+    printf ("-l | --line <n> starting line of BASIC DATA statements [optional, default 10]\n");
     printf ("--binary write .BIN header [optional]\n");
-    printf ("--verbose data and mask as ASCII and sprites as BASIC lines [optional]\n");
+    printf ("--verbose print data and mask as ASCII [optional]\n");
 		exit (1);
 	}
 
@@ -422,19 +430,16 @@ int main (int argc, char **argv)
     else
       j=locate_and_grab_sprites2(sr[i],sg[i],sb[i]);
     printf ("Sprite color %02d = [%02X,%02X,%02X] - %d sprites found\n", i+1, sr[i], sg[i], sb[i], j);
-    if (verbose) {
-      for (int k=sprite_num-j; k<sprite_num; k++) {
-        //printf ("REM OFFSET\n");
-        printf ("DATA %d,%d,",sprite_x_offset[k],sprite_y_offset[k]);
-        //printf ("REM DATA\n");
-        //printf ("DATA ");
-        for (int l=0; l<32; l++) {
-          printf ("%d",sprite_data[k*32+l]);
-          if (l<31)
-            printf (",");
-        }
-        printf ("\n");
+
+    printf("%d DATA %d\n",basic_start_line++,j);
+    for (int k=sprite_num-j; k<sprite_num; k++) {
+      printf ("%d DATA %d,%d,",basic_start_line++,sprite_x_offset[k],sprite_y_offset[k]);
+      for (int l=0; l<32; l++) {
+        printf ("%d",sprite_data[k*32+l]);
+        if (l<31)
+          printf (",");
       }
+      printf ("\n");
     }
   }
 
