@@ -5,7 +5,7 @@
 #include <libpng16/png.h>
 #include <stdbool.h>
 
-static int binary=0, verbose=0;
+static int binary=0, verbose=0, check=0;
 
 int width, height;
 png_byte color_type;
@@ -231,6 +231,28 @@ int locate_and_grab_sprites2 (int r, int g, int b) {
   return sprite_num-num;
 }
 
+// seeks for colors that are different from mask, zero bit and sprites and lists pixel locations
+int check_colors () 
+{
+  int x, y, i;
+  png_bytep p;
+
+  for (x = 0; x < width; x++) {
+    for (y = 0; y < height; y++) {
+      p = &(row_pointers[y][x * 4]);
+      if ((p[0]==mr) && (p[1]==mg) && (p[2]==mb)) continue;
+      if ((p[0]==zr) && (p[1]==zg) && (p[2]==zb)) continue;
+      i=0;
+      while (i<sprite_color_num) {
+        if ((p[0]==sr[i]) && (p[1]==sg[i]) && (p[2]==sb[i])) break;
+        i++;
+      }
+      if ((sprite_color_num>0) && (i==sprite_color_num))
+        printf("(%d,%d)\n",x,y);
+    }
+  }
+}
+
 int main (int argc, char **argv)
 {
   int c;
@@ -254,6 +276,7 @@ int main (int argc, char **argv)
         {
           {"binary", no_argument, &binary, 1},
           {"verbose", no_argument, &verbose, 1},
+          {"check", no_argument, &check, 1},
           /* These options don’t set a flag.
              We distinguish them by their indices. */
           {"input", required_argument, 0, 'i'},
@@ -354,6 +377,7 @@ int main (int argc, char **argv)
     printf ("-l | --line <n> starting line of BASIC DATA statements [optional, default 10]\n");
     printf ("--binary write .BIN header [optional]\n");
     printf ("--verbose print data and mask as ASCII [optional]\n");
+    printf ("--check detect pixels of color other than mask, zero bit and sprites [optional]\n");
 		exit (1);
 	}
 
@@ -441,6 +465,11 @@ int main (int argc, char **argv)
       }
       printf ("\n");
     }
+  }
+
+  if (check) {
+    printf("Searching for stray pixels....\n");
+    check_colors();
   }
 
   FILE *fo = fopen (output_file, "wb");
