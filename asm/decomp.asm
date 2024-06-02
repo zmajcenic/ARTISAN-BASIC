@@ -69,17 +69,35 @@ dzx0s_elias_backtrack:
 DXZ0s_VRAM_LDIR:
         PUSH AF ; save AF used by algorithm
         PUSH DE
-        EX DE, HL
-        ADD HL, BC
-        PUSH HL
-        POP IY
-        EX DE, HL
-        POP DE
+        PUSH BC
         CALL VRAM_LDIRVM
-        LD C,0
-        PUSH IY
-        POP DE
+        POP BC
+        EX DE,HL
+        POP HL
+        ADD HL,BC
+        EX DE,HL
+        LD BC,0
         POP AF
+        RET
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; helper function to get a byte from VRAM address at HL and place it at DE
+VPOKE_VPEEK:
+        DI
+        CALL SETWRT_LOCAL
+        EX (SP),HL
+        EX (SP),HL
+        IN A,(#98)
+        PUSH AF
+        EX DE,HL
+        CALL SETWRT_LOCAL
+        EX (SP),HL
+        EX (SP),HL
+        EX DE,HL     
+        POP AF
+        OUT (#98),A
+        EI
         RET
 ; *******************************************************************************************************
 
