@@ -2,7 +2,7 @@
 ; pointer to data structure is expected at DAC+2
 ; first entry must be function id followed by function specific parameters
 
-DEFUSR_TABLE_ENTRIES    EQU 38
+DEFUSR_TABLE_ENTRIES    EQU 40
 
 DEFUSR_JUMP_TABLE:
  IF (SPRITE_CMDS == 1)
@@ -144,6 +144,18 @@ DEFUSR_JUMP_TABLE:
  IF (VRAM_CMDS == 1)
  DW FILVRM_DEFUSR               ; 36
  DW VRMMEM_DEFUSR               ; 37
+ ELSE
+ DW NOACTION_DEFUSR
+ DW NOACTION_DEFUSR
+ ENDIF
+
+ IF (DECOMP_CMDS == 1)
+ DW UNPACK_DEFUSR               ; 38
+ IF (VRAM_CMDS == 1)
+  DW VUNPACK_DEFUSR             ; 39
+ ELSE
+  DW NOACTION_DEFUSR
+ ENDIF
  ELSE
  DW NOACTION_DEFUSR
  DW NOACTION_DEFUSR
