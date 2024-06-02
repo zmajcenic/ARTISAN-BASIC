@@ -107,7 +107,7 @@ FREEMEMPTR:
 ; this location #4012 stores extension version in DAA format
 ; first byte is major version and second minor
 VERSION:
- DB #00, #91
+ DB #00, #92
 
 ; this location #4014 contains a jump to entry point for DEFUSR approach
 ; if excluded it contains 3xRET so that sound player can be at aspecific spot
@@ -853,7 +853,7 @@ ARTINFO:
 	LD IX, PTRGET
 	CALL CALBAS
    PUSH HL
-   LD HL,SOUND_CMDS+2*RAM_CMDS+4*VRAM_CMDS+8*BLIT_CMDS+16*SPRITE_CMDS+32*GENCAL_CMD+64*TILE_CMDS+128*BOX_CMDS+256*ANIM_CMDS+512*COLL_CMD+1024*BASIC_EXTENSION+2048*DEFUSR_EXTENSION
+   LD HL,SOUND_CMDS+2*RAM_CMDS+4*VRAM_CMDS+8*BLIT_CMDS+16*SPRITE_CMDS+32*GENCAL_CMD+64*TILE_CMDS+128*BOX_CMDS+256*ANIM_CMDS+512*COLL_CMD+1024*BASIC_EXTENSION+2048*DEFUSR_EXTENSION+4096*DECOMP_CMDS
    EX DE,HL
    LD (HL),E
    INC HL

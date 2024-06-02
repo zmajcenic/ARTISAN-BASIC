@@ -64,6 +64,25 @@ dzx0s_elias_backtrack:
         jr      dzx0s_elias_loop
 ; -----------------------------------------------------------------------------
 
+; *******************************************************************************************************
+; helper function for VRAM unpack to save AF prior to calling VRAM copy fn
+DXZ0s_VRAM_LDIR:
+        PUSH AF ; save AF used by algorithm
+        PUSH DE
+        EX DE, HL
+        ADD HL, BC
+        PUSH HL
+        POP IY
+        EX DE, HL
+        POP DE
+        CALL VRAM_LDIRVM
+        LD C,0
+        PUSH IY
+        POP DE
+        POP AF
+        RET
+; *******************************************************************************************************
+
  IF (BASIC_EXTENSION == 1)
 ; *******************************************************************************************************
 ; function to handle CALL VUNPACK basic extension
@@ -75,7 +94,7 @@ VUNPACK:
     LD A, #CD ; CALL
     LD (dzx0_ldir_1), A
     LD (dzx0_ldir_2), A
-    LD DE, VRAM_LDIRVM
+    LD DE, DXZ0s_VRAM_LDIR
     LD (dzx0_ldir_1 + 1), DE
     LD (dzx0_ldir_2 + 1), DE
     JR UNPACK_COMMON
@@ -123,9 +142,9 @@ UNPACK_COMMON:
 	EI
 	EXX
 	CALL dzx0_standard
-    POP DE
-    POP BC
-    CALL RESTORE_PAGE_INFO
+        POP DE
+        POP BC
+        CALL RESTORE_PAGE_INFO
 	PUSH IX
 	POP HL
 	RET
@@ -143,7 +162,7 @@ VUNPACK_DEFUSR:
     LD A, #CD ; CALL
     LD (dzx0_ldir_1), A
     LD (dzx0_ldir_2), A
-    LD HL, VRAM_LDIRVM
+    LD HL, DXZ0s_VRAM_LDIR
     LD (dzx0_ldir_1 + 1), HL
     LD (dzx0_ldir_2 + 1), HL
     JR UNPACK_DEFUSR_COMMON
