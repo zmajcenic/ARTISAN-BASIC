@@ -413,7 +413,7 @@ TILEVRM:
 .SETDESTROW:
 	LD HL, (TILETMP1)
 	DI
-	CALL SETWRT_LOCAL
+	CALL SETWRT_LOCAL_WRITE
 	EI
 	RET
 ; *******************************************************************************************************

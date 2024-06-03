@@ -1784,7 +1784,7 @@ SETUP_ANIM_STEP:
     LD DE,(GRPPAT)
 .L7:
     ADD HL,DE
-    CALL SETWRT_LOCAL
+    CALL SETWRT_LOCAL_WRITE
     LD L,(IY+3)
     LD H,(IY+4) ; pointer to sprite pattern data
     JP BBYTECOPY 

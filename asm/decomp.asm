@@ -65,8 +65,9 @@ dzx0s_elias_backtrack:
 ; -----------------------------------------------------------------------------
 
 ; *******************************************************************************************************
-; helper function for VRAM unpack to save AF prior to calling VRAM copy fn
-DXZ0s_VRAM_LDIR:
+; helper function for VRAM unpack to save AF prior to calling copy to VRAM fn
+; also simulates register states as if LDIR was called
+LDIR_TO_VRAM:
         PUSH AF ; save AF used by algorithm
         PUSH DE
         PUSH BC
@@ -82,22 +83,40 @@ DXZ0s_VRAM_LDIR:
 ; *******************************************************************************************************
 
 ; *******************************************************************************************************
-; helper function to get a byte from VRAM address at HL and place it at DE
+; helper function to get a byte from VRAM address at HL and place it at DE also in VRAM
 VPOKE_VPEEK:
         DI
-        CALL SETWRT_LOCAL
+        CALL SETWRT_LOCAL_READ
         EX (SP),HL
         EX (SP),HL
         IN A,(#98)
+        ;IN A,(#98) ; WHY IS THIS NEEDED ?
         PUSH AF
         EX DE,HL
-        CALL SETWRT_LOCAL
+        CALL SETWRT_LOCAL_WRITE
         EX (SP),HL
         EX (SP),HL
         EX DE,HL     
         POP AF
         OUT (#98),A
         EI
+        RET
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; helper fn VRAM variant of LDIR
+; input HL = source, DE = destination, BC = count
+VRAM_LDIR:
+        PUSH AF
+_L0:
+        CALL VPOKE_VPEEK
+        INC HL
+        INC DE
+        DEC BC
+        LD A, B
+        OR C
+        JR NZ, _L0
+        POP AF
         RET
 ; *******************************************************************************************************
 
@@ -112,8 +131,9 @@ VUNPACK:
     LD A, #CD ; CALL
     LD (dzx0_ldir_1), A
     LD (dzx0_ldir_2), A
-    LD DE, DXZ0s_VRAM_LDIR
+    LD DE, LDIR_TO_VRAM
     LD (dzx0_ldir_1 + 1), DE
+    LD DE, VRAM_LDIR
     LD (dzx0_ldir_2 + 1), DE
     JR UNPACK_COMMON
 ; function to handle CALL UNPACK basic extension
@@ -180,8 +200,9 @@ VUNPACK_DEFUSR:
     LD A, #CD ; CALL
     LD (dzx0_ldir_1), A
     LD (dzx0_ldir_2), A
-    LD HL, DXZ0s_VRAM_LDIR
+    LD HL, LDIR_TO_VRAM
     LD (dzx0_ldir_1 + 1), HL
+    LD HL, VRAM_LDIR
     LD (dzx0_ldir_2 + 1), HL
     JR UNPACK_DEFUSR_COMMON
 ; same as UNPACK but for DEFUSR approach

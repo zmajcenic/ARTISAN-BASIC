@@ -418,16 +418,30 @@ CMDS_A:
 
  IF (VRAM_CMDS + TILE_CMDS + SPRITE_CMDS > 0)
 ; ****************************************************************************************************
-; function sets VRAM address
+; function sets VRAM address for writing
 ; input HL=address
 ; modifies AF
-SETWRT_LOCAL:
+SETWRT_LOCAL_WRITE:
 	LD	A,L
-	OUT (099H),A
+	OUT (#99),A
 	LD	A,H
-	AND 03FH
-	OR	040H
-	OUT (099H),A
+	AND #3F
+	OR	#40
+	OUT (#99),A
+	RET
+; ****************************************************************************************************
+
+; ****************************************************************************************************
+; function sets VRAM address for reading
+; input HL=address
+; modifies AF
+SETWRT_LOCAL_READ:
+	LD	A,L
+	OUT (#99),A
+	LD	A,H
+	AND #3F
+   NOP
+	OUT (#99),A
 	RET
 ; ****************************************************************************************************
  ENDIF
