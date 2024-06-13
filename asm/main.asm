@@ -777,19 +777,19 @@ GETPREVCHAR:
  
  
 TYPE_MISMATCH:
-    LD E, 13 ; Type mismatch 
-    JR THROW_ERROR
+   LD E, 13 ; Type mismatch 
+   JR THROW_ERROR
 SUBSCRIPT_OUT_OF_RANGE:
-    LD E,9 ; subscript out of range
+   LD E,9 ; subscript out of range
 	JR THROW_ERROR
 OVERFLOW:
 	LD E,6
 	JR THROW_ERROR
 ILLEGAL_FUNCTION:
-    LD E, 5 ; illegal function call
-    JR THROW_ERROR
+   LD E, 5 ; illegal function call
+   JR THROW_ERROR
 SYNTAX_ERROR:
-    LD E, 2 ; Syntax error 
+   LD E, 2 ; Syntax error 
 THROW_ERROR:
 	LD	IX,ERRHAND	; Call the Basic error handler
 	JP	CALBAS
