@@ -12,6 +12,7 @@ BOX_CMDS		   EQU 1
 ANIM_CMDS		EQU 1
 COLL_CMD       EQU 1
 DECOMP_CMDS    EQU 1
+DLOAD_CMD      EQU 1
 
 ; what to compile, provided in sjasmplus command line
 ;BASIC_EXTENSION   EQU 1
@@ -57,6 +58,8 @@ GRPATR      EQU   #F3CD ; SCREEN 2 sprite attribute table address
 T32PAT	   EQU   #F3C5 ; SCREEN 1 sprite generator table address 
 T32CGP      EQU   #F3C1 ; SCREEN 1 pattern ganarator table address
 T32ATR      EQU   #F3C3 ; SCREEN 1 sprite attribute table address 
+
+FCB0        EQU   #F23D ; location of FCB 0
 
 ; BASIC error codes
 ;01 NEXT without FOR 
@@ -168,6 +171,10 @@ VERSION:
 
  IF (DECOMP_CMDS == 1)
  INCLUDE "decomp.asm"
+ ENDIF
+
+ IF (DLOAD_CMD == 1)
+ INCLUDE "DLOAD.asm"
  ENDIF
 
  IF (DEFUSR_EXTENSION == 1)
@@ -729,36 +736,6 @@ CALLHAND:
  
 ;---------------------------
  
-;GETSTRPNT:
-; OUT:
-; HL = String Address
-; B  = Lenght
-;        LD      HL,(USR)
-;        LD      B,(HL)
-;        INC     HL
-;        LD      E,(HL)
-;        INC     HL
-;        LD      D,(HL)
-;        EX      DE,HL
-;        RET
- 
-;EVALTXTPARAM:
-;	CALL	CHKCHAR
-;	DEFB	"("             ; Check for (
-;	LD	IX,FRMEVL
-;	CALL	CALBAS		; Evaluate expression
-;       LD      A,(VALTYP)
-;        CP      3               ; Text type?
-;        JP      NZ,TYPE_MISMATCH
-;        PUSH	HL
-;        LD	IX,FRESTR         ; Free the temporary string
-;        CALL	CALBAS
-;        POP	HL
-;	CALL	CHKCHAR
-;	DEFB	")"             ; Check for )
-;        RET
- 
- 
 CHKCHAR:
 	CALL	GETPREVCHAR	; Get previous basic char
 	EX	(SP),HL
@@ -797,6 +774,55 @@ THROW_ERROR:
 ;---------------------------
 
  IF (BASIC_EXTENSION == 1)
+
+ IF (DLOAD_CMD == 1)
+; *******************************************************************************************************
+; helper function to return string pointer and length
+; returns HL = String Address
+; returns B  = Lenght
+; modifies BC, DE, HL
+GETSTRPNT:
+   LD      HL,(USR)
+   LD      B,(HL)
+   INC     HL
+   LD      E,(HL)
+   INC     HL
+   LD      D,(HL)
+   EX      DE,HL
+   RET
+; *******************************************************************************************************
+ 
+; *******************************************************************************************************
+; helper function to get string parameter
+; throws error if incorrect type
+; input HL=basic text
+EVALTXTPARAM:
+	LD	IX,FRMEVL
+	CALL CALBAS		; Evaluate expression
+   LD A,(VALTYP)
+   CP 3               ; Text type?
+   JP NZ,TYPE_MISMATCH
+   PUSH HL
+   LD	IX,FRESTR         ; Free the temporary string
+   CALL CALBAS
+   POP HL
+   RET
+; *******************************************************************************************************
+
+; *******************************************************************************************************
+; helper function to make an uppercase letter
+; input A=character
+; output A=uppercase version of input
+UPPER:  
+   CP "a"
+   RET C
+   CP "z"+1
+   RET NC
+   AND 5FH
+   RET
+
+ ENDIF
+
 ; *******************************************************************************************************
 ; helper function to get pointer to BASIC array data
 ; input A=data type (2=INT,4=SINGLE,8=DOUBLE)
