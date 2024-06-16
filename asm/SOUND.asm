@@ -120,10 +120,9 @@ SNDPLYON_DEFUSR:
 SNDPLYON:
 	LD A, (MUSIC_INIT_STATUS)
 	OR A
-	JR NZ, .L1
-	; player not initialized, throw error
-	LD E, 04 ; Out of DATA 
-	JP THROW_ERROR
+ IF (BASIC_EXTENSION == 1)
+	JP Z, OUT_OF_DATA ; player not initialized, throw error
+ ENDIF
 .L1:
 	LD (SOUND_ENABLED), A
 	; disable key click

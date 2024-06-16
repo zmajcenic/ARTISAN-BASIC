@@ -11,6 +11,9 @@ DLOAD_PROCESS_FILENAME:
     LD A,B
     OR A
     JR Z, .BADFILENAME
+    ; check for more than 13 letters
+    CP 14
+    JR NC, .BADFILENAME
     ; check if more than 2 letters
     CP 3
     JR C, .PROCESS_FILENAME
@@ -40,4 +43,46 @@ DLOAD_PROCESS_FILENAME:
     JR .L2
 .PROCESS_FILENAME:
     ; HL is pointing to rest of the name
-    
+    INC DE ; 8-character filename location, needs to be padded with blanks
+    LD C,8 ; filename length
+.L4:
+    CALL .GETCHAR
+    CP '.'
+    JR Z, .L6 ; if dot, stay here until we fill up filename part
+.L3:
+    LD (DE),A
+    INC DE
+    DEC C
+    JR NZ, .L4
+    ; so we cleared filename part, DE at extension part
+    ; we are either at . or past 8 chars
+    INC HL ; skip potential . and don't care
+    LD C,3
+.L5:
+    CALL .GETCHAR
+    LD (DE),A
+    INC DE
+    DEC C
+    JR NZ, .L5
+    XOR A ; clear carry flag
+    RET    
+.L6:
+    LD A,' ' ; case where we stay at first .
+    DEC HL
+    JR .L3
+.BADFILENAME:
+    SCF
+    RET
+.GETCHAR: ; gets a character, returns blank if we read past input
+    LD A,B
+    OR A
+    JR Z, .BLANK
+    LD A,(HL)
+    CALL UPPER
+    INC HL
+    DEC B
+    RET
+.BLANK:
+    LD A,' '
+    RET
+; *******************************************************************************************************

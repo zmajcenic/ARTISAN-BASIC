@@ -752,7 +752,10 @@ GETPREVCHAR:
    EI
    RET
  
- 
+ IF (BASIC_EXTENSION == 1)
+OUT_OF_DATA:
+   LD E, 4
+   JR THROW_ERROR
 TYPE_MISMATCH:
    LD E, 13 ; Type mismatch 
    JR THROW_ERROR
@@ -765,13 +768,30 @@ OVERFLOW:
 ILLEGAL_FUNCTION:
    LD E, 5 ; illegal function call
    JR THROW_ERROR
+ ENDIF
 SYNTAX_ERROR:
    LD E, 2 ; Syntax error 
 THROW_ERROR:
 	LD	IX,ERRHAND	; Call the Basic error handler
 	JP	CALBAS
+
  
 ;---------------------------
+
+ IF (DLOAD_CMD == 1)
+; *******************************************************************************************************
+; helper function to make an uppercase letter
+; input A=character
+; output A=uppercase version of input
+UPPER:  
+   CP "a"
+   RET C
+   CP "z"+1
+   RET NC
+   AND 5FH
+   RET
+; *******************************************************************************************************
+ ENDIF
 
  IF (BASIC_EXTENSION == 1)
 
@@ -808,18 +828,6 @@ EVALTXTPARAM:
    POP HL
    RET
 ; *******************************************************************************************************
-
-; *******************************************************************************************************
-; helper function to make an uppercase letter
-; input A=character
-; output A=uppercase version of input
-UPPER:  
-   CP "a"
-   RET C
-   CP "z"+1
-   RET NC
-   AND 5FH
-   RET
 
  ENDIF
 
