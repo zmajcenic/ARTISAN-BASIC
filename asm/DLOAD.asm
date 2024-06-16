@@ -11,8 +11,8 @@ DLOAD_PROCESS_FILENAME:
     LD A,B
     OR A
     JR Z, .BADFILENAME
-    ; check for more than 13 letters
-    CP 14
+    ; check for more than 2+8+1+3=14
+    CP 15
     JR NC, .BADFILENAME
     ; check if more than 2 letters
     CP 3
@@ -86,3 +86,51 @@ DLOAD_PROCESS_FILENAME:
     LD A,' '
     RET
 ; *******************************************************************************************************
+
+ IF (BASIC_EXTENSION == 1)
+
+; *******************************************************************************************************
+; function to handle CALL DLOAD basic extension
+; _DLOAD ( STRING filename, 
+;		   INT offset, 
+;		   INT destination,
+;          INT size ) 
+; will put ram in page 0 also, page 1 is already there
+DLOAD:
+	; opening (
+	CALL CHKCHAR
+	DB '('
+    CALL EVALTXTPARAM
+    PUSH HL
+    CALL GETSTRPNT
+    CALL DLOAD_PROCESS_FILENAME
+    JP C, BAD_FILENAME
+    POP HL
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get offset
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD (BLIT_STRUCT), DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get destination
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD (BLIT_STRUCT+2), DE
+	; comma
+	CALL CHKCHAR
+	DB ','
+	; get size
+	LD IX, FRMQNT
+	CALL CALBAS
+	LD (BLIT_STRUCT+4), DE
+	; ending )
+	CALL CHKCHAR
+	DB ')'
+    RET
+; *******************************************************************************************************
+
+ ENDIF
