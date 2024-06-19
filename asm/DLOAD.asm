@@ -16,7 +16,7 @@ DLOAD_PROCESS_FILENAME:
     JR NC, .BADFILENAME
     ; check if more than 2 letters
     CP 3
-    JR C, .PROCESS_FILENAME
+    JR C, .L7 ; no drive
     ; check for : at proper place
     LD E, (HL)
     INC HL
@@ -38,8 +38,9 @@ DLOAD_PROCESS_FILENAME:
     JR .PROCESS_FILENAME
 .L1:
     ; no drive specified
-    XOR A
     DEC HL
+.L7:
+    XOR A
     JR .L2
 .PROCESS_FILENAME:
     ; HL is pointing to rest of the name
@@ -50,6 +51,8 @@ DLOAD_PROCESS_FILENAME:
     CP '.'
     JR Z, .L6 ; if dot, stay here until we fill up filename part
 .L3:
+    DEC B
+.L8:
     LD (DE),A
     INC DE
     DEC C
@@ -62,6 +65,7 @@ DLOAD_PROCESS_FILENAME:
     CALL .GETCHAR
     LD (DE),A
     INC DE
+    DEC B
     DEC C
     JR NZ, .L5
     XOR A ; clear carry flag
@@ -69,7 +73,7 @@ DLOAD_PROCESS_FILENAME:
 .L6:
     LD A,' ' ; case where we stay at first .
     DEC HL
-    JR .L3
+    JR .L8
 .BADFILENAME:
     SCF
     RET
@@ -80,7 +84,6 @@ DLOAD_PROCESS_FILENAME:
     LD A,(HL)
     CALL UPPER
     INC HL
-    DEC B
     RET
 .BLANK:
     LD A,' '

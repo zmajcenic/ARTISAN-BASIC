@@ -102,14 +102,14 @@
  101  4000
  102  4000               ; simulate cartridge with BASIC extension
  103  4000 41 42 00 00   DW 04241H, 0, CALLHAND, 0, 0, 0, 0, 0
- 103  4004 6B 5F 00 00
+ 103  4004 6C 5F 00 00
  103  4008 00 00 00 00
  103  400C 00 00 00 00
  104  4010
  105  4010              ; this location #4010 stores last location used by basic extension
  106  4010              ; free memory after that point
  107  4010              FREEMEMPTR:
- 108  4010 10 60         DW EXT_END
+ 108  4010 11 60         DW EXT_END
  109  4012
  110  4012              ; this location #4012 stores extension version in DAA format
  111  4012              ; first byte is major version and second minor
@@ -119,7 +119,7 @@
  115  4014              ; this location #4014 contains a jump to entry point for DEFUSR approach
  116  4014              ; if excluded it contains 3xRET so that sound player can be at aspecific spot
  117  4014               IF (1 == 1)
- 118  4014 C3 08 5E        JP DEFUSR_ENTRY
+ 118  4014 C3 09 5E        JP DEFUSR_ENTRY
  119  4017               ELSE
  120  4017 ~               .3 RET
  121  4017               ENDIF
@@ -659,20 +659,20 @@
   74+ 4D28
   75+ 4D28              	; enable page 2
   76+ 4D28 3E 02            LD A, 2
-  77+ 4D2A CD 9A 5E         CALL GET_PAGE_INFO
+  77+ 4D2A CD 9B 5E         CALL GET_PAGE_INFO
   78+ 4D2D C5               PUSH BC
   79+ 4D2E D5               PUSH DE
   80+ 4D2F 3A 43 F3         LD A, (RAMAD2)
   81+ 4D32 26 80            LD H, 080H
-  82+ 4D34 CD E1 5E         CALL LOCAL_ENASLT
+  82+ 4D34 CD E2 5E         CALL LOCAL_ENASLT
   83+ 4D37              	; enable page 0
   84+ 4D37 AF               XOR A
-  85+ 4D38 CD 9A 5E         CALL GET_PAGE_INFO
+  85+ 4D38 CD 9B 5E         CALL GET_PAGE_INFO
   86+ 4D3B C5               PUSH BC
   87+ 4D3C D5               PUSH DE
   88+ 4D3D 3A 41 F3         LD A, (RAMAD0)
   89+ 4D40 26 00            LD H, 0
-  90+ 4D42 CD E1 5E         CALL LOCAL_ENASLT
+  90+ 4D42 CD E2 5E         CALL LOCAL_ENASLT
   91+ 4D45
   92+ 4D45               IF (SPRITE_CMDS == 1)
   93+ 4D45 CD 5D 4D     	CALL PROCESS_SPRITES_AND_ANIMATIONS
@@ -687,11 +687,11 @@
  102+ 4D4F              	; restore page 0
  103+ 4D4F D1               POP DE
  104+ 4D50 C1               POP BC
- 105+ 4D51 CD D1 5E         CALL RESTORE_PAGE_INFO
+ 105+ 4D51 CD D2 5E         CALL RESTORE_PAGE_INFO
  106+ 4D54              	; restore page 2
  107+ 4D54 D1               POP DE
  108+ 4D55 C1               POP BC
- 109+ 4D56 CD D1 5E         CALL RESTORE_PAGE_INFO
+ 109+ 4D56 CD D2 5E         CALL RESTORE_PAGE_INFO
  110+ 4D59
  111+ 4D59 F1           	POP AF
  112+ 4D5A               ENDIF
@@ -720,7 +720,7 @@
  135+ 4D6F C9               RET
  136+ 4D70              .L0:
  137+ 4D70                  ; check if anyone else is working with VRAM
- 138+ 4D70 3A 37 5E         LD A,(VRAM_UPDATE_IN_PROGRESS)
+ 138+ 4D70 3A 38 5E         LD A,(VRAM_UPDATE_IN_PROGRESS)
  139+ 4D73 B7               OR A
  140+ 4D74 C0               RET NZ
  141+ 4D75
@@ -763,7 +763,7 @@
   24+ 4D89              GETnthSPRATTR:
   25+ 4D89 26 00            LD H,0
   26+ 4D8B 6F               LD L,A
-  27+ 4D8C CD 96 5E         CALL HLx8
+  27+ 4D8C CD 97 5E         CALL HLx8
   28+ 4D8F ED 5B 82 4D      LD DE,(SPRATR_DATA)
   29+ 4D93 19               ADD HL,DE
   30+ 4D94 C9               RET
@@ -812,7 +812,7 @@
   73+ 4DC0 16 00        	LD D, 0
   74+ 4DC2 5F           	LD E, A
   75+ 4DC3 19           	ADD HL, DE
-  76+ 4DC4 CD 77 5E     	CALL SETWRT_LOCAL_WRITE
+  76+ 4DC4 CD 78 5E     	CALL SETWRT_LOCAL_WRITE
   77+ 4DC7 ED 73 87 4D  	LD (TMPSP), SP
   78+ 4DCB ED 7B 82 4D  	LD SP, (SPRATR_DATA)
   79+ 4DCF
@@ -1177,7 +1177,7 @@
  432+ 4EBA              ; HL=pointer to list of sprites and offsets
  433+ 4EBA              SPR_UPDATE_LOC:
  434+ 4EBA 3E 01        	LD A,1
- 435+ 4EBC 32 37 5E     	LD (VRAM_UPDATE_IN_PROGRESS),A
+ 435+ 4EBC 32 38 5E     	LD (VRAM_UPDATE_IN_PROGRESS),A
  436+ 4EBF 7E           	LD A, (HL)
  437+ 4EC0 23           	INC HL
  438+ 4EC1 23           	INC HL
@@ -1192,7 +1192,7 @@
  444+ 4ECD 23          > INC HL
  445+ 4ECE 10 EA        	DJNZ SPR_UPDATE_LOC
  446+ 4ED0 AF           	XOR A
- 447+ 4ED1 32 37 5E     	LD (VRAM_UPDATE_IN_PROGRESS),A
+ 447+ 4ED1 32 38 5E     	LD (VRAM_UPDATE_IN_PROGRESS),A
  448+ 4ED4 C9           	RET
  449+ 4ED5              ; *******************************************************************************************************
  450+ 4ED5
@@ -1294,22 +1294,22 @@
    4+ 4EEF              ANIMITEMNUM:
    5+ 4EEF 00            DB 0
    6+ 4EF0              ANIMITEMPTR:
-   7+ 4EF0 10 60         DW EXT_END
+   7+ 4EF0 11 60         DW EXT_END
    8+ 4EF2              ; number of animation definitions and pointer
    9+ 4EF2              ANIMDEFNUM:
   10+ 4EF2 00            DB 0
   11+ 4EF3              ANIMDEFPTR:
-  12+ 4EF3 10 60         DW EXT_END
+  12+ 4EF3 11 60         DW EXT_END
   13+ 4EF5              ; number of links between sprite and animation definitions
   14+ 4EF5              ANIMSPRNUM:
   15+ 4EF5 00            DB 0
   16+ 4EF6              ANIMSPRPTR:
-  17+ 4EF6 10 60         DW EXT_END
+  17+ 4EF6 11 60         DW EXT_END
   18+ 4EF8              ; number of automatic sprite group move and animate structures
   19+ 4EF8              AUTOSGAMNUM:
   20+ 4EF8 00            DB 0
   21+ 4EF9              AUTOSGAMPTR:
-  22+ 4EF9 10 60         DW EXT_END
+  22+ 4EF9 11 60         DW EXT_END
   23+ 4EFB
   24+ 4EFB              ; ANIMATION ITEM
   25+ 4EFB              ; byte type = [0 - pattern and color change
@@ -1384,7 +1384,7 @@
   94+ 4F0D              GETnthANIMDEF:
   95+ 4F0D 26 00            LD H,0
   96+ 4F0F 6F               LD L,A
-  97+ 4F10 CD 95 5E         CALL HLx16
+  97+ 4F10 CD 96 5E         CALL HLx16
   98+ 4F13 ED 5B F3 4E      LD DE,(ANIMDEFPTR)
   99+ 4F17 19               ADD HL,DE
  100+ 4F18 C9               RET
@@ -1396,7 +1396,7 @@
  106+ 4F19              GETnthSPRANIM:
  107+ 4F19 26 00            LD H,0
  108+ 4F1B 6F               LD L,A
- 109+ 4F1C CD 96 5E         CALL HLx8
+ 109+ 4F1C CD 97 5E         CALL HLx8
  110+ 4F1F ED 5B F6 4E      LD DE,(ANIMSPRPTR)
  111+ 4F23 19               ADD HL,DE
  112+ 4F24 C9               RET
@@ -1408,7 +1408,7 @@
  118+ 4F25              GETnthAUTOSGAM:
  119+ 4F25 26 00            LD H,0
  120+ 4F27 6F               LD L,A
- 121+ 4F28 CD 96 5E         CALL HLx8
+ 121+ 4F28 CD 97 5E         CALL HLx8
  122+ 4F2B 54               LD D,H
  123+ 4F2C 5D               LD E,L
  124+ 4F2D 29               ADD HL,HL
@@ -1822,7 +1822,7 @@
  532+ 506E              .SIZEDIFF:
  533+ 506E 26 00            LD H,0
  534+ 5070 6F               LD L,A
- 535+ 5071 CD 95 5E         CALL HLx16
+ 535+ 5071 CD 96 5E         CALL HLx16
  536+ 5074 78               LD A,B
  537+ 5075 32 F2 4E         LD (ANIMDEFNUM),A
  538+ 5078 44               LD B,H
@@ -2002,7 +2002,7 @@
  711+ 50E1              .SIZEDIFF:
  712+ 50E1 26 00            LD H,0
  713+ 50E3 6F               LD L,A
- 714+ 50E4 CD 96 5E         CALL HLx8
+ 714+ 50E4 CD 97 5E         CALL HLx8
  715+ 50E7 78               LD A,B
  716+ 50E8 32 F5 4E         LD (ANIMSPRNUM),A
  717+ 50EB 44               LD B,H
@@ -2342,7 +2342,7 @@
 1051+ 519F              .SIZEDIFF:
 1052+ 519F 26 00            LD H,0
 1053+ 51A1 6F               LD L,A
-1054+ 51A2 CD 96 5E         CALL HLx8
+1054+ 51A2 CD 97 5E         CALL HLx8
 1055+ 51A5 54               LD D,H
 1056+ 51A6 5D               LD E,L
 1057+ 51A7 29               ADD HL,HL
@@ -3063,11 +3063,11 @@
 1768+ 537F E6 02            AND 2
 1769+ 5381 20 07            JR NZ,.L6
 1770+ 5383                  ; 8x8 sprite
-1771+ 5383 CD 96 5E         CALL HLx8
+1771+ 5383 CD 97 5E         CALL HLx8
 1772+ 5386 06 08            LD B,8
 1773+ 5388 18 05            JR .L5
 1774+ 538A              .L6:
-1775+ 538A CD 94 5E         CALL HLx32
+1775+ 538A CD 95 5E         CALL HLx32
 1776+ 538D 06 20            LD B,32
 1777+ 538F              .L5:
 1778+ 538F 3A AF FC         LD A,(SCRMOD)
@@ -3079,10 +3079,10 @@
 1784+ 539B ED 5B CF F3      LD DE,(GRPPAT)
 1785+ 539F              .L7:
 1786+ 539F 19               ADD HL,DE
-1787+ 53A0 CD 77 5E         CALL SETWRT_LOCAL_WRITE
+1787+ 53A0 CD 78 5E         CALL SETWRT_LOCAL_WRITE
 1788+ 53A3 FD 6E 03         LD L,(IY+3)
 1789+ 53A6 FD 66 04         LD H,(IY+4) ; pointer to sprite pattern data
-1790+ 53A9 C3 8C 5E         JP BBYTECOPY
+1790+ 53A9 C3 8D 5E         JP BBYTECOPY
 1791+ 53AC              .L4:
 1792+ 53AC                  ; change pattern and color in sprite attributes table
 1793+ 53AC DD 7E 00         LD A,(IX) ; sprite number
@@ -3104,7 +3104,7 @@
 1805+ 53C6 DD 6E 00         LD L,(IX)
 1806+ 53C9 3D               DEC A
 1807+ 53CA 67               LD H,A
-1808+ 53CB CD 96 5E         CALL HLx8
+1808+ 53CB CD 97 5E         CALL HLx8
 1809+ 53CE 3A AF FC         LD A,(SCRMOD)
 1810+ 53D1 3D               DEC A
 1811+ 53D2 20 06            JR NZ,.L8
@@ -3260,7 +3260,7 @@
  137+ 53FA              SGAM_DEFUSR:
  138+ 53FA              	; enable page 0
  139+ 53FA FD 21 01 54  	LD IY, .RET
- 140+ 53FE C3 5A 5F     	JP ENABLE_PAGE0
+ 140+ 53FE C3 5B 5F     	JP ENABLE_PAGE0
  141+ 5401              .RET:
  142+ 5401 FB           	EI
  143+ 5402 D9               EXX
@@ -3282,7 +3282,7 @@
  159+ 542C
  160+ 542C D1               POP DE
  161+ 542D C1               POP BC
- 162+ 542E C3 D1 5E         JP RESTORE_PAGE_INFO
+ 162+ 542E C3 D2 5E         JP RESTORE_PAGE_INFO
  163+ 5431              ; *******************************************************************************************************
  164+ 5431               ENDIF
  165+ 5431
@@ -3505,7 +3505,7 @@
   65+ 5522              MEMCPY_DEFUSR:
   66+ 5522              	; enable page 0
   67+ 5522 FD 21 29 55  	LD IY, .RET
-  68+ 5526 C3 5A 5F     	JP ENABLE_PAGE0
+  68+ 5526 C3 5B 5F     	JP ENABLE_PAGE0
   69+ 5529              .RET:
   70+ 5529 FB           	EI
   71+ 552A DD 6E 02     	LD L,(IX+2)
@@ -3517,7 +3517,7 @@
   77+ 553C ED B0        	LDIR
   78+ 553E D1               POP DE
   79+ 553F C1               POP BC
-  80+ 5540 C3 D1 5E         JP RESTORE_PAGE_INFO
+  80+ 5540 C3 D2 5E         JP RESTORE_PAGE_INFO
   81+ 5543              ; *******************************************************************************************************
   82+ 5543               ENDIF
   83+ 5543
@@ -3592,7 +3592,7 @@
  152+ 5543              FILRAM_DEFUSR:
  153+ 5543              	; enable page 0
  154+ 5543 FD 21 4A 55  	LD IY, .RET
- 155+ 5547 C3 5A 5F     	JP ENABLE_PAGE0
+ 155+ 5547 C3 5B 5F     	JP ENABLE_PAGE0
  156+ 554A              .RET:
  157+ 554A FB           	EI
  158+ 554B DD 6E 02     	LD L,(IX+2)
@@ -3607,7 +3607,7 @@
  167+ 5561              .EXIT:
  168+ 5561 D1               POP DE
  169+ 5562 C1               POP BC
- 170+ 5563 C3 D1 5E         JP RESTORE_PAGE_INFO
+ 170+ 5563 C3 D2 5E         JP RESTORE_PAGE_INFO
  171+ 5566              ; *******************************************************************************************************
  172+ 5566               ENDIF
  173+ 5566
@@ -3714,7 +3714,7 @@
   81+ 5574              ; +4 = sfx address
   82+ 5574              SNDPLYINI_DEFUSR:
   83+ 5574 FD 21 7B 55  	LD IY, .RET
-  84+ 5578 C3 5A 5F     	JP ENABLE_PAGE0
+  84+ 5578 C3 5B 5F     	JP ENABLE_PAGE0
   85+ 557B              .RET:
   86+ 557B AF           	XOR A
   87+ 557C DD 6E 02     	LD L,(IX+2)
@@ -3739,7 +3739,7 @@
  106+ 55A2              .L1:
  107+ 55A2 D1               POP DE
  108+ 55A3 C1               POP BC
- 109+ 55A4 C3 D1 5E         JP RESTORE_PAGE_INFO
+ 109+ 55A4 C3 D2 5E         JP RESTORE_PAGE_INFO
  110+ 55A7              ; *******************************************************************************************************
  111+ 55A7               ENDIF
  112+ 55A7
@@ -3884,7 +3884,7 @@
  251+ 55DE B7           	OR A
  252+ 55DF C8           	RET Z ; sfx data not initialized, just exit
  253+ 55E0 FD 21 E7 55  	LD IY, .RET
- 254+ 55E4 C3 5A 5F     	JP ENABLE_PAGE0
+ 254+ 55E4 C3 5B 5F     	JP ENABLE_PAGE0
  255+ 55E7              .RET:
  256+ 55E7 FB           	EI
  257+ 55E8 DD 7E 02     	LD A,(IX+2) ; SFX number
@@ -3893,7 +3893,7 @@
  260+ 55F1 CD 24 40     	CALL PLY_AKG_PLAYSOUNDEFFECT
  261+ 55F4 D1               POP DE
  262+ 55F5 C1               POP BC
- 263+ 55F6 C3 D1 5E         JP RESTORE_PAGE_INFO
+ 263+ 55F6 C3 D2 5E         JP RESTORE_PAGE_INFO
  264+ 55F9              ; *******************************************************************************************************
  265+ 55F9               ENDIF
 # file closed: asm\SOUND.asm
@@ -3986,7 +3986,7 @@
   82+ 55FF 76           	HALT
   83+ 5600              .L0:
   84+ 5600 3E 01        	LD A,1
-  85+ 5602 32 37 5E     	LD (VRAM_UPDATE_IN_PROGRESS),A
+  85+ 5602 32 38 5E     	LD (VRAM_UPDATE_IN_PROGRESS),A
   86+ 5605 DD 6E 02     	LD L,(IX+2)
   87+ 5608 DD 66 03     	LD H,(IX+3)
   88+ 560B DD 4E 04     	LD C,(IX+4)
@@ -3994,7 +3994,7 @@
   90+ 5611 DD 7E 06     	LD A,(IX+6)
   91+ 5614 CD 56 00     	CALL BIOS_FILVRM
   92+ 5617 AF           	XOR A
-  93+ 5618 32 37 5E     	LD (VRAM_UPDATE_IN_PROGRESS),A
+  93+ 5618 32 38 5E     	LD (VRAM_UPDATE_IN_PROGRESS),A
   94+ 561B C9           	RET
   95+ 561C              ; *******************************************************************************************************
   96+ 561C               ENDIF
@@ -4109,7 +4109,7 @@
  205+ 5631              .L0:
  206+ 5631              	; enable page 0
  207+ 5631 FD 21 38 56  	LD IY, .RET
- 208+ 5635 C3 5A 5F     	JP ENABLE_PAGE0
+ 208+ 5635 C3 5B 5F     	JP ENABLE_PAGE0
  209+ 5638              .RET:
  210+ 5638 FB           	EI
  211+ 5639 DD 6E 02     	LD L,(IX+2)
@@ -4121,7 +4121,7 @@
  217+ 564B CD 53 56     	CALL VRAM_LDIRVM
  218+ 564E D1               POP DE
  219+ 564F C1               POP BC
- 220+ 5650 C3 D1 5E         JP RESTORE_PAGE_INFO
+ 220+ 5650 C3 D2 5E         JP RESTORE_PAGE_INFO
  221+ 5653              ; *******************************************************************************************************
  222+ 5653               ENDIF
  223+ 5653
@@ -4132,10 +4132,10 @@
  228+ 5653              ; BC=count
  229+ 5653              VRAM_LDIRVM:
  230+ 5653 3E 01        	LD A,1
- 231+ 5655 32 37 5E     	LD (VRAM_UPDATE_IN_PROGRESS),A
+ 231+ 5655 32 38 5E     	LD (VRAM_UPDATE_IN_PROGRESS),A
  232+ 5658 EB           	EX DE, HL
  233+ 5659 F3           	DI
- 234+ 565A CD 77 5E     	CALL SETWRT_LOCAL_WRITE
+ 234+ 565A CD 78 5E     	CALL SETWRT_LOCAL_WRITE
  235+ 565D FB           	EI
  236+ 565E EB           	EX DE, HL
  237+ 565F 78           	LD A, B
@@ -4146,7 +4146,7 @@
  242+ 5666              .L2:
  243+ 5666 50           	LD D, B
  244+ 5667 06 00        	LD B, 0
- 245+ 5669 CD 8E 5E     	CALL BBYTECOPY_NO_C
+ 245+ 5669 CD 8F 5E     	CALL BBYTECOPY_NO_C
  246+ 566C 42           	LD B, D
  247+ 566D 10 F7        	DJNZ .L2
  248+ 566F C1           	POP BC
@@ -4155,10 +4155,10 @@
  251+ 5671 B7           	OR A
  252+ 5672 28 04        	JR Z,.L4
  253+ 5674 41           	LD B, C
- 254+ 5675 CD 8C 5E     	CALL BBYTECOPY
+ 254+ 5675 CD 8D 5E     	CALL BBYTECOPY
  255+ 5678              .L4:
  256+ 5678 AF           	XOR A
- 257+ 5679 32 37 5E     	LD (VRAM_UPDATE_IN_PROGRESS),A
+ 257+ 5679 32 38 5E     	LD (VRAM_UPDATE_IN_PROGRESS),A
  258+ 567C C9           	RET
  259+ 567D              ; *******************************************************************************************************
  260+ 567D
@@ -4229,7 +4229,7 @@
  325+ 567D              VRMMEM_DEFUSR:
  326+ 567D              	; enable page 0
  327+ 567D FD 21 84 56  	LD IY, .RET
- 328+ 5681 C3 5A 5F     	JP ENABLE_PAGE0
+ 328+ 5681 C3 5B 5F     	JP ENABLE_PAGE0
  329+ 5684              .RET:
  330+ 5684 FB           	EI
  331+ 5685 DD 6E 02     	LD L,(IX+2)
@@ -4241,7 +4241,7 @@
  337+ 5697 CD 9F 56     	CALL VRAM_LDIRMV
  338+ 569A D1               POP DE
  339+ 569B C1               POP BC
- 340+ 569C C3 D1 5E         JP RESTORE_PAGE_INFO
+ 340+ 569C C3 D2 5E         JP RESTORE_PAGE_INFO
  341+ 569F              ; *******************************************************************************************************
  342+ 569F               ENDIF
  343+ 569F
@@ -4252,10 +4252,10 @@
  348+ 569F              ; BC=count
  349+ 569F              VRAM_LDIRMV:
  350+ 569F 3E 01        	LD A,1
- 351+ 56A1 32 37 5E     	LD (VRAM_UPDATE_IN_PROGRESS),A
+ 351+ 56A1 32 38 5E     	LD (VRAM_UPDATE_IN_PROGRESS),A
  352+ 56A4 7D           	LD	A, L
  353+ 56A5 F3           	DI
- 354+ 56A6 CD 82 5E     	CALL SETWRT_LOCAL_READ
+ 354+ 56A6 CD 83 5E     	CALL SETWRT_LOCAL_READ
  355+ 56A9 FB           	EI
  356+ 56AA 00           	NOP
  357+ 56AB 00           	NOP
@@ -4269,7 +4269,7 @@
  365+ 56B3 B0               OR B
  366+ 56B4 20 F7            JR NZ, .L4
  367+ 56B6 AF           	XOR A
- 368+ 56B7 32 37 5E     	LD (VRAM_UPDATE_IN_PROGRESS),A
+ 368+ 56B7 32 38 5E     	LD (VRAM_UPDATE_IN_PROGRESS),A
  369+ 56BA C9               RET
  370+ 56BB              ; *******************************************************************************************************
 # file closed: asm\VRAM.asm
@@ -4331,7 +4331,7 @@
   51+ 56CF
   52+ 56CF E1               POP HL ; get pointer to register values
   53+ 56D0 F3           	DI
-  54+ 56D1 ED 73 26 5E      LD (BLIT_STRUCT), SP
+  54+ 56D1 ED 73 27 5E      LD (BLIT_STRUCT), SP
   55+ 56D5 F9               LD SP, HL
   56+ 56D6 F1               POP AF
   57+ 56D7 C1               POP BC
@@ -4340,22 +4340,22 @@
   60+ 56DA DD E1            POP IX
   61+ 56DC FD E1            POP IY
   62+ 56DE D9               EXX
-  63+ 56DF ED 73 28 5E      LD (BLIT_STRUCT+2), SP
-  64+ 56E3 ED 7B 26 5E      LD SP, (BLIT_STRUCT)
+  63+ 56DF ED 73 29 5E      LD (BLIT_STRUCT+2), SP
+  64+ 56E3 ED 7B 27 5E      LD SP, (BLIT_STRUCT)
   65+ 56E7 FB               EI
   66+ 56E8 D1               POP DE ; get function to call
   67+ 56E9 E5               PUSH HL
   68+ 56EA CD 05 57         CALL .EXXDECALL
   69+ 56ED F3               DI
-  70+ 56EE ED 73 26 5E      LD (BLIT_STRUCT), SP
-  71+ 56F2 ED 7B 28 5E      LD SP, (BLIT_STRUCT+2)
+  70+ 56EE ED 73 27 5E      LD (BLIT_STRUCT), SP
+  71+ 56F2 ED 7B 29 5E      LD SP, (BLIT_STRUCT+2)
   72+ 56F6 FD E5            PUSH IY
   73+ 56F8 DD E5            PUSH IX
   74+ 56FA E5               PUSH HL
   75+ 56FB D5               PUSH DE
   76+ 56FC C5               PUSH BC
   77+ 56FD F5               PUSH AF
-  78+ 56FE ED 7B 26 5E      LD SP, (BLIT_STRUCT)
+  78+ 56FE ED 7B 27 5E      LD SP, (BLIT_STRUCT)
   79+ 5702 FB               EI
   80+ 5703 E1               POP HL
   81+ 5704 C9           	RET
@@ -4514,15 +4514,15 @@
  141+ 575B E5           	PUSH HL ; save position in BASIC buffer
  142+ 575C              .ADDR:
  143+ 575C FD 21 00 00  	LD IY, 0 ; modified by code
- 144+ 5760 C3 5A 5F     	JP ENABLE_PAGE0
+ 144+ 5760 C3 5B 5F     	JP ENABLE_PAGE0
  145+ 5763              .CALL:
  146+ 5763 CD 08 57     	CALL RECTANGLE_COPY
  147+ 5766 AF           	XOR A
- 148+ 5767 32 37 5E     	LD (VRAM_UPDATE_IN_PROGRESS),A
+ 148+ 5767 32 38 5E     	LD (VRAM_UPDATE_IN_PROGRESS),A
  149+ 576A
  150+ 576A D1               POP DE
  151+ 576B C1               POP BC
- 152+ 576C CD D1 5E         CALL RESTORE_PAGE_INFO
+ 152+ 576C CD D2 5E         CALL RESTORE_PAGE_INFO
  153+ 576F
  154+ 576F E1           	POP HL
  155+ 5770 C9           	RET
@@ -4575,18 +4575,18 @@
  202+ 578D 32 20 57     	LD (RECTANGLE_COPY.CALL1), A
  203+ 5790 32 23 57     	LD (RECTANGLE_COPY.CALL2), A
  204+ 5793              	;LD A,1
- 205+ 5793 32 37 5E     	LD (VRAM_UPDATE_IN_PROGRESS),A
+ 205+ 5793 32 38 5E     	LD (VRAM_UPDATE_IN_PROGRESS),A
  206+ 5796 C3 63 57     	JP BOXCOMMON_DEFUSR.CALL
  207+ 5799              .SETDEST:
  208+ 5799 EB           	EX DE, HL
  209+ 579A F3           	DI
- 210+ 579B CD 77 5E     	CALL SETWRT_LOCAL_WRITE
+ 210+ 579B CD 78 5E     	CALL SETWRT_LOCAL_WRITE
  211+ 579E FB           	EI
  212+ 579F EB           	EX DE, HL
  213+ 57A0 C9           	RET
  214+ 57A1              .COPYDATA:
  215+ 57A1 41           	LD B, C
- 216+ 57A2 C3 8C 5E     	JP BBYTECOPY
+ 216+ 57A2 C3 8D 5E     	JP BBYTECOPY
  217+ 57A5              ; *******************************************************************************************************
 # file closed: asm\BOX.asm
  158  57A5               ENDIF
@@ -4735,11 +4735,11 @@
  139+ 5827              ; modifies AF, AF', HL, HL', DE, DE', BC, BC'
  140+ 5827              SHIFT_ROW:
  141+ 5827 F5           	PUSH AF
- 142+ 5828 ED 53 22 5E  		LD (BLIT_TMP1), DE
+ 142+ 5828 ED 53 23 5E  		LD (BLIT_TMP1), DE
  143+ 582C E5           		PUSH HL
  144+ 582D CD 70 58     			CALL .ADDYSHIFT
  145+ 5830 E1           		POP HL
- 146+ 5831 ED 53 24 5E  		LD (BLIT_TMP2), DE ; DE+vertical shift
+ 146+ 5831 ED 53 25 5E  		LD (BLIT_TMP2), DE ; DE+vertical shift
  147+ 5835              .L1:
  148+ 5835 3E 08        		LD A, 8
  149+ 5837 DD 96 02     		SUB (IX+2) ; y shift
@@ -4748,22 +4748,22 @@
  152+ 583D DD 7E 02     		LD A, (IX+2); y shift
  153+ 5840 B7           		OR A
  154+ 5841 28 26        		JR Z, .DONE
- 155+ 5843 ED 5B 22 5E  		LD DE, (BLIT_TMP1)
+ 155+ 5843 ED 5B 23 5E  		LD DE, (BLIT_TMP1)
  156+ 5847 E5           		PUSH HL
  157+ 5848 CD 7E 58     			CALL .DETONEXTROW
  158+ 584B E1           		POP HL
  159+ 584C              .CALL2:
  160+ 584C CD 00 00     		CALL 0
- 161+ 584F ED 5B 22 5E  		LD DE, (BLIT_TMP1)
+ 161+ 584F ED 5B 23 5E  		LD DE, (BLIT_TMP1)
  162+ 5853 E5           		PUSH HL
  163+ 5854 CD 78 58     			CALL .ADD8
  164+ 5857 E1           		POP HL
- 165+ 5858 ED 53 22 5E  		LD (BLIT_TMP1), DE
- 166+ 585C ED 5B 24 5E  		LD DE, (BLIT_TMP2)
+ 165+ 5858 ED 53 23 5E  		LD (BLIT_TMP1), DE
+ 166+ 585C ED 5B 25 5E  		LD DE, (BLIT_TMP2)
  167+ 5860 E5           		PUSH HL
  168+ 5861 CD 78 58     			CALL .ADD8
  169+ 5864 E1           		POP HL
- 170+ 5865 ED 53 24 5E  		LD (BLIT_TMP2), DE ; DE+vertical shift
+ 170+ 5865 ED 53 25 5E  		LD (BLIT_TMP2), DE ; DE+vertical shift
  171+ 5869              .DONE:
  172+ 5869 F1           	POP AF
  173+ 586A 3D           	DEC A
@@ -4951,74 +4951,74 @@
  355+ 5933 DD 56 03     	LD D,(IX+3)
  356+ 5936 7B           	LD A,E
  357+ 5937 E6 07        	AND 7
- 358+ 5939 32 26 5E     	LD (BLIT_STRUCT+0),A
+ 358+ 5939 32 27 5E     	LD (BLIT_STRUCT+0),A
  359+ 593C CD 22 59     	CALL DEdiv8
- 360+ 593F 32 22 5E     	LD (BLIT_TMP+0),A
+ 360+ 593F 32 23 5E     	LD (BLIT_TMP+0),A
  361+ 5942 DD 5E 04     	LD E,(IX+4)
  362+ 5945 DD 56 05     	LD D,(IX+5)
  363+ 5948 7B           	LD A,E
  364+ 5949 E6 07        	AND 7
- 365+ 594B 32 28 5E     	LD (BLIT_STRUCT+2),A
+ 365+ 594B 32 29 5E     	LD (BLIT_STRUCT+2),A
  366+ 594E CD 22 59     	CALL DEdiv8
- 367+ 5951 32 23 5E     	LD (BLIT_TMP+1),A
+ 367+ 5951 32 24 5E     	LD (BLIT_TMP+1),A
  368+ 5954 DD 6E 06     	LD L,(IX+6)
  369+ 5957 DD 66 07     	LD H,(IX+7)
- 370+ 595A 22 30 5E     	LD (BLIT_STRUCT+10),HL
+ 370+ 595A 22 31 5E     	LD (BLIT_STRUCT+10),HL
  371+ 595D DD 6E 08     	LD L,(IX+8)
  372+ 5960 DD 66 09     	LD H,(IX+9)
- 373+ 5963 22 2E 5E     	LD (BLIT_STRUCT+8),HL
+ 373+ 5963 22 2F 5E     	LD (BLIT_STRUCT+8),HL
  374+ 5966 DD 7E 0A     	LD A,(IX+10)
- 375+ 5969 32 34 5E     	LD (BLIT_STRUCT+14),A
+ 375+ 5969 32 35 5E     	LD (BLIT_STRUCT+14),A
  376+ 596C DD 7E 0C     	LD A,(IX+12)
- 377+ 596F 32 36 5E     	LD (BLIT_STRUCT+16),A
+ 377+ 596F 32 37 5E     	LD (BLIT_STRUCT+16),A
  378+ 5972 DD 6E 0E     	LD L,(IX+14)
  379+ 5975 DD 66 0F     	LD H,(IX+15)
- 380+ 5978 22 2A 5E     	LD (BLIT_STRUCT+4),HL
+ 380+ 5978 22 2B 5E     	LD (BLIT_STRUCT+4),HL
  381+ 597B              	;LD A,(IX+16)
  382+ 597B              	;LD (BLIT_TMP+2),A
  383+ 597B
  384+ 597B              	; calculate char&mask add to value
  385+ 597B 26 00        	LD H,0
- 386+ 597D 3A 34 5E     	LD A,(BLIT_STRUCT+14)
+ 386+ 597D 3A 35 5E     	LD A,(BLIT_STRUCT+14)
  387+ 5980 6F           	LD L,A
- 388+ 5981 CD 96 5E     	CALL HLx8
- 389+ 5984 22 32 5E     	LD (BLIT_STRUCT+12),HL
+ 388+ 5981 CD 97 5E     	CALL HLx8
+ 389+ 5984 22 33 5E     	LD (BLIT_STRUCT+12),HL
  390+ 5987              	; calculate background add to value
  391+ 5987 26 00        	LD H,0
  392+ 5989 DD 6E 10     	LD L,(IX+16)
- 393+ 598C CD 96 5E     	CALL HLx8
- 394+ 598F 22 2C 5E     	LD (BLIT_STRUCT+6),HL
+ 393+ 598C CD 97 5E     	CALL HLx8
+ 394+ 598F 22 2D 5E     	LD (BLIT_STRUCT+6),HL
  395+ 5992              	; calculate pointer to background location
  396+ 5992 21 00 00     	LD HL,0
- 397+ 5995 3A 23 5E     	LD A,(BLIT_TMP+1)
+ 397+ 5995 3A 24 5E     	LD A,(BLIT_TMP+1)
  398+ 5998 B7           	OR A
  399+ 5999 28 08        	JR Z, .L1
  400+ 599B 47           	LD B,A
- 401+ 599C ED 5B 2C 5E  	LD DE,(BLIT_STRUCT+6)
+ 401+ 599C ED 5B 2D 5E  	LD DE,(BLIT_STRUCT+6)
  402+ 59A0              .L0:
  403+ 59A0 19           	ADD HL, DE
  404+ 59A1 10 FD        	DJNZ .L0
  405+ 59A3              .L1:
  406+ 59A3 EB           	EX DE,HL
  407+ 59A4 26 00        	LD H,0
- 408+ 59A6 3A 22 5E     	LD A,(BLIT_TMP+0)
+ 408+ 59A6 3A 23 5E     	LD A,(BLIT_TMP+0)
  409+ 59A9 6F           	LD L,A
- 410+ 59AA CD 96 5E     	CALL HLx8
+ 410+ 59AA CD 97 5E     	CALL HLx8
  411+ 59AD 19           	ADD HL,DE
- 412+ 59AE ED 5B 2A 5E  	LD DE,(BLIT_STRUCT+4)
+ 412+ 59AE ED 5B 2B 5E  	LD DE,(BLIT_STRUCT+4)
  413+ 59B2 19           	ADD HL,DE
- 414+ 59B3 22 2A 5E     	LD (BLIT_STRUCT+4),HL
+ 414+ 59B3 22 2B 5E     	LD (BLIT_STRUCT+4),HL
  415+ 59B6
  416+ 59B6 FD 21 BD 59  	LD IY, .RET
- 417+ 59BA C3 5A 5F     	JP ENABLE_PAGE0
+ 417+ 59BA C3 5B 5F     	JP ENABLE_PAGE0
  418+ 59BD              .RET:
  419+ 59BD FB           	EI
- 420+ 59BE DD 21 26 5E  	LD IX, BLIT_STRUCT
+ 420+ 59BE DD 21 27 5E  	LD IX, BLIT_STRUCT
  421+ 59C2 CD 8E 58     	CALL SHIFT_MERGE_CHARACTER
  422+ 59C5
  423+ 59C5 D1               POP DE
  424+ 59C6 C1               POP BC
- 425+ 59C7 C3 D1 5E         JP RESTORE_PAGE_INFO
+ 425+ 59C7 C3 D2 5E         JP RESTORE_PAGE_INFO
  426+ 59CA              ; *******************************************************************************************************
  427+ 59CA               ENDIF
  428+ 59CA
@@ -5180,13 +5180,13 @@
   13+ 59CA              TILE:
   14+ 59CA DD 6E 06     	LD L, (IX+6)
   15+ 59CD DD 66 07     	LD H, (IX+7) ; destination address
-  16+ 59D0 22 22 5E     	LD (TILETMP1), HL
+  16+ 59D0 22 23 5E     	LD (TILETMP1), HL
   17+ 59D3 DD 46 0C     	LD B, (IX+12) ; vertical tile number
   18+ 59D6              .L1:
   19+ 59D6 C5           	PUSH BC
   20+ 59D7 DD 6E 00     		LD L, (IX+0)
   21+ 59DA DD 66 01     		LD H, (IX+1) ; tile address
-  22+ 59DD 22 24 5E     		LD (TILETMP2), HL
+  22+ 59DD 22 25 5E     		LD (TILETMP2), HL
   23+ 59E0 DD 46 02     		LD B, (IX+2) ; tile rows
   24+ 59E3              .L2:
   25+ 59E3 C5           		PUSH BC
@@ -5194,7 +5194,7 @@
   27+ 59E7 DD 46 0A     			LD B, (IX+10) ; horizontal tile num
   28+ 59EA              .L3:
   29+ 59EA C5           			PUSH BC
-  30+ 59EB 2A 24 5E     				LD HL, (TILETMP2)
+  30+ 59EB 2A 25 5E     				LD HL, (TILETMP2)
   31+ 59EE DD 46 04     				LD B, (IX+4) ; tile columns
   32+ 59F1              .L4:
   33+ 59F1 C5           				PUSH BC
@@ -5204,12 +5204,12 @@
   37+ 59F6 10 F9        				DJNZ .L4
   38+ 59F8 C1           			POP BC
   39+ 59F9 10 EF        			DJNZ .L3
-  40+ 59FB 22 24 5E     			LD (TILETMP2), HL
-  41+ 59FE 2A 22 5E     			LD HL, (TILETMP1)
+  40+ 59FB 22 25 5E     			LD (TILETMP2), HL
+  41+ 59FE 2A 23 5E     			LD HL, (TILETMP1)
   42+ 5A01 DD 5E 08     			LD E, (IX+8)
   43+ 5A04 DD 56 09     			LD D, (IX+9) ; add to value for dest next row
   44+ 5A07 19           			ADD HL, DE
-  45+ 5A08 22 22 5E     			LD (TILETMP1), HL
+  45+ 5A08 22 23 5E     			LD (TILETMP1), HL
   46+ 5A0B C1           		POP BC
   47+ 5A0C 10 D5        		DJNZ .L2
   48+ 5A0E C1           	POP BC
@@ -5236,39 +5236,39 @@
   69+ 5A12              	; tile data pointer
   70+ 5A12 DD 6E 02     	LD L,(IX+2)
   71+ 5A15 DD 66 03     	LD H,(IX+3)
-  72+ 5A18 22 26 5E     	LD (BLIT_STRUCT+0),HL
+  72+ 5A18 22 27 5E     	LD (BLIT_STRUCT+0),HL
   73+ 5A1B              	; tile columns
   74+ 5A1B DD 6E 04     	LD L,(IX+4)
   75+ 5A1E DD 66 05     	LD H,(IX+5)
-  76+ 5A21 22 2A 5E     	LD (BLIT_STRUCT+4),HL
+  76+ 5A21 22 2B 5E     	LD (BLIT_STRUCT+4),HL
   77+ 5A24              	; tile rows
   78+ 5A24 DD 6E 06     	LD L,(IX+6)
   79+ 5A27 DD 66 07     	LD H,(IX+7)
-  80+ 5A2A 22 28 5E     	LD (BLIT_STRUCT+2),HL
+  80+ 5A2A 22 29 5E     	LD (BLIT_STRUCT+2),HL
   81+ 5A2D              	; destintion pointer
   82+ 5A2D DD 6E 08     	LD L,(IX+8)
   83+ 5A30 DD 66 09     	LD H,(IX+9)
-  84+ 5A33 22 2C 5E     	LD (BLIT_STRUCT+6),HL
+  84+ 5A33 22 2D 5E     	LD (BLIT_STRUCT+6),HL
   85+ 5A36              	; destination columns
   86+ 5A36 DD 7E 0A     	LD A,(IX+10)
-  87+ 5A39 32 22 5E     	LD (BLIT_TMP+0),A
+  87+ 5A39 32 23 5E     	LD (BLIT_TMP+0),A
   88+ 5A3C              	; destination rows
   89+ 5A3C DD 7E 0C     	LD A,(IX+12)
-  90+ 5A3F 32 23 5E     	LD (BLIT_TMP+1),A
+  90+ 5A3F 32 24 5E     	LD (BLIT_TMP+1),A
   91+ 5A42              	; destination begin column
   92+ 5A42 DD 7E 0E     	LD A,(IX+14)
-  93+ 5A45 32 24 5E     	LD (BLIT_TMP+2),A
+  93+ 5A45 32 25 5E     	LD (BLIT_TMP+2),A
   94+ 5A48              	; destination begin row
   95+ 5A48 DD 7E 10     	LD A,(IX+16)
-  96+ 5A4B 32 25 5E     	LD (BLIT_TMP+3),A
+  96+ 5A4B 32 26 5E     	LD (BLIT_TMP+3),A
   97+ 5A4E              	; number of tiles horizontally
   98+ 5A4E DD 6E 12     	LD L,(IX+18)
   99+ 5A51 DD 66 13     	LD H,(IX+19)
- 100+ 5A54 22 30 5E     	LD (BLIT_STRUCT+10),HL
+ 100+ 5A54 22 31 5E     	LD (BLIT_STRUCT+10),HL
  101+ 5A57              	; number of tiles vertically
  102+ 5A57 DD 6E 14     	LD L,(IX+20)
  103+ 5A5A DD 66 15     	LD H,(IX+21)
- 104+ 5A5D 22 32 5E     	LD (BLIT_STRUCT+12),HL
+ 104+ 5A5D 22 33 5E     	LD (BLIT_STRUCT+12),HL
  105+ 5A60               IF (0 == 1) ; otherwise we just continue with code below
  106+ 5A60 ~            	JP TILERAM.COMMON
  107+ 5A60               ENDIF
@@ -5373,32 +5373,32 @@
  206+ 5A61
  207+ 5A61              	; calculate destination add to value
  208+ 5A61 26 00        	LD H, 0
- 209+ 5A63 3A 22 5E     	LD A, (BLIT_TMP+0)
+ 209+ 5A63 3A 23 5E     	LD A, (BLIT_TMP+0)
  210+ 5A66 6F           	LD L, A
- 211+ 5A67 CD 96 5E     	CALL HLx8
- 212+ 5A6A 22 2E 5E     	LD (BLIT_STRUCT+8), HL
+ 211+ 5A67 CD 97 5E     	CALL HLx8
+ 212+ 5A6A 22 2F 5E     	LD (BLIT_STRUCT+8), HL
  213+ 5A6D              	; calculate pointer to background location
  214+ 5A6D 21 00 00     	LD HL, 0
- 215+ 5A70 3A 25 5E     	LD A,(BLIT_TMP+3)
+ 215+ 5A70 3A 26 5E     	LD A,(BLIT_TMP+3)
  216+ 5A73 B7           	OR A
  217+ 5A74 28 08        	JR Z, .L1
  218+ 5A76 47           	LD B,A
- 219+ 5A77 ED 5B 2E 5E  	LD DE,(BLIT_STRUCT+8)
+ 219+ 5A77 ED 5B 2F 5E  	LD DE,(BLIT_STRUCT+8)
  220+ 5A7B              .L0:
  221+ 5A7B 19           	ADD HL, DE
  222+ 5A7C 10 FD        	DJNZ .L0
  223+ 5A7E              .L1:
  224+ 5A7E EB           	EX DE,HL
  225+ 5A7F 26 00        	LD H,0
- 226+ 5A81 3A 24 5E     	LD A,(BLIT_TMP+2)
+ 226+ 5A81 3A 25 5E     	LD A,(BLIT_TMP+2)
  227+ 5A84 6F           	LD L,A
- 228+ 5A85 CD 96 5E     	CALL HLx8
+ 228+ 5A85 CD 97 5E     	CALL HLx8
  229+ 5A88 19           	ADD HL,DE
- 230+ 5A89 ED 5B 2C 5E  	LD DE,(BLIT_STRUCT+6)
+ 230+ 5A89 ED 5B 2D 5E  	LD DE,(BLIT_STRUCT+6)
  231+ 5A8D 19           	ADD HL,DE
- 232+ 5A8E 22 2C 5E     	LD (BLIT_STRUCT+6),HL
+ 232+ 5A8E 22 2D 5E     	LD (BLIT_STRUCT+6),HL
  233+ 5A91 FD 21 98 5A  	LD IY, .RET
- 234+ 5A95 C3 5A 5F     	JP ENABLE_PAGE0
+ 234+ 5A95 C3 5B 5F     	JP ENABLE_PAGE0
  235+ 5A98              .RET:
  236+ 5A98 FB           	EI
  237+ 5A99              	; set RAM functions to call
@@ -5406,12 +5406,12 @@
  239+ 5A9C 22 F3 59     	LD (TILE.CALL2+1), HL
  240+ 5A9F 21 C4 5A     	LD HL, .SETDESTROW
  241+ 5AA2 22 E5 59     	LD (TILE.CALL1+1), HL
- 242+ 5AA5 DD 21 26 5E  	LD IX,BLIT_STRUCT
+ 242+ 5AA5 DD 21 27 5E  	LD IX,BLIT_STRUCT
  243+ 5AA9 CD CA 59     	CALL TILE
  244+ 5AAC
  245+ 5AAC D1               POP DE
  246+ 5AAD C1               POP BC
- 247+ 5AAE CD D1 5E         CALL RESTORE_PAGE_INFO
+ 247+ 5AAE CD D2 5E         CALL RESTORE_PAGE_INFO
  248+ 5AB1
  249+ 5AB1 E1           	POP HL
  250+ 5AB2 C9           	RET
@@ -5426,7 +5426,7 @@
  252+ 5AC1 ED A0       > LDI
  253+ 5AC3 C9           	RET
  254+ 5AC4              .SETDESTROW:
- 255+ 5AC4 ED 5B 22 5E  	LD DE, (TILETMP1)
+ 255+ 5AC4 ED 5B 23 5E  	LD DE, (TILETMP1)
  256+ 5AC8 C9           	RET
  257+ 5AC9              ; *******************************************************************************************************
  258+ 5AC9
@@ -5446,29 +5446,29 @@
  272+ 5AC9              	; tile data pointer
  273+ 5AC9 DD 6E 02     	LD L,(IX+2)
  274+ 5ACC DD 66 03     	LD H,(IX+3)
- 275+ 5ACF 22 26 5E     	LD (BLIT_STRUCT+0),HL
+ 275+ 5ACF 22 27 5E     	LD (BLIT_STRUCT+0),HL
  276+ 5AD2              	; tile columns
  277+ 5AD2 DD 6E 04     	LD L,(IX+4)
  278+ 5AD5 DD 66 05     	LD H,(IX+5)
- 279+ 5AD8 22 2A 5E     	LD (BLIT_STRUCT+4),HL
+ 279+ 5AD8 22 2B 5E     	LD (BLIT_STRUCT+4),HL
  280+ 5ADB              	; tile rows
  281+ 5ADB DD 6E 06     	LD L,(IX+6)
  282+ 5ADE DD 66 07     	LD H,(IX+7)
- 283+ 5AE1 22 28 5E     	LD (BLIT_STRUCT+2),HL
+ 283+ 5AE1 22 29 5E     	LD (BLIT_STRUCT+2),HL
  284+ 5AE4              	; destination begin column
  285+ 5AE4 DD 7E 08     	LD A,(IX+8)
- 286+ 5AE7 32 24 5E     	LD (BLIT_TMP+2),A
+ 286+ 5AE7 32 25 5E     	LD (BLIT_TMP+2),A
  287+ 5AEA              	; destination begin row
  288+ 5AEA DD 7E 0A     	LD A,(IX+10)
- 289+ 5AED 32 25 5E     	LD (BLIT_TMP+3),A
+ 289+ 5AED 32 26 5E     	LD (BLIT_TMP+3),A
  290+ 5AF0              	; number of tiles horizontally
  291+ 5AF0 DD 6E 0C     	LD L,(IX+12)
  292+ 5AF3 DD 66 0D     	LD H,(IX+13)
- 293+ 5AF6 22 30 5E     	LD (BLIT_STRUCT+10),HL
+ 293+ 5AF6 22 31 5E     	LD (BLIT_STRUCT+10),HL
  294+ 5AF9              	; number of tiles vertically
  295+ 5AF9 DD 6E 0E     	LD L,(IX+14)
  296+ 5AFC DD 66 0F     	LD H,(IX+15)
- 297+ 5AFF 22 32 5E     	LD (BLIT_STRUCT+12),HL
+ 297+ 5AFF 22 33 5E     	LD (BLIT_STRUCT+12),HL
  298+ 5B02               IF (0 == 1) ; otherwise we just continue with code below
  299+ 5B02 ~            	JP TILEVRM.COMMON
  300+ 5B02               ENDIF
@@ -5549,22 +5549,22 @@
  375+ 5B03
  376+ 5B03              	; calculate destination add to value
  377+ 5B03 21 00 01     	LD HL, 256
- 378+ 5B06 22 2E 5E     	LD (BLIT_STRUCT+8), HL
+ 378+ 5B06 22 2F 5E     	LD (BLIT_STRUCT+8), HL
  379+ 5B09              	; calculate pointer to background location
- 380+ 5B09 3A 25 5E     	LD A,(BLIT_TMP+3)
+ 380+ 5B09 3A 26 5E     	LD A,(BLIT_TMP+3)
  381+ 5B0C 67           	LD H,A
  382+ 5B0D 2E 00        	LD L,0
  383+ 5B0F EB           	EX DE,HL
  384+ 5B10 26 00        	LD H,0
- 385+ 5B12 3A 24 5E     	LD A,(BLIT_TMP+2)
+ 385+ 5B12 3A 25 5E     	LD A,(BLIT_TMP+2)
  386+ 5B15 6F           	LD L,A
- 387+ 5B16 CD 96 5E     	CALL HLx8
+ 387+ 5B16 CD 97 5E     	CALL HLx8
  388+ 5B19 19           	ADD HL,DE
  389+ 5B1A ED 5B CB F3  	LD DE,(GRPCGP)
  390+ 5B1E 19           	ADD HL,DE
- 391+ 5B1F 22 2C 5E     	LD (BLIT_STRUCT+6),HL
+ 391+ 5B1F 22 2D 5E     	LD (BLIT_STRUCT+6),HL
  392+ 5B22 FD 21 29 5B  	LD IY, .RET
- 393+ 5B26 C3 5A 5F     	JP ENABLE_PAGE0
+ 393+ 5B26 C3 5B 5F     	JP ENABLE_PAGE0
  394+ 5B29              .RET:
  395+ 5B29 FB           	EI
  396+ 5B2A              	; set RAM functions to call
@@ -5572,22 +5572,22 @@
  398+ 5B2D 22 F3 59     	LD (TILE.CALL2+1), HL
  399+ 5B30 21 4A 5B     	LD HL, .SETDESTROW
  400+ 5B33 22 E5 59     	LD (TILE.CALL1+1), HL
- 401+ 5B36 DD 21 26 5E  	LD IX,BLIT_STRUCT
+ 401+ 5B36 DD 21 27 5E  	LD IX,BLIT_STRUCT
  402+ 5B3A CD CA 59     	CALL TILE
  403+ 5B3D
  404+ 5B3D D1               POP DE
  405+ 5B3E C1               POP BC
- 406+ 5B3F CD D1 5E         CALL RESTORE_PAGE_INFO
+ 406+ 5B3F CD D2 5E         CALL RESTORE_PAGE_INFO
  407+ 5B42
  408+ 5B42 E1           	POP HL
  409+ 5B43 C9           	RET
  410+ 5B44              .TILECOPY:
  411+ 5B44 01 98 08     	LD BC, #0898
- 412+ 5B47 C3 8E 5E     	JP BBYTECOPY_NO_C
+ 412+ 5B47 C3 8F 5E     	JP BBYTECOPY_NO_C
  413+ 5B4A              .SETDESTROW:
- 414+ 5B4A 2A 22 5E     	LD HL, (TILETMP1)
+ 414+ 5B4A 2A 23 5E     	LD HL, (TILETMP1)
  415+ 5B4D F3           	DI
- 416+ 5B4E CD 77 5E     	CALL SETWRT_LOCAL_WRITE
+ 416+ 5B4E CD 78 5E     	CALL SETWRT_LOCAL_WRITE
  417+ 5B51 FB           	EI
  418+ 5B52 C9           	RET
  419+ 5B53              ; *******************************************************************************************************
@@ -5660,7 +5660,7 @@
   60+ 5B6B                  ; first check which rectangle is higher
   61+ 5B6B DD 6E 0C         LD L,(IX+12)
   62+ 5B6E DD 66 0D         LD H,(IX+13)
-  63+ 5B71 ED 5B 2C 5E      LD DE,(BLIT_STRUCT+6)
+  63+ 5B71 ED 5B 2D 5E      LD DE,(BLIT_STRUCT+6)
   64+ 5B75 A7               AND A
   65+ 5B76 ED 52            SBC HL,DE
   66+ 5B78 FD 6E 04         LD L,(IY+4)
@@ -5671,14 +5671,14 @@
   71+ 5B87                  ; equally high or IX defined one higher
   72+ 5B87                  ; check upper boundary
   73+ 5B87 19               ADD HL,DE
-  74+ 5B88 ED 5B 28 5E      LD DE,(BLIT_STRUCT+2)
+  74+ 5B88 ED 5B 29 5E      LD DE,(BLIT_STRUCT+2)
   75+ 5B8C DD 4E 0C         LD C,(IX+12)
   76+ 5B8F DD 46 0D         LD B,(IX+13)
   77+ 5B92 CD 53 5B         CALL GENERIC_INNER_CHECK
   78+ 5B95 30 29            JR NC,.INSIDE
   79+ 5B97                  ; check lower boundary
   80+ 5B97 E5               PUSH HL
-  81+ 5B98 2A 2C 5E         LD HL,(BLIT_STRUCT+6)
+  81+ 5B98 2A 2D 5E         LD HL,(BLIT_STRUCT+6)
   82+ 5B9B 19               ADD HL,DE
   83+ 5B9C EB               EX DE,HL
   84+ 5B9D E1               POP HL
@@ -5689,8 +5689,8 @@
   89+ 5BA4                  ; rectangle defined in BLIT_STRUCT is higher
   90+ 5BA4 19               ADD HL,DE
   91+ 5BA5 EB               EX DE,HL
-  92+ 5BA6 2A 28 5E         LD HL,(BLIT_STRUCT+2)
-  93+ 5BA9 ED 4B 2C 5E      LD BC,(BLIT_STRUCT+6)
+  92+ 5BA6 2A 29 5E         LD HL,(BLIT_STRUCT+2)
+  93+ 5BA9 ED 4B 2D 5E      LD BC,(BLIT_STRUCT+6)
   94+ 5BAD CD 53 5B         CALL GENERIC_INNER_CHECK
   95+ 5BB0 30 0E            JR NC,.INSIDE
   96+ 5BB2 E5               PUSH HL
@@ -5706,7 +5706,7 @@
  106+ 5BC0                  ; first check which rectangle is wider
  107+ 5BC0 DD 6E 0A         LD L,(IX+10)
  108+ 5BC3 DD 66 0B         LD H,(IX+11)
- 109+ 5BC6 ED 5B 2A 5E      LD DE,(BLIT_STRUCT+4)
+ 109+ 5BC6 ED 5B 2B 5E      LD DE,(BLIT_STRUCT+4)
  110+ 5BCA A7               AND A
  111+ 5BCB ED 52            SBC HL,DE
  112+ 5BCD FD 6E 02         LD L,(IY+2)
@@ -5717,14 +5717,14 @@
  117+ 5BDC                  ; equally wide or IX defined one wider
  118+ 5BDC                  ; check left boundary
  119+ 5BDC 19               ADD HL,DE
- 120+ 5BDD ED 5B 26 5E      LD DE,(BLIT_STRUCT+0)
+ 120+ 5BDD ED 5B 27 5E      LD DE,(BLIT_STRUCT+0)
  121+ 5BE1 DD 4E 0A         LD C,(IX+10)
  122+ 5BE4 DD 46 0B         LD B,(IX+11)
  123+ 5BE7 CD 53 5B         CALL GENERIC_INNER_CHECK
  124+ 5BEA D0               RET NC ; overlap
  125+ 5BEB                  ; check right boundary
  126+ 5BEB E5               PUSH HL
- 127+ 5BEC 2A 2A 5E         LD HL,(BLIT_STRUCT+4)
+ 127+ 5BEC 2A 2B 5E         LD HL,(BLIT_STRUCT+4)
  128+ 5BEF 19               ADD HL,DE
  129+ 5BF0 EB               EX DE,HL
  130+ 5BF1 E1               POP HL
@@ -5733,8 +5733,8 @@
  133+ 5BF5                  ; rectangle defined in BLIT_STRUCT is higher
  134+ 5BF5 19               ADD HL,DE
  135+ 5BF6 EB               EX DE,HL
- 136+ 5BF7 2A 26 5E         LD HL,(BLIT_STRUCT+0)
- 137+ 5BFA ED 4B 2A 5E      LD BC,(BLIT_STRUCT+4)
+ 136+ 5BF7 2A 27 5E         LD HL,(BLIT_STRUCT+0)
+ 137+ 5BFA ED 4B 2B 5E      LD BC,(BLIT_STRUCT+4)
  138+ 5BFE CD 53 5B         CALL GENERIC_INNER_CHECK
  139+ 5C01 D0               RET NC ; overlap
  140+ 5C02 E5               PUSH HL
@@ -5759,9 +5759,9 @@
  159+ 5C0F              ; returns CF=1 if not overlapping
  160+ 5C0F              ; returns A=list index and CF=0 if overlapping
  161+ 5C0F              FIND_OVERLAP:
- 162+ 5C0F 3A 2E 5E         LD A,(BLIT_STRUCT+8)
+ 162+ 5C0F 3A 2F 5E         LD A,(BLIT_STRUCT+8)
  163+ 5C12 47               LD B,A
- 164+ 5C13 DD 2A 2F 5E      LD IX,(BLIT_STRUCT+9)
+ 164+ 5C13 DD 2A 30 5E      LD IX,(BLIT_STRUCT+9)
  165+ 5C17              .L1:
  166+ 5C17 C5               PUSH BC
  167+ 5C18                  ; check active flag
@@ -5779,7 +5779,7 @@
  179+ 5C2F 38 07            JR C,.NEXT
  180+ 5C31                  ; found
  181+ 5C31 C1               POP BC
- 182+ 5C32 3A 2E 5E         LD A,(BLIT_STRUCT+8)
+ 182+ 5C32 3A 2F 5E         LD A,(BLIT_STRUCT+8)
  183+ 5C35 90               SUB B
  184+ 5C36 A7               AND A
  185+ 5C37 C9               RET
@@ -5795,7 +5795,7 @@
  195+ 5C42                  ; at BLIT_STRUCT+13
  196+ 5C42 DD 7E 02         LD A,(IX+2) ; sprite ID
  197+ 5C45 CD 89 4D         CALL GETnthSPRATTR
- 198+ 5C48 FD 21 31 5E      LD IY,BLIT_STRUCT+11
+ 198+ 5C48 FD 21 32 5E      LD IY,BLIT_STRUCT+11
  199+ 5C4C 7E               LD A,(HL)
  200+ 5C4D FD 77 04         LD (IY+4),A
  201+ 5C50 23               INC HL
@@ -5917,17 +5917,17 @@
  316+ 5C65 23          > INC HL
  316+ 5C66 23          > INC HL
  316+ 5C67 23          > INC HL
- 317+ 5C68 11 26 5E         LD DE,BLIT_STRUCT
+ 317+ 5C68 11 27 5E         LD DE,BLIT_STRUCT
  318+ 5C6B 01 09 00         LD BC,9
  319+ 5C6E ED B0            LDIR ; copy over x,y,w,h,list item number
  320+ 5C70 DD 7E 0E         LD A,(IX+14)
- 321+ 5C73 32 2F 5E         LD (BLIT_STRUCT+9),A
+ 321+ 5C73 32 30 5E         LD (BLIT_STRUCT+9),A
  322+ 5C76 DD 7E 0F         LD A,(IX+15)
- 323+ 5C79 32 30 5E         LD (BLIT_STRUCT+10),A ; address to collidable objects array
+ 323+ 5C79 32 31 5E         LD (BLIT_STRUCT+10),A ; address to collidable objects array
  324+ 5C7C DD 7E 02         LD A,(IX+2)
- 325+ 5C7F 32 31 5E         LD (BLIT_STRUCT+11),A
+ 325+ 5C7F 32 32 5E         LD (BLIT_STRUCT+11),A
  326+ 5C82 DD 7E 03         LD A,(IX+3)
- 327+ 5C85 32 32 5E         LD (BLIT_STRUCT+12),A ; address to results variable
+ 327+ 5C85 32 33 5E         LD (BLIT_STRUCT+12),A ; address to results variable
  328+ 5C88 DD E5            PUSH IX
  329+ 5C8A CD 0F 5C         CALL FIND_OVERLAP
  330+ 5C8D DD E1            POP IX
@@ -6040,14 +6040,14 @@
   86+ 5CF8              ; helper function to get a byte from VRAM address at HL and place it at DE also in VRAM
   87+ 5CF8              VPOKE_VPEEK:
   88+ 5CF8 F3                   DI
-  89+ 5CF9 CD 82 5E             CALL SETWRT_LOCAL_READ
+  89+ 5CF9 CD 83 5E             CALL SETWRT_LOCAL_READ
   90+ 5CFC E3                   EX (SP),HL
   91+ 5CFD E3                   EX (SP),HL
   92+ 5CFE DB 98                IN A,(#98)
   93+ 5D00                      ;IN A,(#98) ; WHY IS THIS NEEDED ?
   94+ 5D00 F5                   PUSH AF
   95+ 5D01 EB                   EX DE,HL
-  96+ 5D02 CD 77 5E             CALL SETWRT_LOCAL_WRITE
+  96+ 5D02 CD 78 5E             CALL SETWRT_LOCAL_WRITE
   97+ 5D05 E3                   EX (SP),HL
   98+ 5D06 E3                   EX (SP),HL
   99+ 5D07 EB                   EX DE,HL
@@ -6173,7 +6173,7 @@
  219+ 5D40              UNPACK_DEFUSR_COMMON:
  220+ 5D40              	; enable page 0
  221+ 5D40 FD 21 47 5D  	LD IY, .RET
- 222+ 5D44 C3 5A 5F     	JP ENABLE_PAGE0
+ 222+ 5D44 C3 5B 5F     	JP ENABLE_PAGE0
  223+ 5D47              .RET:
  224+ 5D47 FB           	EI
  225+ 5D48 DD 6E 02     	LD L,(IX+2)
@@ -6183,7 +6183,7 @@
  229+ 5D54 CD A2 5C     	CALL dzx0_standard
  230+ 5D57 D1               POP DE
  231+ 5D58 C1               POP BC
- 232+ 5D59 C3 D1 5E         JP RESTORE_PAGE_INFO
+ 232+ 5D59 C3 D2 5E         JP RESTORE_PAGE_INFO
  233+ 5D5C              ; *******************************************************************************************************
  234+ 5D5C               ENDIF
 # file closed: asm\decomp.asm
@@ -6204,13 +6204,13 @@
   10+ 5D5C                  ; check for zero size
   11+ 5D5C 78               LD A,B
   12+ 5D5D B7               OR A
-  13+ 5D5E 28 48            JR Z, .BADFILENAME
+  13+ 5D5E 28 4A            JR Z, .BADFILENAME
   14+ 5D60                  ; check for more than 2+8+1+3=14
   15+ 5D60 FE 0F            CP 15
-  16+ 5D62 30 44            JR NC, .BADFILENAME
+  16+ 5D62 30 46            JR NC, .BADFILENAME
   17+ 5D64                  ; check if more than 2 letters
   18+ 5D64 FE 03            CP 3
-  19+ 5D66 38 1F            JR C, .PROCESS_FILENAME
+  19+ 5D66 38 1C            JR C, .L7 ; no drive
   20+ 5D68                  ; check for : at proper place
   21+ 5D68 5E               LD E, (HL)
   22+ 5D69 23               INC HL
@@ -6219,10 +6219,10 @@
   25+ 5D6D 20 14            JR NZ, .L1
   26+ 5D6F                  ; so we have : , check for letters A-H
   27+ 5D6F 7B               LD A,E
-  28+ 5D70 CD C6 5F         CALL UPPER
+  28+ 5D70 CD C7 5F         CALL UPPER
   29+ 5D73 D6 41            SUB 'A'
   30+ 5D75 FE 09            CP 9
-  31+ 5D77 30 2F            JR NC, .BADFILENAME
+  31+ 5D77 30 31            JR NC, .BADFILENAME
   32+ 5D79 23               INC HL
   33+ 5D7A 05               DEC B ; consume two characters
   34+ 5D7B 05               DEC B
@@ -6232,1057 +6232,1060 @@
   38+ 5D81 18 04            JR .PROCESS_FILENAME
   39+ 5D83              .L1:
   40+ 5D83                  ; no drive specified
-  41+ 5D83 AF               XOR A
-  42+ 5D84 2B               DEC HL
-  43+ 5D85 18 F5            JR .L2
-  44+ 5D87              .PROCESS_FILENAME:
-  45+ 5D87                  ; HL is pointing to rest of the name
-  46+ 5D87 13               INC DE ; 8-character filename location, needs to be padded with blanks
-  47+ 5D88 0E 08            LD C,8 ; filename length
-  48+ 5D8A              .L4:
-  49+ 5D8A CD AA 5D         CALL .GETCHAR
-  50+ 5D8D FE 2E            CP '.'
-  51+ 5D8F 28 12            JR Z, .L6 ; if dot, stay here until we fill up filename part
-  52+ 5D91              .L3:
-  53+ 5D91 12               LD (DE),A
-  54+ 5D92 13               INC DE
-  55+ 5D93 0D               DEC C
-  56+ 5D94 20 F4            JR NZ, .L4
-  57+ 5D96                  ; so we cleared filename part, DE at extension part
-  58+ 5D96                  ; we are either at . or past 8 chars
-  59+ 5D96 23               INC HL ; skip potential . and don't care
-  60+ 5D97 0E 03            LD C,3
-  61+ 5D99              .L5:
-  62+ 5D99 CD AA 5D         CALL .GETCHAR
-  63+ 5D9C 12               LD (DE),A
-  64+ 5D9D 13               INC DE
-  65+ 5D9E 0D               DEC C
-  66+ 5D9F 20 F8            JR NZ, .L5
-  67+ 5DA1 AF               XOR A ; clear carry flag
-  68+ 5DA2 C9               RET
-  69+ 5DA3              .L6:
-  70+ 5DA3 3E 20            LD A,' ' ; case where we stay at first .
-  71+ 5DA5 2B               DEC HL
-  72+ 5DA6 18 E9            JR .L3
-  73+ 5DA8              .BADFILENAME:
-  74+ 5DA8 37               SCF
-  75+ 5DA9 C9               RET
-  76+ 5DAA              .GETCHAR: ; gets a character, returns blank if we read past input
-  77+ 5DAA 78               LD A,B
-  78+ 5DAB B7               OR A
-  79+ 5DAC 28 07            JR Z, .BLANK
-  80+ 5DAE 7E               LD A,(HL)
-  81+ 5DAF CD C6 5F         CALL UPPER
-  82+ 5DB2 23               INC HL
-  83+ 5DB3 05               DEC B
-  84+ 5DB4 C9               RET
-  85+ 5DB5              .BLANK:
-  86+ 5DB5 3E 20            LD A,' '
-  87+ 5DB7 C9               RET
-  88+ 5DB8              ; *******************************************************************************************************
-  89+ 5DB8
-  90+ 5DB8               IF (0 == 1)
-  91+ 5DB8 ~
-  92+ 5DB8 ~            ; *******************************************************************************************************
-  93+ 5DB8 ~            ; function to handle CALL DLOAD basic extension
-  94+ 5DB8 ~            ; _DLOAD ( STRING filename,
-  95+ 5DB8 ~            ;		   INT offset,
-  96+ 5DB8 ~            ;		   INT destination,
-  97+ 5DB8 ~            ;          INT size )
-  98+ 5DB8 ~            ; will put ram in page 0 also, page 1 is already there
-  99+ 5DB8 ~            DLOAD:
- 100+ 5DB8 ~            	; opening (
- 101+ 5DB8 ~            	CALL CHKCHAR
- 102+ 5DB8 ~            	DB '('
- 103+ 5DB8 ~                CALL EVALTXTPARAM
- 104+ 5DB8 ~                PUSH HL
- 105+ 5DB8 ~                CALL GETSTRPNT
- 106+ 5DB8 ~                CALL DLOAD_PROCESS_FILENAME
- 107+ 5DB8 ~                JP C, BAD_FILENAME
- 108+ 5DB8 ~                POP HL
- 109+ 5DB8 ~            	; comma
- 110+ 5DB8 ~            	CALL CHKCHAR
- 111+ 5DB8 ~            	DB ','
- 112+ 5DB8 ~            	; get offset
- 113+ 5DB8 ~            	LD IX, FRMQNT
- 114+ 5DB8 ~            	CALL CALBAS
- 115+ 5DB8 ~            	LD (BLIT_STRUCT), DE
- 116+ 5DB8 ~            	; comma
- 117+ 5DB8 ~            	CALL CHKCHAR
- 118+ 5DB8 ~            	DB ','
- 119+ 5DB8 ~            	; get destination
- 120+ 5DB8 ~            	LD IX, FRMQNT
- 121+ 5DB8 ~            	CALL CALBAS
- 122+ 5DB8 ~            	LD (BLIT_STRUCT+2), DE
- 123+ 5DB8 ~            	; comma
- 124+ 5DB8 ~            	CALL CHKCHAR
- 125+ 5DB8 ~            	DB ','
- 126+ 5DB8 ~            	; get size
- 127+ 5DB8 ~            	LD IX, FRMQNT
- 128+ 5DB8 ~            	CALL CALBAS
- 129+ 5DB8 ~            	LD (BLIT_STRUCT+4), DE
- 130+ 5DB8 ~            	; ending )
- 131+ 5DB8 ~            	CALL CHKCHAR
- 132+ 5DB8 ~            	DB ')'
- 133+ 5DB8 ~                RET
- 134+ 5DB8 ~            ; *******************************************************************************************************
- 135+ 5DB8 ~
- 136+ 5DB8               ENDIF
- 137+ 5DB8
+  41+ 5D83 2B               DEC HL
+  42+ 5D84              .L7:
+  43+ 5D84 AF               XOR A
+  44+ 5D85 18 F5            JR .L2
+  45+ 5D87              .PROCESS_FILENAME:
+  46+ 5D87                  ; HL is pointing to rest of the name
+  47+ 5D87 13               INC DE ; 8-character filename location, needs to be padded with blanks
+  48+ 5D88 0E 08            LD C,8 ; filename length
+  49+ 5D8A              .L4:
+  50+ 5D8A CD AC 5D         CALL .GETCHAR
+  51+ 5D8D FE 2E            CP '.'
+  52+ 5D8F 28 14            JR Z, .L6 ; if dot, stay here until we fill up filename part
+  53+ 5D91              .L3:
+  54+ 5D91 05               DEC B
+  55+ 5D92              .L8:
+  56+ 5D92 12               LD (DE),A
+  57+ 5D93 13               INC DE
+  58+ 5D94 0D               DEC C
+  59+ 5D95 20 F3            JR NZ, .L4
+  60+ 5D97                  ; so we cleared filename part, DE at extension part
+  61+ 5D97                  ; we are either at . or past 8 chars
+  62+ 5D97 23               INC HL ; skip potential . and don't care
+  63+ 5D98 0E 03            LD C,3
+  64+ 5D9A              .L5:
+  65+ 5D9A CD AC 5D         CALL .GETCHAR
+  66+ 5D9D 12               LD (DE),A
+  67+ 5D9E 13               INC DE
+  68+ 5D9F 05               DEC B
+  69+ 5DA0 0D               DEC C
+  70+ 5DA1 20 F7            JR NZ, .L5
+  71+ 5DA3 AF               XOR A ; clear carry flag
+  72+ 5DA4 C9               RET
+  73+ 5DA5              .L6:
+  74+ 5DA5 3E 20            LD A,' ' ; case where we stay at first .
+  75+ 5DA7 2B               DEC HL
+  76+ 5DA8 18 E8            JR .L8
+  77+ 5DAA              .BADFILENAME:
+  78+ 5DAA 37               SCF
+  79+ 5DAB C9               RET
+  80+ 5DAC              .GETCHAR: ; gets a character, returns blank if we read past input
+  81+ 5DAC 78               LD A,B
+  82+ 5DAD B7               OR A
+  83+ 5DAE 28 06            JR Z, .BLANK
+  84+ 5DB0 7E               LD A,(HL)
+  85+ 5DB1 CD C7 5F         CALL UPPER
+  86+ 5DB4 23               INC HL
+  87+ 5DB5 C9               RET
+  88+ 5DB6              .BLANK:
+  89+ 5DB6 3E 20            LD A,' '
+  90+ 5DB8 C9               RET
+  91+ 5DB9              ; *******************************************************************************************************
+  92+ 5DB9
+  93+ 5DB9               IF (0 == 1)
+  94+ 5DB9 ~
+  95+ 5DB9 ~            ; *******************************************************************************************************
+  96+ 5DB9 ~            ; function to handle CALL DLOAD basic extension
+  97+ 5DB9 ~            ; _DLOAD ( STRING filename,
+  98+ 5DB9 ~            ;		   INT offset,
+  99+ 5DB9 ~            ;		   INT destination,
+ 100+ 5DB9 ~            ;          INT size )
+ 101+ 5DB9 ~            ; will put ram in page 0 also, page 1 is already there
+ 102+ 5DB9 ~            DLOAD:
+ 103+ 5DB9 ~            	; opening (
+ 104+ 5DB9 ~            	CALL CHKCHAR
+ 105+ 5DB9 ~            	DB '('
+ 106+ 5DB9 ~                CALL EVALTXTPARAM
+ 107+ 5DB9 ~                PUSH HL
+ 108+ 5DB9 ~                CALL GETSTRPNT
+ 109+ 5DB9 ~                CALL DLOAD_PROCESS_FILENAME
+ 110+ 5DB9 ~                JP C, BAD_FILENAME
+ 111+ 5DB9 ~                POP HL
+ 112+ 5DB9 ~            	; comma
+ 113+ 5DB9 ~            	CALL CHKCHAR
+ 114+ 5DB9 ~            	DB ','
+ 115+ 5DB9 ~            	; get offset
+ 116+ 5DB9 ~            	LD IX, FRMQNT
+ 117+ 5DB9 ~            	CALL CALBAS
+ 118+ 5DB9 ~            	LD (BLIT_STRUCT), DE
+ 119+ 5DB9 ~            	; comma
+ 120+ 5DB9 ~            	CALL CHKCHAR
+ 121+ 5DB9 ~            	DB ','
+ 122+ 5DB9 ~            	; get destination
+ 123+ 5DB9 ~            	LD IX, FRMQNT
+ 124+ 5DB9 ~            	CALL CALBAS
+ 125+ 5DB9 ~            	LD (BLIT_STRUCT+2), DE
+ 126+ 5DB9 ~            	; comma
+ 127+ 5DB9 ~            	CALL CHKCHAR
+ 128+ 5DB9 ~            	DB ','
+ 129+ 5DB9 ~            	; get size
+ 130+ 5DB9 ~            	LD IX, FRMQNT
+ 131+ 5DB9 ~            	CALL CALBAS
+ 132+ 5DB9 ~            	LD (BLIT_STRUCT+4), DE
+ 133+ 5DB9 ~            	; ending )
+ 134+ 5DB9 ~            	CALL CHKCHAR
+ 135+ 5DB9 ~            	DB ')'
+ 136+ 5DB9 ~                RET
+ 137+ 5DB9 ~            ; *******************************************************************************************************
+ 138+ 5DB9 ~
+ 139+ 5DB9               ENDIF
+ 140+ 5DB9
 # file closed: asm\DLOAD.asm
- 178  5DB8               ENDIF
- 179  5DB8
- 180  5DB8               IF (1 == 1)
- 181  5DB8               INCLUDE "DEFUSR.asm"
+ 178  5DB9               ENDIF
+ 179  5DB9
+ 180  5DB9               IF (1 == 1)
+ 181  5DB9               INCLUDE "DEFUSR.asm"
 # file opened: asm\DEFUSR.asm
-   1+ 5DB8              ; entry function that handles call using CALLF
-   2+ 5DB8              ; pointer to data structure is expected at DAC+2
-   3+ 5DB8              ; first entry must be function id followed by function specific parameters
-   4+ 5DB8
-   5+ 5DB8              DEFUSR_TABLE_ENTRIES    EQU 40
-   6+ 5DB8
-   7+ 5DB8              DEFUSR_JUMP_TABLE:
-   8+ 5DB8               IF (SPRITE_CMDS == 1)
-   9+ 5DB8 6E 4E         DW SPRENABLE_DEFUSR        ; 0
-  10+ 5DBA               ELSE
-  11+ 5DBA ~             DW NOACTION_DEFUSR
-  12+ 5DBA               ENDIF
-  13+ 5DBA
-  14+ 5DBA               IF (SPRITE_CMDS == 1)
-  15+ 5DBA 92 4E         DW SPRDISABLE_DEFUSR        ; 1
-  16+ 5DBC               ELSE
-  17+ 5DBC ~             DW NOACTION_DEFUSR
-  18+ 5DBC               ENDIF
-  19+ 5DBC
-  20+ 5DBC               IF (RAM_CMDS == 1)
-  21+ 5DBC 22 55         DW MEMCPY_DEFUSR           ; 2
-  22+ 5DBE               ELSE
-  23+ 5DBE ~             DW NOACTION_DEFUSR
-  24+ 5DBE               ENDIF
-  25+ 5DBE
-  26+ 5DBE               IF (VRAM_CMDS == 1)        ; 3
-  27+ 5DBE 1C 56         DW MEMVRM_DEFUSR
-  28+ 5DC0               ELSE
-  29+ 5DC0 ~             DW NOACTION_DEFUSR
-  30+ 5DC0               ENDIF
-  31+ 5DC0
-  32+ 5DC0               IF (BLIT_CMDS == 1)        ; 4
-  33+ 5DC0 30 59         DW BLIT_DEFUSR
-  34+ 5DC2               ELSE
-  35+ 5DC2 ~             DW NOACTION_DEFUSR
-  36+ 5DC2               ENDIF
-  37+ 5DC2
-  38+ 5DC2               IF (ANIM_CMDS == 1)        ; 5
-  39+ 5DC2 FA 53         DW SGAM_DEFUSR
-  40+ 5DC4               ELSE
-  41+ 5DC4 ~             DW NOACTION_DEFUSR
-  42+ 5DC4               ENDIF
-  43+ 5DC4
-  44+ 5DC4               IF (SPRITE_CMDS == 1)
-  45+ 5DC4 D5 4E         DW SPRGRPMOV_DEFUSR        ; 6
-  46+ 5DC6               ELSE
-  47+ 5DC6 ~             DW NOACTION_DEFUSR
-  48+ 5DC6               ENDIF
-  49+ 5DC6
-  50+ 5DC6               IF (COLL_CMD == 1)
-  51+ 5DC6 61 5C         DW COLL_DEFUSR             ; 7
-  52+ 5DC8               ELSE
-  53+ 5DC8 ~             DW NOACTION_DEFUSR
-  54+ 5DC8               ENDIF
-  55+ 5DC8
-  56+ 5DC8               IF (SOUND_CMDS == 1)
-  57+ 5DC8 D6 55         DW SNDSFX_DEFUSR             ; 8
-  58+ 5DCA               ELSE
-  59+ 5DCA ~             DW NOACTION_DEFUSR
-  60+ 5DCA               ENDIF
-  61+ 5DCA
-  62+ 5DCA               IF (ANIM_CMDS == 1)
-  63+ 5DCA 8B 52         DW ANIMSTEP_SINGLE_DEFUSR      ; 9
-  64+ 5DCC 9B 52         DW ANIMSTEP_MULTI_DEFUSR       ; 10
-  65+ 5DCE AC 52         DW ANIMSTART_SINGLE_DEFUSR     ; 11
-  66+ 5DD0 BE 52         DW ANIMSTART_MULTI_DEFUSR      ; 12
-  67+ 5DD2 C3 52         DW ANIMSTOP_SINGLE_DEFUSR      ; 13
-  68+ 5DD4 CD 52         DW ANIMSTOP_MULTI_DEFUSR       ; 14
-  69+ 5DD6               ELSE
-  70+ 5DD6 ~             DW NOACTION_DEFUSR
-  71+ 5DD6 ~             DW NOACTION_DEFUSR
-  72+ 5DD6 ~             DW NOACTION_DEFUSR
-  73+ 5DD6 ~             DW NOACTION_DEFUSR
-  74+ 5DD6 ~             DW NOACTION_DEFUSR
-  75+ 5DD6 ~             DW NOACTION_DEFUSR
-  76+ 5DD6               ENDIF
-  77+ 5DD6
-  78+ 5DD6               IF (BOX_CMDS == 1)
-  79+ 5DD6 3B 57         DW BOXMEMCPY_DEFUSR            ; 15
-  80+ 5DD8 71 57         DW BOXMEMVRM_DEFUSR            ; 16
-  81+ 5DDA               ELSE
-  82+ 5DDA ~             DW NOACTION_DEFUSR
-  83+ 5DDA ~             DW NOACTION_DEFUSR
-  84+ 5DDA               ENDIF
-  85+ 5DDA
-  86+ 5DDA               IF (ANIM_CMDS == 1)
-  87+ 5DDA 35 4F         DW MAXANIMITEMS_DEFUSR         ; 17
-  88+ 5DDC 44 50         DW MAXANIMDEFS_DEFUSR          ; 18
-  89+ 5DDE A1 50         DW MAXANIMSPRS_DEFUSR          ; 19
-  90+ 5DE0 5F 51         DW MAXAUTOSGAMS_DEFUSR         ; 20
-  91+ 5DE2 FA 4F         DW ANIMITEMPAT_DEFUSR          ; 21
-  92+ 5DE4 1F 50         DW ANIMITEMPTR_DEFUSR          ; 22
-  93+ 5DE6 7B 50         DW ANIMDEF_DEFUSR              ; 23
-  94+ 5DE8 EE 50         DW ANIMSPRITE_DEFUSR           ; 24
-  95+ 5DEA 25 51         DW ANIMCHAR_DEFUSR             ; 25
-  96+ 5DEC B0 51         DW AUTOSGAMDEF_DEFUSR          ; 26
-  97+ 5DEE 40 52         DW AUTOSGAMSTART_DEFUSR        ; 27
-  98+ 5DF0 67 52         DW AUTOSGAMSTOP_DEFUSR         ; 28
-  99+ 5DF2               ELSE
- 100+ 5DF2 ~             DW NOACTION_DEFUSR
- 101+ 5DF2 ~             DW NOACTION_DEFUSR
- 102+ 5DF2 ~             DW NOACTION_DEFUSR
- 103+ 5DF2 ~             DW NOACTION_DEFUSR
- 104+ 5DF2 ~             DW NOACTION_DEFUSR
- 105+ 5DF2 ~             DW NOACTION_DEFUSR
- 106+ 5DF2 ~             DW NOACTION_DEFUSR
- 107+ 5DF2 ~             DW NOACTION_DEFUSR
- 108+ 5DF2 ~             DW NOACTION_DEFUSR
- 109+ 5DF2 ~             DW NOACTION_DEFUSR
- 110+ 5DF2 ~             DW NOACTION_DEFUSR
- 111+ 5DF2 ~             DW NOACTION_DEFUSR
- 112+ 5DF2               ENDIF
- 113+ 5DF2
- 114+ 5DF2               IF (GENCAL_CMD == 1)
- 115+ 5DF2 BB 56         DW GENCAL_DEFUSR               ; 29
- 116+ 5DF4               ELSE
- 117+ 5DF4 ~             DW NOACTION_DEFUSR
- 118+ 5DF4               ENDIF
- 119+ 5DF4
- 120+ 5DF4               IF (RAM_CMDS == 1)
- 121+ 5DF4 43 55         DW FILRAM_DEFUSR               ; 30
- 122+ 5DF6               ELSE
- 123+ 5DF6 ~             DW NOACTION_DEFUSR
- 124+ 5DF6               ENDIF
- 125+ 5DF6
- 126+ 5DF6               IF (SOUND_CMDS == 1)
- 127+ 5DF6 74 55         DW SNDPLYINI_DEFUSR            ; 31
- 128+ 5DF8 A7 55         DW SNDPLYON_DEFUSR             ; 32
- 129+ 5DFA B3 55         DW SNDPLYOFF_DEFUSR            ; 33
- 130+ 5DFC               ELSE
- 131+ 5DFC ~             DW NOACTION_DEFUSR
- 132+ 5DFC ~             DW NOACTION_DEFUSR
- 133+ 5DFC ~             DW NOACTION_DEFUSR
- 134+ 5DFC               ENDIF
- 135+ 5DFC
- 136+ 5DFC               IF (TILE_CMDS == 1)
- 137+ 5DFC 12 5A         DW TILERAM_DEFUSR              ; 34
- 138+ 5DFE C9 5A         DW TILEVRM_DEFUSR              ; 35
- 139+ 5E00               ELSE
- 140+ 5E00 ~             DW NOACTION_DEFUSR
- 141+ 5E00 ~             DW NOACTION_DEFUSR
- 142+ 5E00               ENDIF
- 143+ 5E00
- 144+ 5E00               IF (VRAM_CMDS == 1)
- 145+ 5E00 F9 55         DW FILVRM_DEFUSR               ; 36
- 146+ 5E02 7D 56         DW VRMMEM_DEFUSR               ; 37
- 147+ 5E04               ELSE
- 148+ 5E04 ~             DW NOACTION_DEFUSR
- 149+ 5E04 ~             DW NOACTION_DEFUSR
- 150+ 5E04               ENDIF
- 151+ 5E04
- 152+ 5E04               IF (DECOMP_CMDS == 1)
- 153+ 5E04 30 5D         DW UNPACK_DEFUSR               ; 38
- 154+ 5E06               IF (VRAM_CMDS == 1)
- 155+ 5E06 1A 5D          DW VUNPACK_DEFUSR             ; 39
- 156+ 5E08               ELSE
- 157+ 5E08 ~              DW NOACTION_DEFUSR
- 158+ 5E08               ENDIF
- 159+ 5E08               ELSE
- 160+ 5E08 ~             DW NOACTION_DEFUSR
- 161+ 5E08 ~             DW NOACTION_DEFUSR
- 162+ 5E08               ENDIF
- 163+ 5E08
- 164+ 5E08              DEFUSR_ENTRY:
- 165+ 5E08 FB               EI
- 166+ 5E09 DD 2A F8 F7      LD IX,(DAC+2)
- 167+ 5E0D DD 7E 00         LD A,(IX)
- 168+ 5E10 FE 28            CP DEFUSR_TABLE_ENTRIES
- 169+ 5E12 D0               RET NC ; return if an undefined function requested
- 170+ 5E13 26 00            LD H,0
- 171+ 5E15 6F               LD L,A
- 172+ 5E16 29               ADD HL,HL
- 173+ 5E17 11 B8 5D         LD DE,DEFUSR_JUMP_TABLE
- 174+ 5E1A 19               ADD HL,DE
- 175+ 5E1B EB               EX DE,HL
- 176+ 5E1C 1A               LD A,(DE)
- 177+ 5E1D 6F               LD L,A
- 178+ 5E1E 13               INC DE
- 179+ 5E1F 1A               LD A,(DE)
- 180+ 5E20 67               LD H,A
- 181+ 5E21 E9               JP (HL) ; call function with IX=pointer to data array
- 182+ 5E22
+   1+ 5DB9              ; entry function that handles call using CALLF
+   2+ 5DB9              ; pointer to data structure is expected at DAC+2
+   3+ 5DB9              ; first entry must be function id followed by function specific parameters
+   4+ 5DB9
+   5+ 5DB9              DEFUSR_TABLE_ENTRIES    EQU 40
+   6+ 5DB9
+   7+ 5DB9              DEFUSR_JUMP_TABLE:
+   8+ 5DB9               IF (SPRITE_CMDS == 1)
+   9+ 5DB9 6E 4E         DW SPRENABLE_DEFUSR        ; 0
+  10+ 5DBB               ELSE
+  11+ 5DBB ~             DW NOACTION_DEFUSR
+  12+ 5DBB               ENDIF
+  13+ 5DBB
+  14+ 5DBB               IF (SPRITE_CMDS == 1)
+  15+ 5DBB 92 4E         DW SPRDISABLE_DEFUSR        ; 1
+  16+ 5DBD               ELSE
+  17+ 5DBD ~             DW NOACTION_DEFUSR
+  18+ 5DBD               ENDIF
+  19+ 5DBD
+  20+ 5DBD               IF (RAM_CMDS == 1)
+  21+ 5DBD 22 55         DW MEMCPY_DEFUSR           ; 2
+  22+ 5DBF               ELSE
+  23+ 5DBF ~             DW NOACTION_DEFUSR
+  24+ 5DBF               ENDIF
+  25+ 5DBF
+  26+ 5DBF               IF (VRAM_CMDS == 1)        ; 3
+  27+ 5DBF 1C 56         DW MEMVRM_DEFUSR
+  28+ 5DC1               ELSE
+  29+ 5DC1 ~             DW NOACTION_DEFUSR
+  30+ 5DC1               ENDIF
+  31+ 5DC1
+  32+ 5DC1               IF (BLIT_CMDS == 1)        ; 4
+  33+ 5DC1 30 59         DW BLIT_DEFUSR
+  34+ 5DC3               ELSE
+  35+ 5DC3 ~             DW NOACTION_DEFUSR
+  36+ 5DC3               ENDIF
+  37+ 5DC3
+  38+ 5DC3               IF (ANIM_CMDS == 1)        ; 5
+  39+ 5DC3 FA 53         DW SGAM_DEFUSR
+  40+ 5DC5               ELSE
+  41+ 5DC5 ~             DW NOACTION_DEFUSR
+  42+ 5DC5               ENDIF
+  43+ 5DC5
+  44+ 5DC5               IF (SPRITE_CMDS == 1)
+  45+ 5DC5 D5 4E         DW SPRGRPMOV_DEFUSR        ; 6
+  46+ 5DC7               ELSE
+  47+ 5DC7 ~             DW NOACTION_DEFUSR
+  48+ 5DC7               ENDIF
+  49+ 5DC7
+  50+ 5DC7               IF (COLL_CMD == 1)
+  51+ 5DC7 61 5C         DW COLL_DEFUSR             ; 7
+  52+ 5DC9               ELSE
+  53+ 5DC9 ~             DW NOACTION_DEFUSR
+  54+ 5DC9               ENDIF
+  55+ 5DC9
+  56+ 5DC9               IF (SOUND_CMDS == 1)
+  57+ 5DC9 D6 55         DW SNDSFX_DEFUSR             ; 8
+  58+ 5DCB               ELSE
+  59+ 5DCB ~             DW NOACTION_DEFUSR
+  60+ 5DCB               ENDIF
+  61+ 5DCB
+  62+ 5DCB               IF (ANIM_CMDS == 1)
+  63+ 5DCB 8B 52         DW ANIMSTEP_SINGLE_DEFUSR      ; 9
+  64+ 5DCD 9B 52         DW ANIMSTEP_MULTI_DEFUSR       ; 10
+  65+ 5DCF AC 52         DW ANIMSTART_SINGLE_DEFUSR     ; 11
+  66+ 5DD1 BE 52         DW ANIMSTART_MULTI_DEFUSR      ; 12
+  67+ 5DD3 C3 52         DW ANIMSTOP_SINGLE_DEFUSR      ; 13
+  68+ 5DD5 CD 52         DW ANIMSTOP_MULTI_DEFUSR       ; 14
+  69+ 5DD7               ELSE
+  70+ 5DD7 ~             DW NOACTION_DEFUSR
+  71+ 5DD7 ~             DW NOACTION_DEFUSR
+  72+ 5DD7 ~             DW NOACTION_DEFUSR
+  73+ 5DD7 ~             DW NOACTION_DEFUSR
+  74+ 5DD7 ~             DW NOACTION_DEFUSR
+  75+ 5DD7 ~             DW NOACTION_DEFUSR
+  76+ 5DD7               ENDIF
+  77+ 5DD7
+  78+ 5DD7               IF (BOX_CMDS == 1)
+  79+ 5DD7 3B 57         DW BOXMEMCPY_DEFUSR            ; 15
+  80+ 5DD9 71 57         DW BOXMEMVRM_DEFUSR            ; 16
+  81+ 5DDB               ELSE
+  82+ 5DDB ~             DW NOACTION_DEFUSR
+  83+ 5DDB ~             DW NOACTION_DEFUSR
+  84+ 5DDB               ENDIF
+  85+ 5DDB
+  86+ 5DDB               IF (ANIM_CMDS == 1)
+  87+ 5DDB 35 4F         DW MAXANIMITEMS_DEFUSR         ; 17
+  88+ 5DDD 44 50         DW MAXANIMDEFS_DEFUSR          ; 18
+  89+ 5DDF A1 50         DW MAXANIMSPRS_DEFUSR          ; 19
+  90+ 5DE1 5F 51         DW MAXAUTOSGAMS_DEFUSR         ; 20
+  91+ 5DE3 FA 4F         DW ANIMITEMPAT_DEFUSR          ; 21
+  92+ 5DE5 1F 50         DW ANIMITEMPTR_DEFUSR          ; 22
+  93+ 5DE7 7B 50         DW ANIMDEF_DEFUSR              ; 23
+  94+ 5DE9 EE 50         DW ANIMSPRITE_DEFUSR           ; 24
+  95+ 5DEB 25 51         DW ANIMCHAR_DEFUSR             ; 25
+  96+ 5DED B0 51         DW AUTOSGAMDEF_DEFUSR          ; 26
+  97+ 5DEF 40 52         DW AUTOSGAMSTART_DEFUSR        ; 27
+  98+ 5DF1 67 52         DW AUTOSGAMSTOP_DEFUSR         ; 28
+  99+ 5DF3               ELSE
+ 100+ 5DF3 ~             DW NOACTION_DEFUSR
+ 101+ 5DF3 ~             DW NOACTION_DEFUSR
+ 102+ 5DF3 ~             DW NOACTION_DEFUSR
+ 103+ 5DF3 ~             DW NOACTION_DEFUSR
+ 104+ 5DF3 ~             DW NOACTION_DEFUSR
+ 105+ 5DF3 ~             DW NOACTION_DEFUSR
+ 106+ 5DF3 ~             DW NOACTION_DEFUSR
+ 107+ 5DF3 ~             DW NOACTION_DEFUSR
+ 108+ 5DF3 ~             DW NOACTION_DEFUSR
+ 109+ 5DF3 ~             DW NOACTION_DEFUSR
+ 110+ 5DF3 ~             DW NOACTION_DEFUSR
+ 111+ 5DF3 ~             DW NOACTION_DEFUSR
+ 112+ 5DF3               ENDIF
+ 113+ 5DF3
+ 114+ 5DF3               IF (GENCAL_CMD == 1)
+ 115+ 5DF3 BB 56         DW GENCAL_DEFUSR               ; 29
+ 116+ 5DF5               ELSE
+ 117+ 5DF5 ~             DW NOACTION_DEFUSR
+ 118+ 5DF5               ENDIF
+ 119+ 5DF5
+ 120+ 5DF5               IF (RAM_CMDS == 1)
+ 121+ 5DF5 43 55         DW FILRAM_DEFUSR               ; 30
+ 122+ 5DF7               ELSE
+ 123+ 5DF7 ~             DW NOACTION_DEFUSR
+ 124+ 5DF7               ENDIF
+ 125+ 5DF7
+ 126+ 5DF7               IF (SOUND_CMDS == 1)
+ 127+ 5DF7 74 55         DW SNDPLYINI_DEFUSR            ; 31
+ 128+ 5DF9 A7 55         DW SNDPLYON_DEFUSR             ; 32
+ 129+ 5DFB B3 55         DW SNDPLYOFF_DEFUSR            ; 33
+ 130+ 5DFD               ELSE
+ 131+ 5DFD ~             DW NOACTION_DEFUSR
+ 132+ 5DFD ~             DW NOACTION_DEFUSR
+ 133+ 5DFD ~             DW NOACTION_DEFUSR
+ 134+ 5DFD               ENDIF
+ 135+ 5DFD
+ 136+ 5DFD               IF (TILE_CMDS == 1)
+ 137+ 5DFD 12 5A         DW TILERAM_DEFUSR              ; 34
+ 138+ 5DFF C9 5A         DW TILEVRM_DEFUSR              ; 35
+ 139+ 5E01               ELSE
+ 140+ 5E01 ~             DW NOACTION_DEFUSR
+ 141+ 5E01 ~             DW NOACTION_DEFUSR
+ 142+ 5E01               ENDIF
+ 143+ 5E01
+ 144+ 5E01               IF (VRAM_CMDS == 1)
+ 145+ 5E01 F9 55         DW FILVRM_DEFUSR               ; 36
+ 146+ 5E03 7D 56         DW VRMMEM_DEFUSR               ; 37
+ 147+ 5E05               ELSE
+ 148+ 5E05 ~             DW NOACTION_DEFUSR
+ 149+ 5E05 ~             DW NOACTION_DEFUSR
+ 150+ 5E05               ENDIF
+ 151+ 5E05
+ 152+ 5E05               IF (DECOMP_CMDS == 1)
+ 153+ 5E05 30 5D         DW UNPACK_DEFUSR               ; 38
+ 154+ 5E07               IF (VRAM_CMDS == 1)
+ 155+ 5E07 1A 5D          DW VUNPACK_DEFUSR             ; 39
+ 156+ 5E09               ELSE
+ 157+ 5E09 ~              DW NOACTION_DEFUSR
+ 158+ 5E09               ENDIF
+ 159+ 5E09               ELSE
+ 160+ 5E09 ~             DW NOACTION_DEFUSR
+ 161+ 5E09 ~             DW NOACTION_DEFUSR
+ 162+ 5E09               ENDIF
+ 163+ 5E09
+ 164+ 5E09              DEFUSR_ENTRY:
+ 165+ 5E09 FB               EI
+ 166+ 5E0A DD 2A F8 F7      LD IX,(DAC+2)
+ 167+ 5E0E DD 7E 00         LD A,(IX)
+ 168+ 5E11 FE 28            CP DEFUSR_TABLE_ENTRIES
+ 169+ 5E13 D0               RET NC ; return if an undefined function requested
+ 170+ 5E14 26 00            LD H,0
+ 171+ 5E16 6F               LD L,A
+ 172+ 5E17 29               ADD HL,HL
+ 173+ 5E18 11 B9 5D         LD DE,DEFUSR_JUMP_TABLE
+ 174+ 5E1B 19               ADD HL,DE
+ 175+ 5E1C EB               EX DE,HL
+ 176+ 5E1D 1A               LD A,(DE)
+ 177+ 5E1E 6F               LD L,A
+ 178+ 5E1F 13               INC DE
+ 179+ 5E20 1A               LD A,(DE)
+ 180+ 5E21 67               LD H,A
+ 181+ 5E22 E9               JP (HL) ; call function with IX=pointer to data array
+ 182+ 5E23
 # file closed: asm\DEFUSR.asm
- 182  5E22               ENDIF
- 183  5E22
- 184  5E22              ; temp variables for BLIT, TILE functions
- 185  5E22               IF (BLIT_CMDS + TILE_CMDS + BOX_CMDS + SPRITE_CMDS + ANIM_CMDS + COLL_CMD + DLOAD_CMD > 0)
- 186  5E22              BLIT_TMP:
- 187  5E22              TILETMP1:
- 188  5E22              BLIT_TMP1:
- 189  5E22 00 00         DW 0
- 190  5E24              TILETMP2:
- 191  5E24              BLIT_TMP2:
- 192  5E24 00 00         DW 0
- 193  5E26              BLIT_STRUCT:
- 194  5E26 00 00 00...   DS 17
- 195  5E2A               ENDIF
- 196  5E37
- 197  5E37               IF (VRAM_CMDS + TILE_CMDS + BOX_CMDS + SPRITE_CMDS + ANIM_CMDS > 0)
- 198  5E37              VRAM_UPDATE_IN_PROGRESS:
- 199  5E37 00            DB 0
- 200  5E38               ENDIF
- 201  5E38
- 202  5E38              ; List of pointers to available instructions (as ASCIIZ) and execute address (as word)
- 203  5E38              ; per starting letter, if no commands with this letter, NULL value
- 204  5E38              CMDS:
- 205  5E38 6C 5E        	DW CMDS_A ; always present due to ARTINFO
- 206  5E3A               IF (BLIT_CMDS + BOX_CMDS > 0) && (0 == 1)
- 207  5E3A ~                DW CMDS_B ; B
- 208  5E3A               ELSE
- 209  5E3A 00 00        	DW 0
- 210  5E3C               ENDIF
- 211  5E3C               IF (COLL_CMD == 1) && (0 == 1)
- 212  5E3C ~            	DW CMDS_C ;
- 213  5E3C               ELSE
- 214  5E3C 00 00            DW 0 ; C
- 215  5E3E               ENDIF
- 216  5E3E               IF (DLOAD_CMD > 0) && (0 == 1)
- 217  5E3E ~                DW CMDS_D ; D
- 218  5E3E               ELSE
- 219  5E3E 00 00        	DW 0
- 220  5E40               ENDIF
- 221  5E40 00 00            DW 0 ; E
- 222  5E42               IF (VRAM_CMDS + RAM_CMDS > 0) && (0 == 1)
- 223  5E42 ~                DW CMDS_F; F
- 224  5E42               ELSE
- 225  5E42 00 00        	DW 0
- 226  5E44               ENDIF
- 227  5E44               IF (GENCAL_CMD > 0) && (0 == 1)
- 228  5E44 ~                DW CMDS_G; G
- 229  5E44               ELSE
- 230  5E44 00 00        	DW 0
- 231  5E46               ENDIF
- 232  5E46 00 00            DW 0 ; H
- 233  5E48 00 00            DW 0 ; I
- 234  5E4A 00 00            DW 0 ; J
- 235  5E4C 00 00            DW 0 ; K
- 236  5E4E 00 00            DW 0 ; L
- 237  5E50               IF (VRAM_CMDS + RAM_CMDS + ANIM_CMDS > 0) && (0 == 1)
- 238  5E50 ~                DW CMDS_M ; M
- 239  5E50               ELSE
- 240  5E50 00 00        	DW 0
- 241  5E52               ENDIF
- 242  5E52 00 00            DW 0 ; N
- 243  5E54 00 00            DW 0 ; O
- 244  5E56 00 00            DW 0 ; P
- 245  5E58 00 00            DW 0 ; Q
- 246  5E5A 00 00            DW 0 ; R
- 247  5E5C               IF (SOUND_CMDS + SPRITE_CMDS > 0) && (0 == 1)
- 248  5E5C ~                DW CMDS_S ; S
- 249  5E5C               ELSE
- 250  5E5C 00 00        	DW 0
- 251  5E5E               ENDIF
- 252  5E5E               IF (TILE_CMDS > 0) && (0 == 1)
- 253  5E5E ~                DW CMDS_T ; T
- 254  5E5E               ELSE
- 255  5E5E 00 00        	DW 0
- 256  5E60               ENDIF
- 257  5E60               IF (DECOMP_CMDS > 0) && (0 == 1)
- 258  5E60 ~                DW CMDS_U ; U
- 259  5E60               ELSE
- 260  5E60 00 00        	DW 0
- 261  5E62               ENDIF
- 262  5E62               IF ((VRAM_CMDS > 0) || (VRAM_CMDS + DECOMP_CMDS > 1)) && (0 == 1)
- 263  5E62 ~                DW CMDS_V ; V
- 264  5E62               ELSE
- 265  5E62 00 00        	DW 0
- 266  5E64               ENDIF
- 267  5E64 00 00            DW 0 ; W
- 268  5E66 00 00            DW 0 ; X
- 269  5E68 00 00            DW 0 ; Y
- 270  5E6A 00 00            DW 0 ; Z
- 271  5E6C
- 272  5E6C               IF (0 == 1)
- 273  5E6C ~             IF (VRAM_CMDS + RAM_CMDS + ANIM_CMDS > 0)
- 274  5E6C ~            CMDS_M:
- 275  5E6C ~             IF (VRAM_CMDS == 1)
- 276  5E6C ~                DB "MEMVRM", 0
- 277  5E6C ~                DW MEMVRM
- 278  5E6C ~             ENDIF
- 279  5E6C ~             IF (RAM_CMDS == 1)
- 280  5E6C ~            	DB "MEMCPY", 0
- 281  5E6C ~            	DW MEMCPY
- 282  5E6C ~             ENDIF
- 283  5E6C ~             IF (ANIM_CMDS == 1)
- 284  5E6C ~            	DB "MAXANIMITEMS",0
- 285  5E6C ~            	DW MAXANIMITEMS
- 286  5E6C ~            	DB "MAXANIMDEFS",0
- 287  5E6C ~            	DW MAXANIMDEFS
- 288  5E6C ~            	DB "MAXANIMSPRS",0
- 289  5E6C ~            	DW MAXANIMSPRS
- 290  5E6C ~               DB "MAXAUTOSGAMS",0
- 291  5E6C ~               DW MAXAUTOSGAMS
- 292  5E6C ~             ENDIF
- 293  5E6C ~             ENDIF
- 294  5E6C ~
- 295  5E6C ~             IF (VRAM_CMDS + RAM_CMDS > 0)
- 296  5E6C ~            CMDS_F:
- 297  5E6C ~             IF (VRAM_CMDS == 1)
- 298  5E6C ~                DB "FILVRM", 0
- 299  5E6C ~                DW FILVRM
- 300  5E6C ~             ENDIF
- 301  5E6C ~             IF (RAM_CMDS == 1)
- 302  5E6C ~                DB "FILRAM", 0
- 303  5E6C ~                DW FILRAM
- 304  5E6C ~             ENDIF
- 305  5E6C ~             ENDIF
- 306  5E6C ~
- 307  5E6C ~             IF (GENCAL_CMD > 0)
- 308  5E6C ~            CMDS_G:
- 309  5E6C ~             IF (GENCAL_CMD == 1)
- 310  5E6C ~                DB "GENCAL", 0
- 311  5E6C ~                DW GENCAL
- 312  5E6C ~             ENDIF
- 313  5E6C ~             ENDIF
- 314  5E6C ~
- 315  5E6C ~             IF (VRAM_CMDS > 0)
- 316  5E6C ~            CMDS_V:
- 317  5E6C ~             IF (VRAM_CMDS == 1)
- 318  5E6C ~            	DB "VRMMEM", 0
- 319  5E6C ~            	DW VRMMEM
- 320  5E6C ~             ENDIF
- 321  5E6C ~             IF (DECOMP_CMDS == 1)
- 322  5E6C ~            	DB "VUNPACK", 0
- 323  5E6C ~            	DW VUNPACK
- 324  5E6C ~             ENDIF
- 325  5E6C ~             ENDIF
- 326  5E6C ~
- 327  5E6C ~             IF (SOUND_CMDS + SPRITE_CMDS + ANIM_CMDS > 0)
- 328  5E6C ~            CMDS_S:
- 329  5E6C ~             IF (SPRITE_CMDS + ANIM_CMDS > 0)
- 330  5E6C ~                DB "SGAM",0
- 331  5E6C ~                DW SGAM
- 332  5E6C ~             ENDIF
- 333  5E6C ~             IF (SPRITE_CMDS == 1)
- 334  5E6C ~            	DB "SPRGRPMOV", 0
- 335  5E6C ~            	DW SPRGRPMOV
- 336  5E6C ~             ENDIF
- 337  5E6C ~             IF (SOUND_CMDS == 1)
- 338  5E6C ~            	DB "SNDSFX", 0
- 339  5E6C ~            	DW SNDSFX
- 340  5E6C ~            	DB "SNDPLYON", 0
- 341  5E6C ~            	DW SNDPLYON
- 342  5E6C ~            	DB "SNDPLYOFF", 0
- 343  5E6C ~            	DW SNDPLYOFF
- 344  5E6C ~            	DB "SNDPLYINI", 0
- 345  5E6C ~            	DW SNDPLYINIT
- 346  5E6C ~             ENDIF
- 347  5E6C ~             IF (SPRITE_CMDS == 1)
- 348  5E6C ~            	DB "SPRENABLE", 0
- 349  5E6C ~            	DW SPRENABLE
- 350  5E6C ~            	DB "SPRDISABLE", 0
- 351  5E6C ~            	DW SPRDISABLE
- 352  5E6C ~             ENDIF
- 353  5E6C ~             ENDIF
- 354  5E6C ~
- 355  5E6C ~             IF (BLIT_CMDS + BOX_CMDS > 0)
- 356  5E6C ~            CMDS_B:
- 357  5E6C ~             IF (BLIT_CMDS == 1)
- 358  5E6C ~            	DB "BLIT", 0
- 359  5E6C ~            	DW BLIT
- 360  5E6C ~             ENDIF
- 361  5E6C ~             IF (BOX_CMDS == 1)
- 362  5E6C ~            	DB "BOXMEMCPY", 0
- 363  5E6C ~            	DW BOXMEMCPY
- 364  5E6C ~            	DB "BOXMEMVRM", 0
- 365  5E6C ~            	DW BOXMEMVRM
- 366  5E6C ~             ENDIF
- 367  5E6C ~             ENDIF
- 368  5E6C ~
- 369  5E6C ~             IF (TILE_CMDS > 0)
- 370  5E6C ~            CMDS_T:
- 371  5E6C ~             IF (TILE_CMDS == 1)
- 372  5E6C ~            	DB "TILERAM", 0
- 373  5E6C ~            	DW TILERAM
- 374  5E6C ~            	DB "TILEVRM", 0
- 375  5E6C ~            	DW TILEVRM
- 376  5E6C ~             ENDIF
- 377  5E6C ~             ENDIF
- 378  5E6C ~
- 379  5E6C ~             IF (COLL_CMD > 0)
- 380  5E6C ~            CMDS_C:
- 381  5E6C ~             IF (COLL_CMD == 1)
- 382  5E6C ~                DB "COLL", 0
- 383  5E6C ~                DW COLL
- 384  5E6C ~             ENDIF
- 385  5E6C ~             ENDIF
- 386  5E6C ~
- 387  5E6C ~             IF (DECOMP_CMDS > 0)
- 388  5E6C ~            CMDS_U:
- 389  5E6C ~             IF (DECOMP_CMDS == 1)
- 390  5E6C ~                DB "UNPACK", 0
- 391  5E6C ~                DW UNPACK
- 392  5E6C ~             ENDIF
- 393  5E6C ~             ENDIF
- 394  5E6C ~
- 395  5E6C ~             IF (DLOAD_CMD > 0)
- 396  5E6C ~            CMDS_D:
- 397  5E6C ~             IF (DLOAD_CMD == 1)
- 398  5E6C ~                DB "DLOAD", 0
- 399  5E6C ~                DW DLOAD
- 400  5E6C ~             ENDIF
- 401  5E6C ~             ENDIF
- 402  5E6C ~
- 403  5E6C ~            CMDS_A:
- 404  5E6C ~             IF (ANIM_CMDS == 1)
- 405  5E6C ~               DB "ANIMSTEP",0
- 406  5E6C ~               DW ANIMSTEP
- 407  5E6C ~            	DB "ANIMSTART",0
- 408  5E6C ~            	DW ANIMSTART
- 409  5E6C ~            	DB "ANIMSTOP",0
- 410  5E6C ~            	DW ANIMSTOP
- 411  5E6C ~            	DB "ANIMITEMPAT",0
- 412  5E6C ~            	DW ANIMITEMPAT
- 413  5E6C ~            	DB "ANIMITEMPTR",0
- 414  5E6C ~            	DW ANIMITEMPTR_CMD
- 415  5E6C ~            	DB "ANIMDEF",0
- 416  5E6C ~            	DW ANIMDEF
- 417  5E6C ~            	DB "ANIMSPRITE",0
- 418  5E6C ~            	DW ANIMSPRITE
- 419  5E6C ~               DB "ANIMCHAR",0
- 420  5E6C ~               DW ANIMCHAR
- 421  5E6C ~               DB "AUTOSGAMDEF",0
- 422  5E6C ~               DW AUTOSGAMDEF
- 423  5E6C ~               DB "AUTOSGAMSTART",0
- 424  5E6C ~               DW AUTOSGAMSTART
- 425  5E6C ~               DB "AUTOSGAMSTOP",0
- 426  5E6C ~               DW AUTOSGAMSTOP
- 427  5E6C ~             ENDIF
- 428  5E6C ~               DB "ARTINFO",0
- 429  5E6C ~               DW ARTINFO
- 430  5E6C ~            	DB 0
- 431  5E6C               ELSE // if not BASIC extension
- 432  5E6C              CMDS_A:
- 433  5E6C 41 52 54 49     DB "ARTINFO",0
- 433  5E70 4E 46 4F 00
- 434  5E74 CF 5F           DW ARTINFO
- 435  5E76 00           	DB 0
- 436  5E77               ENDIF
- 437  5E77
- 438  5E77               IF (VRAM_CMDS + TILE_CMDS + SPRITE_CMDS > 0)
- 439  5E77              ; ****************************************************************************************************
- 440  5E77              ; function sets VRAM address for writing
- 441  5E77              ; input HL=address
- 442  5E77              ; modifies AF
- 443  5E77              SETWRT_LOCAL_WRITE:
- 444  5E77 7D           	LD	A,L
- 445  5E78 D3 99        	OUT (#99),A
- 446  5E7A 7C           	LD	A,H
- 447  5E7B E6 3F        	AND #3F
- 448  5E7D F6 40        	OR	#40
- 449  5E7F D3 99        	OUT (#99),A
- 450  5E81 C9           	RET
- 451  5E82              ; ****************************************************************************************************
- 452  5E82
- 453  5E82              ; ****************************************************************************************************
- 454  5E82              ; function sets VRAM address for reading
- 455  5E82              ; input HL=address
- 456  5E82              ; modifies AF
- 457  5E82              SETWRT_LOCAL_READ:
- 458  5E82 7D           	LD	A,L
- 459  5E83 D3 99        	OUT (#99),A
- 460  5E85 7C           	LD	A,H
- 461  5E86 E6 3F        	AND #3F
- 462  5E88 00              NOP
- 463  5E89 D3 99        	OUT (#99),A
- 464  5E8B C9           	RET
- 465  5E8C              ; ****************************************************************************************************
- 466  5E8C               ENDIF
- 467  5E8C
- 468  5E8C               IF (VRAM_CMDS + TILE_CMDS > 0)
- 469  5E8C              ; ****************************************************************************************************
- 470  5E8C              ; function copies data from RAM to VRAM
- 471  5E8C              ; input HL=address in RAM
- 472  5E8C              ; input B=count
- 473  5E8C              ; modifies AF, BC, HL
- 474  5E8C              BBYTECOPY:
- 475  5E8C 0E 98        	LD C,#98
- 476  5E8E              BBYTECOPY_NO_C:
- 477  5E8E ED A3        	OUTI
- 478  5E90 C2 8E 5E     	JP	NZ, BBYTECOPY_NO_C
- 479  5E93 C9           	RET
- 480  5E94              ; ****************************************************************************************************
- 481  5E94               ENDIF
- 482  5E94
- 483  5E94              ; ****************************************************************************************************
- 484  5E94              ; function multiplies HL by 32
- 485  5E94              HLx32:
- 486  5E94 29           	ADD HL,HL
- 487  5E95              ; ****************************************************************************************************
- 488  5E95              ; function multiplies HL by 16
- 489  5E95              HLx16:
- 490  5E95 29           	ADD HL,HL
- 491  5E96              ; ****************************************************************************************************
- 492  5E96              ; function multiplies HL by 8
- 493  5E96              HLx8:
- 494  5E96 29          > ADD HL, HL
+ 182  5E23               ENDIF
+ 183  5E23
+ 184  5E23              ; temp variables for BLIT, TILE functions
+ 185  5E23               IF (BLIT_CMDS + TILE_CMDS + BOX_CMDS + SPRITE_CMDS + ANIM_CMDS + COLL_CMD + DLOAD_CMD > 0)
+ 186  5E23              BLIT_TMP:
+ 187  5E23              TILETMP1:
+ 188  5E23              BLIT_TMP1:
+ 189  5E23 00 00         DW 0
+ 190  5E25              TILETMP2:
+ 191  5E25              BLIT_TMP2:
+ 192  5E25 00 00         DW 0
+ 193  5E27              BLIT_STRUCT:
+ 194  5E27 00 00 00...   DS 17
+ 195  5E2B               ENDIF
+ 196  5E38
+ 197  5E38               IF (VRAM_CMDS + TILE_CMDS + BOX_CMDS + SPRITE_CMDS + ANIM_CMDS > 0)
+ 198  5E38              VRAM_UPDATE_IN_PROGRESS:
+ 199  5E38 00            DB 0
+ 200  5E39               ENDIF
+ 201  5E39
+ 202  5E39              ; List of pointers to available instructions (as ASCIIZ) and execute address (as word)
+ 203  5E39              ; per starting letter, if no commands with this letter, NULL value
+ 204  5E39              CMDS:
+ 205  5E39 6D 5E        	DW CMDS_A ; always present due to ARTINFO
+ 206  5E3B               IF (BLIT_CMDS + BOX_CMDS > 0) && (0 == 1)
+ 207  5E3B ~                DW CMDS_B ; B
+ 208  5E3B               ELSE
+ 209  5E3B 00 00        	DW 0
+ 210  5E3D               ENDIF
+ 211  5E3D               IF (COLL_CMD == 1) && (0 == 1)
+ 212  5E3D ~            	DW CMDS_C ;
+ 213  5E3D               ELSE
+ 214  5E3D 00 00            DW 0 ; C
+ 215  5E3F               ENDIF
+ 216  5E3F               IF (DLOAD_CMD > 0) && (0 == 1)
+ 217  5E3F ~                DW CMDS_D ; D
+ 218  5E3F               ELSE
+ 219  5E3F 00 00        	DW 0
+ 220  5E41               ENDIF
+ 221  5E41 00 00            DW 0 ; E
+ 222  5E43               IF (VRAM_CMDS + RAM_CMDS > 0) && (0 == 1)
+ 223  5E43 ~                DW CMDS_F; F
+ 224  5E43               ELSE
+ 225  5E43 00 00        	DW 0
+ 226  5E45               ENDIF
+ 227  5E45               IF (GENCAL_CMD > 0) && (0 == 1)
+ 228  5E45 ~                DW CMDS_G; G
+ 229  5E45               ELSE
+ 230  5E45 00 00        	DW 0
+ 231  5E47               ENDIF
+ 232  5E47 00 00            DW 0 ; H
+ 233  5E49 00 00            DW 0 ; I
+ 234  5E4B 00 00            DW 0 ; J
+ 235  5E4D 00 00            DW 0 ; K
+ 236  5E4F 00 00            DW 0 ; L
+ 237  5E51               IF (VRAM_CMDS + RAM_CMDS + ANIM_CMDS > 0) && (0 == 1)
+ 238  5E51 ~                DW CMDS_M ; M
+ 239  5E51               ELSE
+ 240  5E51 00 00        	DW 0
+ 241  5E53               ENDIF
+ 242  5E53 00 00            DW 0 ; N
+ 243  5E55 00 00            DW 0 ; O
+ 244  5E57 00 00            DW 0 ; P
+ 245  5E59 00 00            DW 0 ; Q
+ 246  5E5B 00 00            DW 0 ; R
+ 247  5E5D               IF (SOUND_CMDS + SPRITE_CMDS > 0) && (0 == 1)
+ 248  5E5D ~                DW CMDS_S ; S
+ 249  5E5D               ELSE
+ 250  5E5D 00 00        	DW 0
+ 251  5E5F               ENDIF
+ 252  5E5F               IF (TILE_CMDS > 0) && (0 == 1)
+ 253  5E5F ~                DW CMDS_T ; T
+ 254  5E5F               ELSE
+ 255  5E5F 00 00        	DW 0
+ 256  5E61               ENDIF
+ 257  5E61               IF (DECOMP_CMDS > 0) && (0 == 1)
+ 258  5E61 ~                DW CMDS_U ; U
+ 259  5E61               ELSE
+ 260  5E61 00 00        	DW 0
+ 261  5E63               ENDIF
+ 262  5E63               IF ((VRAM_CMDS > 0) || (VRAM_CMDS + DECOMP_CMDS > 1)) && (0 == 1)
+ 263  5E63 ~                DW CMDS_V ; V
+ 264  5E63               ELSE
+ 265  5E63 00 00        	DW 0
+ 266  5E65               ENDIF
+ 267  5E65 00 00            DW 0 ; W
+ 268  5E67 00 00            DW 0 ; X
+ 269  5E69 00 00            DW 0 ; Y
+ 270  5E6B 00 00            DW 0 ; Z
+ 271  5E6D
+ 272  5E6D               IF (0 == 1)
+ 273  5E6D ~             IF (VRAM_CMDS + RAM_CMDS + ANIM_CMDS > 0)
+ 274  5E6D ~            CMDS_M:
+ 275  5E6D ~             IF (VRAM_CMDS == 1)
+ 276  5E6D ~                DB "MEMVRM", 0
+ 277  5E6D ~                DW MEMVRM
+ 278  5E6D ~             ENDIF
+ 279  5E6D ~             IF (RAM_CMDS == 1)
+ 280  5E6D ~            	DB "MEMCPY", 0
+ 281  5E6D ~            	DW MEMCPY
+ 282  5E6D ~             ENDIF
+ 283  5E6D ~             IF (ANIM_CMDS == 1)
+ 284  5E6D ~            	DB "MAXANIMITEMS",0
+ 285  5E6D ~            	DW MAXANIMITEMS
+ 286  5E6D ~            	DB "MAXANIMDEFS",0
+ 287  5E6D ~            	DW MAXANIMDEFS
+ 288  5E6D ~            	DB "MAXANIMSPRS",0
+ 289  5E6D ~            	DW MAXANIMSPRS
+ 290  5E6D ~               DB "MAXAUTOSGAMS",0
+ 291  5E6D ~               DW MAXAUTOSGAMS
+ 292  5E6D ~             ENDIF
+ 293  5E6D ~             ENDIF
+ 294  5E6D ~
+ 295  5E6D ~             IF (VRAM_CMDS + RAM_CMDS > 0)
+ 296  5E6D ~            CMDS_F:
+ 297  5E6D ~             IF (VRAM_CMDS == 1)
+ 298  5E6D ~                DB "FILVRM", 0
+ 299  5E6D ~                DW FILVRM
+ 300  5E6D ~             ENDIF
+ 301  5E6D ~             IF (RAM_CMDS == 1)
+ 302  5E6D ~                DB "FILRAM", 0
+ 303  5E6D ~                DW FILRAM
+ 304  5E6D ~             ENDIF
+ 305  5E6D ~             ENDIF
+ 306  5E6D ~
+ 307  5E6D ~             IF (GENCAL_CMD > 0)
+ 308  5E6D ~            CMDS_G:
+ 309  5E6D ~             IF (GENCAL_CMD == 1)
+ 310  5E6D ~                DB "GENCAL", 0
+ 311  5E6D ~                DW GENCAL
+ 312  5E6D ~             ENDIF
+ 313  5E6D ~             ENDIF
+ 314  5E6D ~
+ 315  5E6D ~             IF (VRAM_CMDS > 0)
+ 316  5E6D ~            CMDS_V:
+ 317  5E6D ~             IF (VRAM_CMDS == 1)
+ 318  5E6D ~            	DB "VRMMEM", 0
+ 319  5E6D ~            	DW VRMMEM
+ 320  5E6D ~             ENDIF
+ 321  5E6D ~             IF (DECOMP_CMDS == 1)
+ 322  5E6D ~            	DB "VUNPACK", 0
+ 323  5E6D ~            	DW VUNPACK
+ 324  5E6D ~             ENDIF
+ 325  5E6D ~             ENDIF
+ 326  5E6D ~
+ 327  5E6D ~             IF (SOUND_CMDS + SPRITE_CMDS + ANIM_CMDS > 0)
+ 328  5E6D ~            CMDS_S:
+ 329  5E6D ~             IF (SPRITE_CMDS + ANIM_CMDS > 0)
+ 330  5E6D ~                DB "SGAM",0
+ 331  5E6D ~                DW SGAM
+ 332  5E6D ~             ENDIF
+ 333  5E6D ~             IF (SPRITE_CMDS == 1)
+ 334  5E6D ~            	DB "SPRGRPMOV", 0
+ 335  5E6D ~            	DW SPRGRPMOV
+ 336  5E6D ~             ENDIF
+ 337  5E6D ~             IF (SOUND_CMDS == 1)
+ 338  5E6D ~            	DB "SNDSFX", 0
+ 339  5E6D ~            	DW SNDSFX
+ 340  5E6D ~            	DB "SNDPLYON", 0
+ 341  5E6D ~            	DW SNDPLYON
+ 342  5E6D ~            	DB "SNDPLYOFF", 0
+ 343  5E6D ~            	DW SNDPLYOFF
+ 344  5E6D ~            	DB "SNDPLYINI", 0
+ 345  5E6D ~            	DW SNDPLYINIT
+ 346  5E6D ~             ENDIF
+ 347  5E6D ~             IF (SPRITE_CMDS == 1)
+ 348  5E6D ~            	DB "SPRENABLE", 0
+ 349  5E6D ~            	DW SPRENABLE
+ 350  5E6D ~            	DB "SPRDISABLE", 0
+ 351  5E6D ~            	DW SPRDISABLE
+ 352  5E6D ~             ENDIF
+ 353  5E6D ~             ENDIF
+ 354  5E6D ~
+ 355  5E6D ~             IF (BLIT_CMDS + BOX_CMDS > 0)
+ 356  5E6D ~            CMDS_B:
+ 357  5E6D ~             IF (BLIT_CMDS == 1)
+ 358  5E6D ~            	DB "BLIT", 0
+ 359  5E6D ~            	DW BLIT
+ 360  5E6D ~             ENDIF
+ 361  5E6D ~             IF (BOX_CMDS == 1)
+ 362  5E6D ~            	DB "BOXMEMCPY", 0
+ 363  5E6D ~            	DW BOXMEMCPY
+ 364  5E6D ~            	DB "BOXMEMVRM", 0
+ 365  5E6D ~            	DW BOXMEMVRM
+ 366  5E6D ~             ENDIF
+ 367  5E6D ~             ENDIF
+ 368  5E6D ~
+ 369  5E6D ~             IF (TILE_CMDS > 0)
+ 370  5E6D ~            CMDS_T:
+ 371  5E6D ~             IF (TILE_CMDS == 1)
+ 372  5E6D ~            	DB "TILERAM", 0
+ 373  5E6D ~            	DW TILERAM
+ 374  5E6D ~            	DB "TILEVRM", 0
+ 375  5E6D ~            	DW TILEVRM
+ 376  5E6D ~             ENDIF
+ 377  5E6D ~             ENDIF
+ 378  5E6D ~
+ 379  5E6D ~             IF (COLL_CMD > 0)
+ 380  5E6D ~            CMDS_C:
+ 381  5E6D ~             IF (COLL_CMD == 1)
+ 382  5E6D ~                DB "COLL", 0
+ 383  5E6D ~                DW COLL
+ 384  5E6D ~             ENDIF
+ 385  5E6D ~             ENDIF
+ 386  5E6D ~
+ 387  5E6D ~             IF (DECOMP_CMDS > 0)
+ 388  5E6D ~            CMDS_U:
+ 389  5E6D ~             IF (DECOMP_CMDS == 1)
+ 390  5E6D ~                DB "UNPACK", 0
+ 391  5E6D ~                DW UNPACK
+ 392  5E6D ~             ENDIF
+ 393  5E6D ~             ENDIF
+ 394  5E6D ~
+ 395  5E6D ~             IF (DLOAD_CMD > 0)
+ 396  5E6D ~            CMDS_D:
+ 397  5E6D ~             IF (DLOAD_CMD == 1)
+ 398  5E6D ~                DB "DLOAD", 0
+ 399  5E6D ~                DW DLOAD
+ 400  5E6D ~             ENDIF
+ 401  5E6D ~             ENDIF
+ 402  5E6D ~
+ 403  5E6D ~            CMDS_A:
+ 404  5E6D ~             IF (ANIM_CMDS == 1)
+ 405  5E6D ~               DB "ANIMSTEP",0
+ 406  5E6D ~               DW ANIMSTEP
+ 407  5E6D ~            	DB "ANIMSTART",0
+ 408  5E6D ~            	DW ANIMSTART
+ 409  5E6D ~            	DB "ANIMSTOP",0
+ 410  5E6D ~            	DW ANIMSTOP
+ 411  5E6D ~            	DB "ANIMITEMPAT",0
+ 412  5E6D ~            	DW ANIMITEMPAT
+ 413  5E6D ~            	DB "ANIMITEMPTR",0
+ 414  5E6D ~            	DW ANIMITEMPTR_CMD
+ 415  5E6D ~            	DB "ANIMDEF",0
+ 416  5E6D ~            	DW ANIMDEF
+ 417  5E6D ~            	DB "ANIMSPRITE",0
+ 418  5E6D ~            	DW ANIMSPRITE
+ 419  5E6D ~               DB "ANIMCHAR",0
+ 420  5E6D ~               DW ANIMCHAR
+ 421  5E6D ~               DB "AUTOSGAMDEF",0
+ 422  5E6D ~               DW AUTOSGAMDEF
+ 423  5E6D ~               DB "AUTOSGAMSTART",0
+ 424  5E6D ~               DW AUTOSGAMSTART
+ 425  5E6D ~               DB "AUTOSGAMSTOP",0
+ 426  5E6D ~               DW AUTOSGAMSTOP
+ 427  5E6D ~             ENDIF
+ 428  5E6D ~               DB "ARTINFO",0
+ 429  5E6D ~               DW ARTINFO
+ 430  5E6D ~            	DB 0
+ 431  5E6D               ELSE // if not BASIC extension
+ 432  5E6D              CMDS_A:
+ 433  5E6D 41 52 54 49     DB "ARTINFO",0
+ 433  5E71 4E 46 4F 00
+ 434  5E75 D0 5F           DW ARTINFO
+ 435  5E77 00           	DB 0
+ 436  5E78               ENDIF
+ 437  5E78
+ 438  5E78               IF (VRAM_CMDS + TILE_CMDS + SPRITE_CMDS > 0)
+ 439  5E78              ; ****************************************************************************************************
+ 440  5E78              ; function sets VRAM address for writing
+ 441  5E78              ; input HL=address
+ 442  5E78              ; modifies AF
+ 443  5E78              SETWRT_LOCAL_WRITE:
+ 444  5E78 7D           	LD	A,L
+ 445  5E79 D3 99        	OUT (#99),A
+ 446  5E7B 7C           	LD	A,H
+ 447  5E7C E6 3F        	AND #3F
+ 448  5E7E F6 40        	OR	#40
+ 449  5E80 D3 99        	OUT (#99),A
+ 450  5E82 C9           	RET
+ 451  5E83              ; ****************************************************************************************************
+ 452  5E83
+ 453  5E83              ; ****************************************************************************************************
+ 454  5E83              ; function sets VRAM address for reading
+ 455  5E83              ; input HL=address
+ 456  5E83              ; modifies AF
+ 457  5E83              SETWRT_LOCAL_READ:
+ 458  5E83 7D           	LD	A,L
+ 459  5E84 D3 99        	OUT (#99),A
+ 460  5E86 7C           	LD	A,H
+ 461  5E87 E6 3F        	AND #3F
+ 462  5E89 00              NOP
+ 463  5E8A D3 99        	OUT (#99),A
+ 464  5E8C C9           	RET
+ 465  5E8D              ; ****************************************************************************************************
+ 466  5E8D               ENDIF
+ 467  5E8D
+ 468  5E8D               IF (VRAM_CMDS + TILE_CMDS > 0)
+ 469  5E8D              ; ****************************************************************************************************
+ 470  5E8D              ; function copies data from RAM to VRAM
+ 471  5E8D              ; input HL=address in RAM
+ 472  5E8D              ; input B=count
+ 473  5E8D              ; modifies AF, BC, HL
+ 474  5E8D              BBYTECOPY:
+ 475  5E8D 0E 98        	LD C,#98
+ 476  5E8F              BBYTECOPY_NO_C:
+ 477  5E8F ED A3        	OUTI
+ 478  5E91 C2 8F 5E     	JP	NZ, BBYTECOPY_NO_C
+ 479  5E94 C9           	RET
+ 480  5E95              ; ****************************************************************************************************
+ 481  5E95               ENDIF
+ 482  5E95
+ 483  5E95              ; ****************************************************************************************************
+ 484  5E95              ; function multiplies HL by 32
+ 485  5E95              HLx32:
+ 486  5E95 29           	ADD HL,HL
+ 487  5E96              ; ****************************************************************************************************
+ 488  5E96              ; function multiplies HL by 16
+ 489  5E96              HLx16:
+ 490  5E96 29           	ADD HL,HL
+ 491  5E97              ; ****************************************************************************************************
+ 492  5E97              ; function multiplies HL by 8
+ 493  5E97              HLx8:
  494  5E97 29          > ADD HL, HL
  494  5E98 29          > ADD HL, HL
- 495  5E99 C9           	RET
- 496  5E9A              ; ****************************************************************************************************
- 497  5E9A
- 498  5E9A              ; ****************************************************************************************************
- 499  5E9A              ; function gets slot and subslot data for specific page
- 500  5E9A              ; input A=page (0, 1 or 2)
- 501  5E9A              ; output B = 0A8H register value
- 502  5E9A              ; output D = 0 is no subslots, 1 if yes
- 503  5E9A              ; output C = 0A8H value when page 3 slot equals to requested page slot
- 504  5E9A              ; output E = subslot value if present
- 505  5E9A              ; modifies AF, BC, DE, HL
- 506  5E9A              GET_PAGE_INFO:
- 507  5E9A 6F               LD L, A
- 508  5E9B C6 C1            ADD A, low (EXPTBL)
- 509  5E9D 32 A7 5E         LD (GET_PAGE_INFO_L1+1), A
- 510  5EA0 DB A8            IN A, (0A8H)
- 511  5EA2 47               LD B, A
- 512  5EA3 E6 3F            AND 03FH
- 513  5EA5 4F               LD C, A
- 514  5EA6              GET_PAGE_INFO_L1:
- 515  5EA6 3A C1 FC         LD A, (EXPTBL) ; modified by code above
- 516  5EA9 E6 80            AND 080H
- 517  5EAB 28 1B            JR Z, GET_PAGE_INFO_L2
- 518  5EAD                  ; expanded
- 519  5EAD 2D               DEC L
- 520  5EAE FA CD 5E         JP M, GET_PAGE_INFO_L3
- 521  5EB1 2D               DEC L
- 522  5EB2 FA CB 5E         JP M, GET_PAGE_INFO_L4
- 523  5EB5                  ; page 2
- 524  5EB5 07               RLCA
- 525  5EB6 07               RLCA
- 526  5EB7              GET_PAGE_INFO_L5:
- 527  5EB7 E6 C0            AND 0C0H
- 528  5EB9 B1               OR C
- 529  5EBA D3 A8            OUT (0A8H), A ; slot 3 = slot of page requested
- 530  5EBC 4F               LD C, A
- 531  5EBD 3A FF FF         LD A, (0FFFFH)
- 532  5EC0 2F               CPL
- 533  5EC1 5F               LD E, A
- 534  5EC2 16 01            LD D, 1
- 535  5EC4 78               LD A, B ; return stack
- 536  5EC5 D3 A8            OUT (0A8H), A
- 537  5EC7 C9               RET
- 538  5EC8              GET_PAGE_INFO_L2:
- 539  5EC8                  ; not expanded
- 540  5EC8 16 00            LD D, 0
- 541  5ECA C9               RET
- 542  5ECB              GET_PAGE_INFO_L4:
- 543  5ECB                  ; page 1
- 544  5ECB 0F               RRCA
- 545  5ECC 0F               RRCA
- 546  5ECD              GET_PAGE_INFO_L3:
- 547  5ECD                  ; page 0
- 548  5ECD 0F               RRCA
- 549  5ECE 0F               RRCA
- 550  5ECF 18 E6            JR GET_PAGE_INFO_L5
- 551  5ED1              ; ****************************************************************************************************
- 552  5ED1
- 553  5ED1              ; ****************************************************************************************************
- 554  5ED1              ; function returns original slot and subslot info
- 555  5ED1              ; input B = 0A8H register value
- 556  5ED1              ; input D = 0 is no subslots, 1 if yes
- 557  5ED1              ; input C = 0A8H value when page 3 slot equals to requested page slot
- 558  5ED1              ; input E = subslot value if present
- 559  5ED1              ; modifies AF, disables interrupts
- 560  5ED1              RESTORE_PAGE_INFO:
- 561  5ED1 F3              DI
- 562  5ED2 7A              LD A, D
- 563  5ED3 B7              OR A
- 564  5ED4 28 07           JR Z, RESTORE_PAGE_INFO_L1
- 565  5ED6 79              LD A, C
- 566  5ED7 D3 A8           OUT (0A8H), A
- 567  5ED9 7B              LD A, E
- 568  5EDA 32 FF FF        LD (0FFFFH), A
- 569  5EDD              RESTORE_PAGE_INFO_L1:
- 570  5EDD 78              LD A, B
- 571  5EDE D3 A8           OUT (0A8H), A
- 572  5EE0              NOACTION_DEFUSR: ; just a safe RET for use when DEFUSR table has an empty entry
- 573  5EE0 C9              RET
- 574  5EE1              ; ****************************************************************************************************
- 575  5EE1
- 576  5EE1              ; *******************************************************************************************************
- 577  5EE1              ; SELECTS A SLOT IN THE PAGE SPECIFIED BY AN ADDRESS.
- 578  5EE1              ; INPUT:  A = SLOT ID: EXXXSSPP
- 579  5EE1              ; E = EXPANDED FLAG
- 580  5EE1              ; SS = SECONDARY SLOT NUMBER (ONLY IF EXPANDED)
- 581  5EE1              ; PP = PRIMARY SLOT NUMBER
- 582  5EE1              ;     HL = ADDRESS INSIDE THE PAGE TO CHANGE
- 583  5EE1              ; CHANGES: AF, BC, DE
- 584  5EE1
- 585  5EE1              LOCAL_ENASLT:
- 586  5EE1 CD 01 5F         CALL L0353
- 587  5EE4 FA EE 5E         JP M, L0340
- 588  5EE7 DB A8            IN A, (0A8H)
- 589  5EE9 A1               AND C
- 590  5EEA B0               OR B
- 591  5EEB D3 A8            OUT (0A8H), A
- 592  5EED C9               RET
- 593  5EEE              L0340:
- 594  5EEE E5               PUSH HL
- 595  5EEF CD 26 5F         CALL L0378
- 596  5EF2 4F               LD C, A
- 597  5EF3 06 00            LD B, 0
- 598  5EF5 7D               LD A, L
- 599  5EF6 A4               AND H
- 600  5EF7 B2               OR D
- 601  5EF8 21 C5 FC         LD HL, 0FCC5H
- 602  5EFB 09               ADD HL, BC
- 603  5EFC 77               LD (HL), A
- 604  5EFD E1               POP HL
- 605  5EFE 79               LD A, C
- 606  5EFF 18 E0            JR LOCAL_ENASLT
- 607  5F01              L0353:
- 608  5F01 F3               DI
- 609  5F02 F5               PUSH AF
- 610  5F03 7C               LD A, H
- 611  5F04 07               RLCA
- 612  5F05 07               RLCA
- 613  5F06 E6 03            AND 3
- 614  5F08 5F               LD E, A
- 615  5F09 3E C0            LD A, 0C0H
- 616  5F0B              L035D:
- 617  5F0B 07               RLCA
- 618  5F0C 07               RLCA
- 619  5F0D 1D               DEC E
- 620  5F0E F2 0B 5F         JP P, L035D
- 621  5F11 5F               LD E, A
- 622  5F12 2F               CPL
- 623  5F13 4F               LD C, A
- 624  5F14 F1               POP AF
- 625  5F15 F5               PUSH AF
- 626  5F16 E6 03            AND 3
- 627  5F18 3C               INC A
- 628  5F19 47               LD B, A
- 629  5F1A 3E AB            LD A, 0ABH
- 630  5F1C              L036E:
- 631  5F1C C6 55            ADD A, 055H
- 632  5F1E 10 FC            DJNZ L036E
- 633  5F20 57               LD D, A
- 634  5F21 A3               AND E
- 635  5F22 47               LD B, A
- 636  5F23 F1               POP AF
- 637  5F24 A7               AND A
- 638  5F25 C9               RET
- 639  5F26              L0378:
- 640  5F26 F5               PUSH AF
- 641  5F27 7A               LD A, D
- 642  5F28 E6 C0            AND 0C0H
- 643  5F2A 4F               LD C, A
- 644  5F2B F1               POP AF
- 645  5F2C F5               PUSH AF
- 646  5F2D 57               LD D, A
- 647  5F2E DB A8            IN A, (0A8H)
- 648  5F30 47               LD B, A
- 649  5F31 E6 3F            AND 03FH
- 650  5F33 B1               OR C
- 651  5F34 D3 A8            OUT (0A8H), A
- 652  5F36 7A               LD A, D
- 653  5F37 0F               RRCA
- 654  5F38 0F               RRCA
- 655  5F39 E6 03            AND 3
- 656  5F3B 57               LD D, A
- 657  5F3C 3E AB            LD A, 0ABH
- 658  5F3E              L0390:
- 659  5F3E C6 55            ADD A, 055H
- 660  5F40 15               DEC D
- 661  5F41 F2 3E 5F         JP P, L0390
- 662  5F44 A3               AND E
- 663  5F45 57               LD D, A
- 664  5F46 7B               LD A, E
- 665  5F47 2F               CPL
- 666  5F48 67               LD H, A
- 667  5F49 3A FF FF         LD A, (0FFFFH)
- 668  5F4C 2F               CPL
- 669  5F4D 6F               LD L, A
- 670  5F4E A4               AND H
- 671  5F4F B2               OR D
- 672  5F50 32 FF FF         LD (0FFFFH), A
- 673  5F53 78               LD A, B
- 674  5F54 D3 A8            OUT (0A8H), A
- 675  5F56 F1               POP AF
- 676  5F57 E6 03            AND 3
- 677  5F59 C9               RET
- 678  5F5A              ; *******************************************************************************************************
- 679  5F5A
- 680  5F5A              ; *******************************************************************************************************
- 681  5F5A              ; some common code to activate page 0 and place values needed to restore original page on stack
- 682  5F5A              ; input IY=return address
- 683  5F5A              ENABLE_PAGE0:
- 684  5F5A F3              DI
- 685  5F5B AF              XOR A
- 686  5F5C CD 9A 5E        CALL GET_PAGE_INFO
- 687  5F5F C5              PUSH BC
- 688  5F60 D5              PUSH DE
- 689  5F61 3A 41 F3        LD A, (RAMAD0)
- 690  5F64 26 00           LD H, 0
- 691  5F66 CD E1 5E        CALL LOCAL_ENASLT
- 692  5F69 FD E9        	JP (IY)
- 693  5F6B              ; *******************************************************************************************************
- 694  5F6B
- 695  5F6B              ; General BASIC CALL-instruction handler
- 696  5F6B              CALLHAND:
- 697  5F6B FB              EI
- 698  5F6C E5           	PUSH HL
- 699  5F6D 21 38 5E     	LD	HL, CMDS ; pointer table based on starting letter
- 700  5F70 3A 89 FD        LD A, (PROCNM)
- 701  5F73 D6 41           SUB 'A'
- 702  5F75 87              ADD A, A
- 703  5F76 16 00           LD D, 0
- 704  5F78 5F              LD E, A
- 705  5F79 19              ADD HL, DE
- 706  5F7A 5E              LD E, (HL)
- 707  5F7B 23              INC HL
- 708  5F7C 56              LD D, (HL)
- 709  5F7D 7A              LD A, D
- 710  5F7E B3              OR E
- 711  5F7F 28 23           JR Z, .CMDNOTRECOGNIZED
- 712  5F81 EB              EX DE, HL
- 713  5F82              .CHKCMD:
- 714  5F82 11 89 FD     	LD	DE, PROCNM
- 715  5F85              .LOOP:
- 716  5F85 1A              LD	A,(DE)
- 717  5F86 BE           	CP	(HL)
- 718  5F87 20 11        	JR	NZ,.TONEXTCMD	; Not equal
- 719  5F89 13           	INC	DE
- 720  5F8A 23           	INC	HL
- 721  5F8B A7           	AND	A
- 722  5F8C 20 F7        	JR	NZ,.LOOP	; No end of instruction name, go checking
- 723  5F8E 5E           	LD	E,(HL)
- 724  5F8F 23           	INC	HL
- 725  5F90 56           	LD	D,(HL)
- 726  5F91 E1           	POP	HL		; routine address
- 727  5F92 CD B3 5F     	CALL	GETPREVCHAR
- 728  5F95 CD A7 5F     	CALL	.CALLDE		; Call routine
- 729  5F98 A7           	AND	A
- 730  5F99 C9           	RET
- 731  5F9A
- 732  5F9A              .TONEXTCMD:
- 733  5F9A 0E FF        	LD	C,0FFH
- 734  5F9C AF           	XOR	A
- 735  5F9D ED B1        	CPIR			; Skip to end of instruction name
- 736  5F9F 23           	INC	HL
- 737  5FA0 23           	INC	HL		; Skip address
- 738  5FA1 BE           	CP	(HL)
- 739  5FA2 20 DE        	JR	NZ,.CHKCMD	; Not end of table, go checking
- 740  5FA4              .CMDNOTRECOGNIZED:
- 741  5FA4 E1           	POP	HL
- 742  5FA5 37              SCF
- 743  5FA6 C9           	RET
- 744  5FA7
- 745  5FA7              .CALLDE:
- 746  5FA7 D5           	PUSH	DE
- 747  5FA8 C9           	RET
- 748  5FA9
- 749  5FA9              ;---------------------------
- 750  5FA9
- 751  5FA9              CHKCHAR:
- 752  5FA9 CD B3 5F     	CALL	GETPREVCHAR	; Get previous basic char
- 753  5FAC E3           	EX	(SP),HL
- 754  5FAD BE           	CP	(HL) 	        ; Check if good char
- 755  5FAE 20 0D        	JR	NZ,SYNTAX_ERROR	; No, Syntax error
- 756  5FB0 23           	INC	HL
- 757  5FB1 E3           	EX	(SP),HL
- 758  5FB2 23           	INC	HL		; Get next basic char
- 759  5FB3
- 760  5FB3              GETPREVCHAR:
- 761  5FB3 2B           	DEC HL
- 762  5FB4 DD 21 66 46  	LD	IX,CHRGTR
- 763  5FB8 CD 59 01     	CALL CALBAS
- 764  5FBB FB              EI
- 765  5FBC C9              RET
- 766  5FBD
- 767  5FBD               IF (0 == 1)
- 768  5FBD ~             IF (DLOAD_CMD == 1)
- 769  5FBD ~            BAD_FILENAME:
- 770  5FBD ~               LD E,56
- 771  5FBD ~               JR THROW_ERROR
- 772  5FBD ~             ENDIF
- 773  5FBD ~            OUT_OF_DATA:
- 774  5FBD ~               LD E, 4
- 775  5FBD ~               JR THROW_ERROR
- 776  5FBD ~            TYPE_MISMATCH:
- 777  5FBD ~               LD E, 13 ; Type mismatch
- 778  5FBD ~               JR THROW_ERROR
- 779  5FBD ~            SUBSCRIPT_OUT_OF_RANGE:
- 780  5FBD ~               LD E,9 ; subscript out of range
- 781  5FBD ~            	JR THROW_ERROR
- 782  5FBD ~            OVERFLOW:
- 783  5FBD ~            	LD E,6
- 784  5FBD ~            	JR THROW_ERROR
- 785  5FBD ~            ILLEGAL_FUNCTION:
- 786  5FBD ~               LD E, 5 ; illegal function call
- 787  5FBD ~               JR THROW_ERROR
- 788  5FBD               ENDIF
- 789  5FBD              SYNTAX_ERROR:
- 790  5FBD 1E 02           LD E, 2 ; Syntax error
- 791  5FBF              THROW_ERROR:
- 792  5FBF DD 21 6F 40  	LD	IX,ERRHAND	; Call the Basic error handler
- 793  5FC3 C3 59 01     	JP	CALBAS
- 794  5FC6
- 795  5FC6
- 796  5FC6              ;---------------------------
- 797  5FC6
- 798  5FC6               IF (DLOAD_CMD == 1)
- 799  5FC6              ; *******************************************************************************************************
- 800  5FC6              ; helper function to make an uppercase letter
- 801  5FC6              ; input A=character
- 802  5FC6              ; output A=uppercase version of input
- 803  5FC6              UPPER:
- 804  5FC6 FE 61           CP "a"
- 805  5FC8 D8              RET C
- 806  5FC9 FE 7B           CP "z"+1
- 807  5FCB D0              RET NC
- 808  5FCC E6 5F           AND 5FH
- 809  5FCE C9              RET
- 810  5FCF              ; *******************************************************************************************************
- 811  5FCF               ENDIF
- 812  5FCF
- 813  5FCF               IF (0 == 1)
- 814  5FCF ~
- 815  5FCF ~             IF (DLOAD_CMD == 1)
- 816  5FCF ~            ; *******************************************************************************************************
- 817  5FCF ~            ; helper function to return string pointer and length
- 818  5FCF ~            ; returns HL = String Address
- 819  5FCF ~            ; returns B  = Lenght
- 820  5FCF ~            ; modifies BC, DE, HL
- 821  5FCF ~            GETSTRPNT:
- 822  5FCF ~               LD      HL,(USR)
- 823  5FCF ~               LD      B,(HL)
- 824  5FCF ~               INC     HL
- 825  5FCF ~               LD      E,(HL)
- 826  5FCF ~               INC     HL
- 827  5FCF ~               LD      D,(HL)
- 828  5FCF ~               EX      DE,HL
- 829  5FCF ~               RET
- 830  5FCF ~            ; *******************************************************************************************************
- 831  5FCF ~
- 832  5FCF ~            ; *******************************************************************************************************
- 833  5FCF ~            ; helper function to get string parameter
- 834  5FCF ~            ; throws error if incorrect type
- 835  5FCF ~            ; input HL=basic text
- 836  5FCF ~            EVALTXTPARAM:
- 837  5FCF ~            	LD	IX,FRMEVL
- 838  5FCF ~            	CALL CALBAS		; Evaluate expression
- 839  5FCF ~               LD A,(VALTYP)
- 840  5FCF ~               CP 3               ; Text type?
- 841  5FCF ~               JP NZ,TYPE_MISMATCH
- 842  5FCF ~               PUSH HL
- 843  5FCF ~               LD	IX,FRESTR         ; Free the temporary string
- 844  5FCF ~               CALL CALBAS
- 845  5FCF ~               POP HL
- 846  5FCF ~               RET
- 847  5FCF ~            ; *******************************************************************************************************
- 848  5FCF ~
- 849  5FCF ~             ENDIF
- 850  5FCF ~
- 851  5FCF ~            ; *******************************************************************************************************
- 852  5FCF ~            ; helper function to get pointer to BASIC array data
- 853  5FCF ~            ; input A=data type (2=INT,4=SINGLE,8=DOUBLE)
- 854  5FCF ~            ; input B=dimensions (1 or 2)
- 855  5FCF ~            ; input D=minimal first dimension
- 856  5FCF ~            ; input E=minimal second dimension, if applicable
- 857  5FCF ~            ; returns BC=pointer to first data element
- 858  5FCF ~            ; throws BASIC error if invalid type
- 859  5FCF ~            GET_BASIC_ARRAY_DATA_POINTER:
- 860  5FCF ~            	PUSH DE
- 861  5FCF ~            	PUSH BC
- 862  5FCF ~            	PUSH AF
- 863  5FCF ~               LD A,1
- 864  5FCF ~               LD (SUBFLG),A ; search for arrays only
- 865  5FCF ~            	LD IX, PTRGET
- 866  5FCF ~            	CALL CALBAS
- 867  5FCF ~               XOR A
- 868  5FCF ~               LD (SUBFLG),A ; if not reset will cause syntax errors
- 869  5FCF ~            	LD A,(VALTYP)
- 870  5FCF ~            	POP DE ; required type
- 871  5FCF ~            	CP D
- 872  5FCF ~            	JP NZ,TYPE_MISMATCH
- 873  5FCF ~            	LD A,(BC)
- 874  5FCF ~            	INC BC
- 875  5FCF ~            	POP DE ; required number of dimensions
- 876  5FCF ~            	CP D
- 877  5FCF ~            	JP NZ,TYPE_MISMATCH
- 878  5FCF ~            	POP DE ; required minimal array dimensions
- 879  5FCF ~            	DEC A
- 880  5FCF ~            	JR Z,.ONE_DIMENSION
- 881  5FCF ~            	; 2-dimension array
- 882  5FCF ~            	LD A,(BC)
- 883  5FCF ~            	.2 INC BC
- 884  5FCF ~            	CP E
- 885  5FCF ~            	JP C,SUBSCRIPT_OUT_OF_RANGE
- 886  5FCF ~            .ONE_DIMENSION:
- 887  5FCF ~            	LD A,(BC)
- 888  5FCF ~            	.2 INC BC
- 889  5FCF ~            	CP D
- 890  5FCF ~            	JP C,SUBSCRIPT_OUT_OF_RANGE
- 891  5FCF ~            	RET
- 892  5FCF ~            ; *******************************************************************************************************
- 893  5FCF               ENDIF
- 894  5FCF
- 895  5FCF              ; *******************************************************************************************************
- 896  5FCF              ; function to handle CALL ARTINFO basic extension
- 897  5FCF              ; returns info about the extension
- 898  5FCF              ; _ARTINFO ( INT variable version,
- 899  5FCF              ;			    INT variable build_flags,
- 900  5FCF              ;			    INT variable free_memory_ptr )
- 901  5FCF              ; this function is always available and can be used to test if the extension is active
- 902  5FCF              ARTINFO:
- 903  5FCF              	; opening (
- 904  5FCF CD A9 5F     	CALL CHKCHAR
- 905  5FD2 28           	DB '('
- 906  5FD3              	; get address of version variable
- 907  5FD3 DD 21 A4 5E  	LD IX, PTRGET
- 908  5FD7 CD 59 01     	CALL CALBAS
- 909  5FDA 3A 12 40     	LD A,(VERSION)
- 910  5FDD 12              LD (DE),A
- 911  5FDE 13              INC DE
- 912  5FDF 3A 13 40        LD A,(VERSION+1)
- 913  5FE2 12              LD (DE),A
- 914  5FE3              	; comma
- 915  5FE3 CD A9 5F     	CALL CHKCHAR
- 916  5FE6 2C           	DB ','
- 917  5FE7              	; get address of build flags variable
- 918  5FE7 DD 21 A4 5E  	LD IX, PTRGET
- 919  5FEB CD 59 01     	CALL CALBAS
- 920  5FEE E5              PUSH HL
- 921  5FEF 21 FF 1B        LD HL,SOUND_CMDS+2*RAM_CMDS+4*VRAM_CMDS+8*BLIT_CMDS+16*SPRITE_CMDS+32*GENCAL_CMD+64*TILE_CMDS+128*BOX_CMDS+256*ANIM_CMDS+512*COLL_CMD+1024*0+2048*1+4096*DECOMP_CMDS
- 922  5FF2 EB              EX DE,HL
- 923  5FF3 73              LD (HL),E
- 924  5FF4 23              INC HL
- 925  5FF5 72              LD (HL),D
- 926  5FF6 E1              POP HL
- 927  5FF7              	; comma
- 928  5FF7 CD A9 5F     	CALL CHKCHAR
- 929  5FFA 2C           	DB ','
- 930  5FFB              	; get address of free memory variable
- 931  5FFB DD 21 A4 5E  	LD IX, PTRGET
- 932  5FFF CD 59 01     	CALL CALBAS
- 933  6002 3A 10 40     	LD A,(FREEMEMPTR)
- 934  6005 12              LD (DE),A
- 935  6006 13              INC DE
- 936  6007 3A 11 40        LD A,(FREEMEMPTR+1)
- 937  600A 12              LD (DE),A
- 938  600B              	; ending )
- 939  600B CD A9 5F     	CALL CHKCHAR
- 940  600E 29           	DB ')'
- 941  600F C9           	RET
- 942  6010              ; *******************************************************************************************************
- 943  6010
- 944  6010              EXT_END:
- 945  6010
+ 494  5E99 29          > ADD HL, HL
+ 495  5E9A C9           	RET
+ 496  5E9B              ; ****************************************************************************************************
+ 497  5E9B
+ 498  5E9B              ; ****************************************************************************************************
+ 499  5E9B              ; function gets slot and subslot data for specific page
+ 500  5E9B              ; input A=page (0, 1 or 2)
+ 501  5E9B              ; output B = 0A8H register value
+ 502  5E9B              ; output D = 0 is no subslots, 1 if yes
+ 503  5E9B              ; output C = 0A8H value when page 3 slot equals to requested page slot
+ 504  5E9B              ; output E = subslot value if present
+ 505  5E9B              ; modifies AF, BC, DE, HL
+ 506  5E9B              GET_PAGE_INFO:
+ 507  5E9B 6F               LD L, A
+ 508  5E9C C6 C1            ADD A, low (EXPTBL)
+ 509  5E9E 32 A8 5E         LD (GET_PAGE_INFO_L1+1), A
+ 510  5EA1 DB A8            IN A, (0A8H)
+ 511  5EA3 47               LD B, A
+ 512  5EA4 E6 3F            AND 03FH
+ 513  5EA6 4F               LD C, A
+ 514  5EA7              GET_PAGE_INFO_L1:
+ 515  5EA7 3A C1 FC         LD A, (EXPTBL) ; modified by code above
+ 516  5EAA E6 80            AND 080H
+ 517  5EAC 28 1B            JR Z, GET_PAGE_INFO_L2
+ 518  5EAE                  ; expanded
+ 519  5EAE 2D               DEC L
+ 520  5EAF FA CE 5E         JP M, GET_PAGE_INFO_L3
+ 521  5EB2 2D               DEC L
+ 522  5EB3 FA CC 5E         JP M, GET_PAGE_INFO_L4
+ 523  5EB6                  ; page 2
+ 524  5EB6 07               RLCA
+ 525  5EB7 07               RLCA
+ 526  5EB8              GET_PAGE_INFO_L5:
+ 527  5EB8 E6 C0            AND 0C0H
+ 528  5EBA B1               OR C
+ 529  5EBB D3 A8            OUT (0A8H), A ; slot 3 = slot of page requested
+ 530  5EBD 4F               LD C, A
+ 531  5EBE 3A FF FF         LD A, (0FFFFH)
+ 532  5EC1 2F               CPL
+ 533  5EC2 5F               LD E, A
+ 534  5EC3 16 01            LD D, 1
+ 535  5EC5 78               LD A, B ; return stack
+ 536  5EC6 D3 A8            OUT (0A8H), A
+ 537  5EC8 C9               RET
+ 538  5EC9              GET_PAGE_INFO_L2:
+ 539  5EC9                  ; not expanded
+ 540  5EC9 16 00            LD D, 0
+ 541  5ECB C9               RET
+ 542  5ECC              GET_PAGE_INFO_L4:
+ 543  5ECC                  ; page 1
+ 544  5ECC 0F               RRCA
+ 545  5ECD 0F               RRCA
+ 546  5ECE              GET_PAGE_INFO_L3:
+ 547  5ECE                  ; page 0
+ 548  5ECE 0F               RRCA
+ 549  5ECF 0F               RRCA
+ 550  5ED0 18 E6            JR GET_PAGE_INFO_L5
+ 551  5ED2              ; ****************************************************************************************************
+ 552  5ED2
+ 553  5ED2              ; ****************************************************************************************************
+ 554  5ED2              ; function returns original slot and subslot info
+ 555  5ED2              ; input B = 0A8H register value
+ 556  5ED2              ; input D = 0 is no subslots, 1 if yes
+ 557  5ED2              ; input C = 0A8H value when page 3 slot equals to requested page slot
+ 558  5ED2              ; input E = subslot value if present
+ 559  5ED2              ; modifies AF, disables interrupts
+ 560  5ED2              RESTORE_PAGE_INFO:
+ 561  5ED2 F3              DI
+ 562  5ED3 7A              LD A, D
+ 563  5ED4 B7              OR A
+ 564  5ED5 28 07           JR Z, RESTORE_PAGE_INFO_L1
+ 565  5ED7 79              LD A, C
+ 566  5ED8 D3 A8           OUT (0A8H), A
+ 567  5EDA 7B              LD A, E
+ 568  5EDB 32 FF FF        LD (0FFFFH), A
+ 569  5EDE              RESTORE_PAGE_INFO_L1:
+ 570  5EDE 78              LD A, B
+ 571  5EDF D3 A8           OUT (0A8H), A
+ 572  5EE1              NOACTION_DEFUSR: ; just a safe RET for use when DEFUSR table has an empty entry
+ 573  5EE1 C9              RET
+ 574  5EE2              ; ****************************************************************************************************
+ 575  5EE2
+ 576  5EE2              ; *******************************************************************************************************
+ 577  5EE2              ; SELECTS A SLOT IN THE PAGE SPECIFIED BY AN ADDRESS.
+ 578  5EE2              ; INPUT:  A = SLOT ID: EXXXSSPP
+ 579  5EE2              ; E = EXPANDED FLAG
+ 580  5EE2              ; SS = SECONDARY SLOT NUMBER (ONLY IF EXPANDED)
+ 581  5EE2              ; PP = PRIMARY SLOT NUMBER
+ 582  5EE2              ;     HL = ADDRESS INSIDE THE PAGE TO CHANGE
+ 583  5EE2              ; CHANGES: AF, BC, DE
+ 584  5EE2
+ 585  5EE2              LOCAL_ENASLT:
+ 586  5EE2 CD 02 5F         CALL L0353
+ 587  5EE5 FA EF 5E         JP M, L0340
+ 588  5EE8 DB A8            IN A, (0A8H)
+ 589  5EEA A1               AND C
+ 590  5EEB B0               OR B
+ 591  5EEC D3 A8            OUT (0A8H), A
+ 592  5EEE C9               RET
+ 593  5EEF              L0340:
+ 594  5EEF E5               PUSH HL
+ 595  5EF0 CD 27 5F         CALL L0378
+ 596  5EF3 4F               LD C, A
+ 597  5EF4 06 00            LD B, 0
+ 598  5EF6 7D               LD A, L
+ 599  5EF7 A4               AND H
+ 600  5EF8 B2               OR D
+ 601  5EF9 21 C5 FC         LD HL, 0FCC5H
+ 602  5EFC 09               ADD HL, BC
+ 603  5EFD 77               LD (HL), A
+ 604  5EFE E1               POP HL
+ 605  5EFF 79               LD A, C
+ 606  5F00 18 E0            JR LOCAL_ENASLT
+ 607  5F02              L0353:
+ 608  5F02 F3               DI
+ 609  5F03 F5               PUSH AF
+ 610  5F04 7C               LD A, H
+ 611  5F05 07               RLCA
+ 612  5F06 07               RLCA
+ 613  5F07 E6 03            AND 3
+ 614  5F09 5F               LD E, A
+ 615  5F0A 3E C0            LD A, 0C0H
+ 616  5F0C              L035D:
+ 617  5F0C 07               RLCA
+ 618  5F0D 07               RLCA
+ 619  5F0E 1D               DEC E
+ 620  5F0F F2 0C 5F         JP P, L035D
+ 621  5F12 5F               LD E, A
+ 622  5F13 2F               CPL
+ 623  5F14 4F               LD C, A
+ 624  5F15 F1               POP AF
+ 625  5F16 F5               PUSH AF
+ 626  5F17 E6 03            AND 3
+ 627  5F19 3C               INC A
+ 628  5F1A 47               LD B, A
+ 629  5F1B 3E AB            LD A, 0ABH
+ 630  5F1D              L036E:
+ 631  5F1D C6 55            ADD A, 055H
+ 632  5F1F 10 FC            DJNZ L036E
+ 633  5F21 57               LD D, A
+ 634  5F22 A3               AND E
+ 635  5F23 47               LD B, A
+ 636  5F24 F1               POP AF
+ 637  5F25 A7               AND A
+ 638  5F26 C9               RET
+ 639  5F27              L0378:
+ 640  5F27 F5               PUSH AF
+ 641  5F28 7A               LD A, D
+ 642  5F29 E6 C0            AND 0C0H
+ 643  5F2B 4F               LD C, A
+ 644  5F2C F1               POP AF
+ 645  5F2D F5               PUSH AF
+ 646  5F2E 57               LD D, A
+ 647  5F2F DB A8            IN A, (0A8H)
+ 648  5F31 47               LD B, A
+ 649  5F32 E6 3F            AND 03FH
+ 650  5F34 B1               OR C
+ 651  5F35 D3 A8            OUT (0A8H), A
+ 652  5F37 7A               LD A, D
+ 653  5F38 0F               RRCA
+ 654  5F39 0F               RRCA
+ 655  5F3A E6 03            AND 3
+ 656  5F3C 57               LD D, A
+ 657  5F3D 3E AB            LD A, 0ABH
+ 658  5F3F              L0390:
+ 659  5F3F C6 55            ADD A, 055H
+ 660  5F41 15               DEC D
+ 661  5F42 F2 3F 5F         JP P, L0390
+ 662  5F45 A3               AND E
+ 663  5F46 57               LD D, A
+ 664  5F47 7B               LD A, E
+ 665  5F48 2F               CPL
+ 666  5F49 67               LD H, A
+ 667  5F4A 3A FF FF         LD A, (0FFFFH)
+ 668  5F4D 2F               CPL
+ 669  5F4E 6F               LD L, A
+ 670  5F4F A4               AND H
+ 671  5F50 B2               OR D
+ 672  5F51 32 FF FF         LD (0FFFFH), A
+ 673  5F54 78               LD A, B
+ 674  5F55 D3 A8            OUT (0A8H), A
+ 675  5F57 F1               POP AF
+ 676  5F58 E6 03            AND 3
+ 677  5F5A C9               RET
+ 678  5F5B              ; *******************************************************************************************************
+ 679  5F5B
+ 680  5F5B              ; *******************************************************************************************************
+ 681  5F5B              ; some common code to activate page 0 and place values needed to restore original page on stack
+ 682  5F5B              ; input IY=return address
+ 683  5F5B              ENABLE_PAGE0:
+ 684  5F5B F3              DI
+ 685  5F5C AF              XOR A
+ 686  5F5D CD 9B 5E        CALL GET_PAGE_INFO
+ 687  5F60 C5              PUSH BC
+ 688  5F61 D5              PUSH DE
+ 689  5F62 3A 41 F3        LD A, (RAMAD0)
+ 690  5F65 26 00           LD H, 0
+ 691  5F67 CD E2 5E        CALL LOCAL_ENASLT
+ 692  5F6A FD E9        	JP (IY)
+ 693  5F6C              ; *******************************************************************************************************
+ 694  5F6C
+ 695  5F6C              ; General BASIC CALL-instruction handler
+ 696  5F6C              CALLHAND:
+ 697  5F6C FB              EI
+ 698  5F6D E5           	PUSH HL
+ 699  5F6E 21 39 5E     	LD	HL, CMDS ; pointer table based on starting letter
+ 700  5F71 3A 89 FD        LD A, (PROCNM)
+ 701  5F74 D6 41           SUB 'A'
+ 702  5F76 87              ADD A, A
+ 703  5F77 16 00           LD D, 0
+ 704  5F79 5F              LD E, A
+ 705  5F7A 19              ADD HL, DE
+ 706  5F7B 5E              LD E, (HL)
+ 707  5F7C 23              INC HL
+ 708  5F7D 56              LD D, (HL)
+ 709  5F7E 7A              LD A, D
+ 710  5F7F B3              OR E
+ 711  5F80 28 23           JR Z, .CMDNOTRECOGNIZED
+ 712  5F82 EB              EX DE, HL
+ 713  5F83              .CHKCMD:
+ 714  5F83 11 89 FD     	LD	DE, PROCNM
+ 715  5F86              .LOOP:
+ 716  5F86 1A              LD	A,(DE)
+ 717  5F87 BE           	CP	(HL)
+ 718  5F88 20 11        	JR	NZ,.TONEXTCMD	; Not equal
+ 719  5F8A 13           	INC	DE
+ 720  5F8B 23           	INC	HL
+ 721  5F8C A7           	AND	A
+ 722  5F8D 20 F7        	JR	NZ,.LOOP	; No end of instruction name, go checking
+ 723  5F8F 5E           	LD	E,(HL)
+ 724  5F90 23           	INC	HL
+ 725  5F91 56           	LD	D,(HL)
+ 726  5F92 E1           	POP	HL		; routine address
+ 727  5F93 CD B4 5F     	CALL	GETPREVCHAR
+ 728  5F96 CD A8 5F     	CALL	.CALLDE		; Call routine
+ 729  5F99 A7           	AND	A
+ 730  5F9A C9           	RET
+ 731  5F9B
+ 732  5F9B              .TONEXTCMD:
+ 733  5F9B 0E FF        	LD	C,0FFH
+ 734  5F9D AF           	XOR	A
+ 735  5F9E ED B1        	CPIR			; Skip to end of instruction name
+ 736  5FA0 23           	INC	HL
+ 737  5FA1 23           	INC	HL		; Skip address
+ 738  5FA2 BE           	CP	(HL)
+ 739  5FA3 20 DE        	JR	NZ,.CHKCMD	; Not end of table, go checking
+ 740  5FA5              .CMDNOTRECOGNIZED:
+ 741  5FA5 E1           	POP	HL
+ 742  5FA6 37              SCF
+ 743  5FA7 C9           	RET
+ 744  5FA8
+ 745  5FA8              .CALLDE:
+ 746  5FA8 D5           	PUSH	DE
+ 747  5FA9 C9           	RET
+ 748  5FAA
+ 749  5FAA              ;---------------------------
+ 750  5FAA
+ 751  5FAA              CHKCHAR:
+ 752  5FAA CD B4 5F     	CALL	GETPREVCHAR	; Get previous basic char
+ 753  5FAD E3           	EX	(SP),HL
+ 754  5FAE BE           	CP	(HL) 	        ; Check if good char
+ 755  5FAF 20 0D        	JR	NZ,SYNTAX_ERROR	; No, Syntax error
+ 756  5FB1 23           	INC	HL
+ 757  5FB2 E3           	EX	(SP),HL
+ 758  5FB3 23           	INC	HL		; Get next basic char
+ 759  5FB4
+ 760  5FB4              GETPREVCHAR:
+ 761  5FB4 2B           	DEC HL
+ 762  5FB5 DD 21 66 46  	LD	IX,CHRGTR
+ 763  5FB9 CD 59 01     	CALL CALBAS
+ 764  5FBC FB              EI
+ 765  5FBD C9              RET
+ 766  5FBE
+ 767  5FBE               IF (0 == 1)
+ 768  5FBE ~             IF (DLOAD_CMD == 1)
+ 769  5FBE ~            BAD_FILENAME:
+ 770  5FBE ~               LD E,56
+ 771  5FBE ~               JR THROW_ERROR
+ 772  5FBE ~             ENDIF
+ 773  5FBE ~            OUT_OF_DATA:
+ 774  5FBE ~               LD E, 4
+ 775  5FBE ~               JR THROW_ERROR
+ 776  5FBE ~            TYPE_MISMATCH:
+ 777  5FBE ~               LD E, 13 ; Type mismatch
+ 778  5FBE ~               JR THROW_ERROR
+ 779  5FBE ~            SUBSCRIPT_OUT_OF_RANGE:
+ 780  5FBE ~               LD E,9 ; subscript out of range
+ 781  5FBE ~            	JR THROW_ERROR
+ 782  5FBE ~            OVERFLOW:
+ 783  5FBE ~            	LD E,6
+ 784  5FBE ~            	JR THROW_ERROR
+ 785  5FBE ~            ILLEGAL_FUNCTION:
+ 786  5FBE ~               LD E, 5 ; illegal function call
+ 787  5FBE ~               JR THROW_ERROR
+ 788  5FBE               ENDIF
+ 789  5FBE              SYNTAX_ERROR:
+ 790  5FBE 1E 02           LD E, 2 ; Syntax error
+ 791  5FC0              THROW_ERROR:
+ 792  5FC0 DD 21 6F 40  	LD	IX,ERRHAND	; Call the Basic error handler
+ 793  5FC4 C3 59 01     	JP	CALBAS
+ 794  5FC7
+ 795  5FC7
+ 796  5FC7              ;---------------------------
+ 797  5FC7
+ 798  5FC7               IF (DLOAD_CMD == 1)
+ 799  5FC7              ; *******************************************************************************************************
+ 800  5FC7              ; helper function to make an uppercase letter
+ 801  5FC7              ; input A=character
+ 802  5FC7              ; output A=uppercase version of input
+ 803  5FC7              UPPER:
+ 804  5FC7 FE 61           CP "a"
+ 805  5FC9 D8              RET C
+ 806  5FCA FE 7B           CP "z"+1
+ 807  5FCC D0              RET NC
+ 808  5FCD E6 5F           AND 5FH
+ 809  5FCF C9              RET
+ 810  5FD0              ; *******************************************************************************************************
+ 811  5FD0               ENDIF
+ 812  5FD0
+ 813  5FD0               IF (0 == 1)
+ 814  5FD0 ~
+ 815  5FD0 ~             IF (DLOAD_CMD == 1)
+ 816  5FD0 ~            ; *******************************************************************************************************
+ 817  5FD0 ~            ; helper function to return string pointer and length
+ 818  5FD0 ~            ; returns HL = String Address
+ 819  5FD0 ~            ; returns B  = Lenght
+ 820  5FD0 ~            ; modifies BC, DE, HL
+ 821  5FD0 ~            GETSTRPNT:
+ 822  5FD0 ~               LD      HL,(USR)
+ 823  5FD0 ~               LD      B,(HL)
+ 824  5FD0 ~               INC     HL
+ 825  5FD0 ~               LD      E,(HL)
+ 826  5FD0 ~               INC     HL
+ 827  5FD0 ~               LD      D,(HL)
+ 828  5FD0 ~               EX      DE,HL
+ 829  5FD0 ~               RET
+ 830  5FD0 ~            ; *******************************************************************************************************
+ 831  5FD0 ~
+ 832  5FD0 ~            ; *******************************************************************************************************
+ 833  5FD0 ~            ; helper function to get string parameter
+ 834  5FD0 ~            ; throws error if incorrect type
+ 835  5FD0 ~            ; input HL=basic text
+ 836  5FD0 ~            EVALTXTPARAM:
+ 837  5FD0 ~            	LD	IX,FRMEVL
+ 838  5FD0 ~            	CALL CALBAS		; Evaluate expression
+ 839  5FD0 ~               LD A,(VALTYP)
+ 840  5FD0 ~               CP 3               ; Text type?
+ 841  5FD0 ~               JP NZ,TYPE_MISMATCH
+ 842  5FD0 ~               PUSH HL
+ 843  5FD0 ~               LD	IX,FRESTR         ; Free the temporary string
+ 844  5FD0 ~               CALL CALBAS
+ 845  5FD0 ~               POP HL
+ 846  5FD0 ~               RET
+ 847  5FD0 ~            ; *******************************************************************************************************
+ 848  5FD0 ~
+ 849  5FD0 ~             ENDIF
+ 850  5FD0 ~
+ 851  5FD0 ~            ; *******************************************************************************************************
+ 852  5FD0 ~            ; helper function to get pointer to BASIC array data
+ 853  5FD0 ~            ; input A=data type (2=INT,4=SINGLE,8=DOUBLE)
+ 854  5FD0 ~            ; input B=dimensions (1 or 2)
+ 855  5FD0 ~            ; input D=minimal first dimension
+ 856  5FD0 ~            ; input E=minimal second dimension, if applicable
+ 857  5FD0 ~            ; returns BC=pointer to first data element
+ 858  5FD0 ~            ; throws BASIC error if invalid type
+ 859  5FD0 ~            GET_BASIC_ARRAY_DATA_POINTER:
+ 860  5FD0 ~            	PUSH DE
+ 861  5FD0 ~            	PUSH BC
+ 862  5FD0 ~            	PUSH AF
+ 863  5FD0 ~               LD A,1
+ 864  5FD0 ~               LD (SUBFLG),A ; search for arrays only
+ 865  5FD0 ~            	LD IX, PTRGET
+ 866  5FD0 ~            	CALL CALBAS
+ 867  5FD0 ~               XOR A
+ 868  5FD0 ~               LD (SUBFLG),A ; if not reset will cause syntax errors
+ 869  5FD0 ~            	LD A,(VALTYP)
+ 870  5FD0 ~            	POP DE ; required type
+ 871  5FD0 ~            	CP D
+ 872  5FD0 ~            	JP NZ,TYPE_MISMATCH
+ 873  5FD0 ~            	LD A,(BC)
+ 874  5FD0 ~            	INC BC
+ 875  5FD0 ~            	POP DE ; required number of dimensions
+ 876  5FD0 ~            	CP D
+ 877  5FD0 ~            	JP NZ,TYPE_MISMATCH
+ 878  5FD0 ~            	POP DE ; required minimal array dimensions
+ 879  5FD0 ~            	DEC A
+ 880  5FD0 ~            	JR Z,.ONE_DIMENSION
+ 881  5FD0 ~            	; 2-dimension array
+ 882  5FD0 ~            	LD A,(BC)
+ 883  5FD0 ~            	.2 INC BC
+ 884  5FD0 ~            	CP E
+ 885  5FD0 ~            	JP C,SUBSCRIPT_OUT_OF_RANGE
+ 886  5FD0 ~            .ONE_DIMENSION:
+ 887  5FD0 ~            	LD A,(BC)
+ 888  5FD0 ~            	.2 INC BC
+ 889  5FD0 ~            	CP D
+ 890  5FD0 ~            	JP C,SUBSCRIPT_OUT_OF_RANGE
+ 891  5FD0 ~            	RET
+ 892  5FD0 ~            ; *******************************************************************************************************
+ 893  5FD0               ENDIF
+ 894  5FD0
+ 895  5FD0              ; *******************************************************************************************************
+ 896  5FD0              ; function to handle CALL ARTINFO basic extension
+ 897  5FD0              ; returns info about the extension
+ 898  5FD0              ; _ARTINFO ( INT variable version,
+ 899  5FD0              ;			    INT variable build_flags,
+ 900  5FD0              ;			    INT variable free_memory_ptr )
+ 901  5FD0              ; this function is always available and can be used to test if the extension is active
+ 902  5FD0              ARTINFO:
+ 903  5FD0              	; opening (
+ 904  5FD0 CD AA 5F     	CALL CHKCHAR
+ 905  5FD3 28           	DB '('
+ 906  5FD4              	; get address of version variable
+ 907  5FD4 DD 21 A4 5E  	LD IX, PTRGET
+ 908  5FD8 CD 59 01     	CALL CALBAS
+ 909  5FDB 3A 12 40     	LD A,(VERSION)
+ 910  5FDE 12              LD (DE),A
+ 911  5FDF 13              INC DE
+ 912  5FE0 3A 13 40        LD A,(VERSION+1)
+ 913  5FE3 12              LD (DE),A
+ 914  5FE4              	; comma
+ 915  5FE4 CD AA 5F     	CALL CHKCHAR
+ 916  5FE7 2C           	DB ','
+ 917  5FE8              	; get address of build flags variable
+ 918  5FE8 DD 21 A4 5E  	LD IX, PTRGET
+ 919  5FEC CD 59 01     	CALL CALBAS
+ 920  5FEF E5              PUSH HL
+ 921  5FF0 21 FF 1B        LD HL,SOUND_CMDS+2*RAM_CMDS+4*VRAM_CMDS+8*BLIT_CMDS+16*SPRITE_CMDS+32*GENCAL_CMD+64*TILE_CMDS+128*BOX_CMDS+256*ANIM_CMDS+512*COLL_CMD+1024*0+2048*1+4096*DECOMP_CMDS
+ 922  5FF3 EB              EX DE,HL
+ 923  5FF4 73              LD (HL),E
+ 924  5FF5 23              INC HL
+ 925  5FF6 72              LD (HL),D
+ 926  5FF7 E1              POP HL
+ 927  5FF8              	; comma
+ 928  5FF8 CD AA 5F     	CALL CHKCHAR
+ 929  5FFB 2C           	DB ','
+ 930  5FFC              	; get address of free memory variable
+ 931  5FFC DD 21 A4 5E  	LD IX, PTRGET
+ 932  6000 CD 59 01     	CALL CALBAS
+ 933  6003 3A 10 40     	LD A,(FREEMEMPTR)
+ 934  6006 12              LD (DE),A
+ 935  6007 13              INC DE
+ 936  6008 3A 11 40        LD A,(FREEMEMPTR+1)
+ 937  600B 12              LD (DE),A
+ 938  600C              	; ending )
+ 939  600C CD AA 5F     	CALL CHKCHAR
+ 940  600F 29           	DB ')'
+ 941  6010 C9           	RET
+ 942  6011              ; *******************************************************************************************************
+ 943  6011
+ 944  6011              EXT_END:
+ 945  6011
 # file closed: asm\main.asm
