@@ -49,30 +49,35 @@ DLOAD_PROCESS_FILENAME:
 .L4:
     CALL .GETCHAR
     CP '.'
-    JR Z, .L6 ; if dot, stay here until we fill up filename part
-.L3:
-    DEC B
-.L8:
+    JR Z, .L6 ; if dot, fill rest with blanks
     LD (DE),A
     INC DE
     DEC C
     JR NZ, .L4
-    ; so we cleared filename part, DE at extension part
-    ; we are either at . or past 8 chars
-    INC HL ; skip potential . and don't care
+    ; so we cleared filename part
+    LD A,B ; no more letters. just fill extension with blanks
+    OR A
+    JR Z, .L8
+    CALL .GETCHAR ; here we must have . for a valid name
+    CP '.'
+    JR NZ, .BADFILENAME
+.L8:
     LD C,3
 .L5:
     CALL .GETCHAR
     LD (DE),A
     INC DE
-    DEC B
     DEC C
     JR NZ, .L5
     XOR A ; clear carry flag
     RET    
 .L6:
-    LD A,' ' ; case where we stay at first .
-    DEC HL
+    LD A,' '
+.L9:
+    LD (DE),A
+    INC DE
+    DEC C
+    JR NZ, .L9
     JR .L8
 .BADFILENAME:
     SCF
@@ -84,6 +89,7 @@ DLOAD_PROCESS_FILENAME:
     LD A,(HL)
     CALL UPPER
     INC HL
+    DEC B
     RET
 .BLANK:
     LD A,' '
