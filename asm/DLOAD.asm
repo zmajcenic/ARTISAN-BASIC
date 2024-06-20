@@ -69,6 +69,9 @@ DLOAD_PROCESS_FILENAME:
     INC DE
     DEC C
     JR NZ, .L5
+    LD A,B ; nothing must be left in buffer
+    OR A
+    JR NZ, .BADFILENAME
     XOR A ; clear carry flag
     RET    
 .L6:
