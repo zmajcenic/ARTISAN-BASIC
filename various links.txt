@@ -1,0 +1,1 @@
+https://www.msx.org/forum/development/msx-development/help-handling-files-bdos-functions
