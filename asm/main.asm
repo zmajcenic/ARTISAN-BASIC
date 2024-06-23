@@ -59,7 +59,9 @@ T32PAT	   EQU   #F3C5 ; SCREEN 1 sprite generator table address
 T32CGP      EQU   #F3C1 ; SCREEN 1 pattern ganarator table address
 T32ATR      EQU   #F3C3 ; SCREEN 1 sprite attribute table address 
 
-FCB0        EQU   #F23D ; location of FCB 0
+FCB0        EQU   #F353 ; location of FCB 0
+BDOS        EQU   #F37D ; disk functions
+NULBUF      EQU   #F862 ; disk buffer of 256 bytes address
 
 ; BASIC error codes
 ;01 NEXT without FOR 
@@ -768,6 +770,9 @@ GETPREVCHAR:
  IF (DLOAD_CMD == 1)
 BAD_FILENAME:
    LD E,56
+   JR THROW_ERROR
+DISKIOERR:
+   LD E,69
    JR THROW_ERROR
  ENDIF
 OUT_OF_DATA:
