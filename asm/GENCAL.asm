@@ -78,6 +78,7 @@ GENCAL:
     LD SP, (BLIT_STRUCT)
     EI
     POP HL
+    XOR A ; success
 	RET 
 
 .EXXDECALL:

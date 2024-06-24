@@ -299,6 +299,7 @@ DLOAD:
 ; +4 = offset
 ; +6 = destination
 ; +8 = size
+; output A=0 on success
 ; *******************************************************************************************************
 DLOAD_DEFUSR:
     LD L,(IX+2)
@@ -310,7 +311,7 @@ DLOAD_DEFUSR:
     LD D,(HL)
     EX DE,HL ; pointer to ASCIIZ text
     CALL DLOAD_PROCESS_FILENAME
-    RET C ; exit on error
+    JR C,.ERR ; exit on error
     LD L,(IX+4)
     LD H,(IX+5)
     LD (BLIT_STRUCT),HL ; offset
@@ -320,7 +321,13 @@ DLOAD_DEFUSR:
     LD L,(IX+8)
     LD H,(IX+9)
     LD (BLIT_STRUCT+4),HL ; size
-    JP DLOAD_LOADFILE
+    CALL DLOAD_LOADFILE
+    JR NZ,.ERR
+    XOR A
+    RET
+.ERR:
+    LD A,1
+    RET
 ; *******************************************************************************************************    
 
  ENDIF

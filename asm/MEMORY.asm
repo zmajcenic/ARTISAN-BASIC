@@ -77,7 +77,9 @@ MEMCPY_DEFUSR:
 	LDIR
     POP DE
     POP BC
-    JP RESTORE_PAGE_INFO
+    CALL RESTORE_PAGE_INFO
+	XOR A ; success
+	RET
 ; *******************************************************************************************************
  ENDIF
 
@@ -167,7 +169,9 @@ FILRAM_DEFUSR:
 .EXIT:
     POP DE
     POP BC
-    JP RESTORE_PAGE_INFO
+    CALL RESTORE_PAGE_INFO
+	XOR A ; success
+	RET
 ; *******************************************************************************************************
  ENDIF	
 

@@ -39,9 +39,9 @@ VBLANK:
  ENDIF
 
     ; increase JIFFY
-    ;LD HL,(JIFFY)
-    ;INC HL
-    ;LD (JIFFY),HL
+    LD HL,(JIFFY)
+    INC HL
+    LD (JIFFY),HL
 
     POP IY
     POP IX

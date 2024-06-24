@@ -215,9 +215,12 @@ MEMVRM_DEFUSR:
 	LD C,(IX+6)
 	LD B,(IX+7)
 	CALL VRAM_LDIRVM
+.COMMON:
     POP DE
     POP BC
-    JP RESTORE_PAGE_INFO
+    CALL RESTORE_PAGE_INFO
+	XOR A ; success
+	RET
 ; *******************************************************************************************************
  ENDIF
 
@@ -335,9 +338,7 @@ VRMMEM_DEFUSR:
 	LD C,(IX+6)
 	LD B,(IX+7)
 	CALL VRAM_LDIRMV
-    POP DE
-    POP BC
-    JP RESTORE_PAGE_INFO
+	JR MEMVRM_DEFUSR.COMMON
 ; *******************************************************************************************************
  ENDIF
 

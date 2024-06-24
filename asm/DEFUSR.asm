@@ -167,22 +167,35 @@ DEFUSR_JUMP_TABLE:
  DW NOACTION_DEFUSR
  ENDIF
 
+; *******************************************************************************************************
+; function jumps to specified function based on inputs and returns success flag in (DAC+2) of type integer
+; input INT(DAC+2) function ID = 0..DEFUSR_TABLE_ENTRIES-1
+; input function specific parameters after the function ID, these are handled later in a called fn
+; output stores back A to (DAC+2) and set type to INT, A=0 success
 DEFUSR_ENTRY:
     EI
     LD IX,(DAC+2)
     LD A,(IX)
     CP DEFUSR_TABLE_ENTRIES
-    RET NC ; return if an undefined function requested
+    JR NC,.RET ; return if an undefined function requested
     LD H,0
     LD L,A
     ADD HL,HL
     LD DE,DEFUSR_JUMP_TABLE
     ADD HL,DE
-    EX DE,HL
-    LD A,(DE)
+    LD A,(HL)
+    INC HL
+    LD H,(HL)
     LD L,A
-    INC DE
-    LD A,(DE)
-    LD H,A
+    LD DE,.RET
+    PUSH DE
     JP (HL) ; call function with IX=pointer to data array
+.RET:
+    LD H,0
+    LD L,A
+    LD (DAC+2),HL
+    LD A,2 ; INT
+    LD (VALTYP),A
+    RET
+
     

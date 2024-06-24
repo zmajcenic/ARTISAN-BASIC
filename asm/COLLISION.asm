@@ -334,12 +334,14 @@ COLL_DEFUSR:
     LD (HL),A
     INC HL
     LD (HL),0
+.EXIT:
+    XOR A ; success
     RET 
 .NOTFOUND:
     LD (HL),#FF
     INC HL
     LD (HL),#FF    
-    RET 
+    JR .EXIT 
 ; *******************************************************************************************************
  ENDIF
  

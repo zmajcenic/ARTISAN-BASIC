@@ -229,6 +229,8 @@ UNPACK_DEFUSR_COMMON:
 	CALL dzx0_standard
     POP DE
     POP BC
-    JP RESTORE_PAGE_INFO
+    CALL RESTORE_PAGE_INFO
+    XOR A ; success
+    RET
 ; *******************************************************************************************************
  ENDIF

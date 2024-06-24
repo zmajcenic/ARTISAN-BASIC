@@ -106,7 +106,9 @@ SNDPLYINI_DEFUSR:
 .L1:
     POP DE
     POP BC
-    JP RESTORE_PAGE_INFO
+    CALL RESTORE_PAGE_INFO
+	XOR A ; success
+	RET
 ; *******************************************************************************************************
  ENDIF
 
@@ -123,11 +125,17 @@ SNDPLYON:
  IF (BASIC_EXTENSION == 1)
 	JP Z, OUT_OF_DATA ; player not initialized, throw error
  ENDIF
+ IF (DEFUSR_EXTENSION == 1)
+	JR Z,.ERR
+ ENDIF
 .L1:
 	LD (SOUND_ENABLED), A
 	; disable key click
 	XOR A
 	LD (CLIKSW), A
+	RET
+.ERR:
+	LD A,1
 	RET
 ; *******************************************************************************************************
 
@@ -157,6 +165,7 @@ SNDPLYOFF:
 	CALL PLY_AKG_STOPSOUNDEFFECTFROMCHANNEL
 .EXIT:
 	POP HL
+	XOR A ; success
 	RET
 ; *******************************************************************************************************
 
@@ -260,6 +269,8 @@ SNDSFX_DEFUSR:
 	CALL PLY_AKG_PLAYSOUNDEFFECT
     POP DE
     POP BC
-    JP RESTORE_PAGE_INFO
+    CALL RESTORE_PAGE_INFO
+	XOR A ; success
+	RET
 ; *******************************************************************************************************
  ENDIF

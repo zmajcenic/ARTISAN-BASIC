@@ -135,7 +135,9 @@ GETnthAUTOSGAM:
 ; +2 = number
 MAXANIMITEMS_DEFUSR:
     LD A,(IX+2)
-    JR MAXANIMITEMS.COMMON
+    CALL MAXANIMITEMS.COMMON
+    XOR A ; success
+    RET
 ; *******************************************************************************************************
  ENDIF
 
@@ -360,7 +362,7 @@ ANIMITEMPAT_DEFUSR:
     INC C
     LD A,(ANIMITEMNUM)
     CP C
-    RET C ; out of bounds, prevent memory corruption
+    JR C,.ERR ; out of bounds, prevent memory corruption
     LD A,C
     DEC A
     CALL GETnthANIMITEM
@@ -377,6 +379,10 @@ ANIMITEMPAT_DEFUSR:
     INC HL
     LD A,(IX+8) ; color
     LD (HL),A
+    XOR A ; success
+    RET
+.ERR:
+    LD A,1
     RET
 ; *******************************************************************************************************
  ENDIF
@@ -459,7 +465,7 @@ ANIMITEMPTR_DEFUSR:
     INC C
     LD A,(ANIMITEMNUM)
     CP C
-    RET C ; out of bounds, prevent memory corruption
+    JR C,.ERR ; out of bounds, prevent memory corruption
     LD A,C
     DEC A
     CALL GETnthANIMITEM
@@ -476,6 +482,10 @@ ANIMITEMPTR_DEFUSR:
     INC HL
     LD A,(IX+7) ; pointer high
     LD (HL),A
+    XOR A ; success
+    RET
+.ERR:
+    LD A,1
     RET
 ; *******************************************************************************************************
  ENDIF
@@ -487,7 +497,9 @@ ANIMITEMPTR_DEFUSR:
 ; +2 = number
 MAXANIMDEFS_DEFUSR:
     LD A,(IX+2)
-    JR MAXANIMDEFS.COMMON
+    CALL MAXANIMDEFS.COMMON
+    XOR A ; success
+    RET
 ; *******************************************************************************************************
  ENDIF
 
@@ -621,7 +633,7 @@ ANIMDEF_DEFUSR:
     INC C
     LD A,(ANIMDEFNUM)
     CP C
-    RET C ; invalid id
+    JR C,.ERR ; invalid id
 	; get size
     LD A,(IX+4)
     CP 16
@@ -641,7 +653,11 @@ ANIMDEF_DEFUSR:
     .2 INC DE
     LD (HL),A
     DJNZ .L1
+    XOR A ; success
     RET   
+.ERR:
+    LD A,1
+    RET
 ; *******************************************************************************************************
  ENDIF
 
@@ -652,7 +668,9 @@ ANIMDEF_DEFUSR:
 ; +2 = number
 MAXANIMSPRS_DEFUSR:
     LD A,(IX+2)
-    JR MAXANIMSPRS.COMMON
+    CALL MAXANIMSPRS.COMMON
+    XOR A ; success
+    RET
 ; *******************************************************************************************************
  ENDIF
 
@@ -816,16 +834,16 @@ ANIMSPRITE_DEFUSR:
     INC C
     LD A,(ANIMSPRNUM)
     CP C
-    RET C ; invalid id
+    JR C,.ERR ; invalid id
 	; get sprite number
     LD A,(IX+4)
     CP 32
-    RET NC ; invalid sprite id
+    JR NC,.ERR ; invalid sprite id
     LD B,(IX+6)
     INC B
     LD A,(ANIMDEFNUM)
     CP B
-    RET C ; invalid animation definition id
+    JR C,.ERR ; invalid animation definition id
     LD A,C
     DEC A
     CALL GETnthSPRANIM
@@ -846,6 +864,10 @@ ANIMSPRITE_DEFUSR:
     INC HL
     INC HL
     LD (HL),0 ; +7
+    XOR A ; success
+    RET
+.ERR:
+    LD A,1
     RET
 ; *******************************************************************************************************
  ENDIF
@@ -949,16 +971,16 @@ ANIMCHAR_DEFUSR:
     INC C
     LD A,(ANIMSPRNUM)
     CP C
-    RET C ; invalid id
+    JR C,.ERR ; invalid id
 	; get sprite number
     LD A,(IX+5)
     CP 3
-    RET NC ; invalid character (>767)
+    JR NC,.ERR ; invalid character (>767)
     LD B,(IX+6)
     INC B
     LD A,(ANIMDEFNUM)
     CP B
-    RET C ; invalid animation definition id
+    JR C,.ERR ; invalid animation definition id
     LD A,C
     DEC A
     CALL GETnthSPRANIM
@@ -981,6 +1003,10 @@ ANIMCHAR_DEFUSR:
     LD A,(IX+5)
     INC A
     LD (HL),A ; +7
+    XOR A ; success
+    RET
+.ERR:
+    LD A,1
     RET
 ; *******************************************************************************************************
  ENDIF
@@ -992,7 +1018,9 @@ ANIMCHAR_DEFUSR:
 ; +2 = number
 MAXAUTOSGAMS_DEFUSR:
     LD A,(IX+2)
-    JR MAXAUTOSGAMS.COMMON
+    CALL MAXAUTOSGAMS.COMMON
+    XOR A ; success
+    RET
 ; *******************************************************************************************************
  ENDIF
 
@@ -1242,7 +1270,7 @@ AUTOSGAMDEF_DEFUSR:
     INC C
     LD A,(AUTOSGAMNUM)
     CP C
-    RET C ; invalid id
+    JP C,.ERR ; invalid id
     LD A,C
     DEC A
     CALL GETnthAUTOSGAM
@@ -1302,6 +1330,10 @@ AUTOSGAMDEF_DEFUSR:
     LD (IY+17),A
     LD A,(IX+27)
     LD (IY+18),A
+    XOR A ; success
+    RET
+.ERR:
+    LD A,1
     RET
 ; *******************************************************************************************************
  ENDIF
@@ -1371,7 +1403,7 @@ AUTOSGAMSTART_DEFUSR:
     INC C
     LD A,(AUTOSGAMNUM)
     CP C
-    RET C ; invalid id
+    JR C,.ERR ; invalid id
     LD A,C
     DEC A
     CALL GETnthAUTOSGAM
@@ -1383,7 +1415,11 @@ AUTOSGAMSTART_DEFUSR:
     LD A,(IX+20)
     LD (IX+22),A
     LD A,(IX+21)
-    LD (IX+23),A    
+    LD (IX+23),A  
+    XOR A ; success  
+    RET
+.ERR:
+    LD A,1
     RET
 ; *******************************************************************************************************
 
