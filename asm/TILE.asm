@@ -69,19 +69,19 @@ TILERAM_DEFUSR:
 	; tile data pointer
 	LD L,(IX+2)
 	LD H,(IX+3)
-	LD (BLIT_STRUCT+0),HL
+	LD (TMP_STRUCT+0),HL
 	; tile columns
 	LD L,(IX+4)
 	LD H,(IX+5)
-	LD (BLIT_STRUCT+4),HL
+	LD (TMP_STRUCT+4),HL
 	; tile rows
 	LD L,(IX+6)
 	LD H,(IX+7)
-	LD (BLIT_STRUCT+2),HL
+	LD (TMP_STRUCT+2),HL
 	; destintion pointer
 	LD L,(IX+8)
 	LD H,(IX+9)
-	LD (BLIT_STRUCT+6),HL
+	LD (TMP_STRUCT+6),HL
 	; destination columns
 	LD A,(IX+10)
 	LD (BLIT_TMP+0),A
@@ -97,11 +97,11 @@ TILERAM_DEFUSR:
 	; number of tiles horizontally
 	LD L,(IX+18)
 	LD H,(IX+19)
-	LD (BLIT_STRUCT+10),HL
+	LD (TMP_STRUCT+10),HL
 	; number of tiles vertically
 	LD L,(IX+20)
 	LD H,(IX+21)
-	LD (BLIT_STRUCT+12),HL
+	LD (TMP_STRUCT+12),HL
  IF (BASIC_EXTENSION == 1) ; otherwise we just continue with code below
 	JP TILERAM.COMMON
  ENDIF
@@ -129,28 +129,28 @@ TILERAM:
 	; get tile data pointer coordinate
 	LD IX, FRMQNT
 	CALL CALBAS
-	LD (BLIT_STRUCT+0), DE
+	LD (TMP_STRUCT+0), DE
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; get tile columns
 	LD IX, FRMQNT
 	CALL CALBAS
-	LD (BLIT_STRUCT+4), DE
+	LD (TMP_STRUCT+4), DE
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; get tile columns
 	LD IX, FRMQNT
 	CALL CALBAS
-	LD (BLIT_STRUCT+2), DE
+	LD (TMP_STRUCT+2), DE
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; get destintion pointer
 	LD IX, FRMQNT
 	CALL CALBAS
-	LD (BLIT_STRUCT+6), DE
+	LD (TMP_STRUCT+6), DE
 	; comma
 	CALL CHKCHAR
 	DB ','
@@ -189,14 +189,14 @@ TILERAM:
 	; get number of tiles horizontally
 	LD IX, FRMQNT
 	CALL CALBAS
-	LD (BLIT_STRUCT+10), DE
+	LD (TMP_STRUCT+10), DE
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; get number of tiles vertically
 	LD IX, FRMQNT
 	CALL CALBAS
-	LD (BLIT_STRUCT+12), DE
+	LD (TMP_STRUCT+12), DE
 	; ending )
 	CALL CHKCHAR
 	DB ')'
@@ -209,14 +209,14 @@ TILERAM:
 	LD A, (BLIT_TMP+0)
 	LD L, A
 	CALL HLx8
-	LD (BLIT_STRUCT+8), HL
+	LD (TMP_STRUCT+8), HL
 	; calculate pointer to background location
 	LD HL, 0
 	LD A,(BLIT_TMP+3)
 	OR A
 	JR Z, .L1
 	LD B,A
-	LD DE,(BLIT_STRUCT+8)
+	LD DE,(TMP_STRUCT+8)
 .L0:
 	ADD HL, DE
 	DJNZ .L0
@@ -227,9 +227,9 @@ TILERAM:
 	LD L,A
 	CALL HLx8
 	ADD HL,DE
-	LD DE,(BLIT_STRUCT+6)
+	LD DE,(TMP_STRUCT+6)
 	ADD HL,DE
-	LD (BLIT_STRUCT+6),HL
+	LD (TMP_STRUCT+6),HL
 	LD IY, .RET
 	JP ENABLE_PAGE0
 .RET:
@@ -239,16 +239,9 @@ TILERAM:
 	LD (TILE.CALL2+1), HL
 	LD HL, .SETDESTROW
 	LD (TILE.CALL1+1), HL
-	LD IX,BLIT_STRUCT
+	LD IX,TMP_STRUCT
 	CALL TILE
-
-    POP DE
-    POP BC
-    CALL RESTORE_PAGE_INFO
-
-	POP HL
-	XOR A ; success
-	RET
+	JP COMMON_EXIT_CODE
 .TILECOPY:
 	.8 LDI
 	RET	
@@ -273,15 +266,15 @@ TILEVRM_DEFUSR:
 	; tile data pointer
 	LD L,(IX+2)
 	LD H,(IX+3)
-	LD (BLIT_STRUCT+0),HL
+	LD (TMP_STRUCT+0),HL
 	; tile columns
 	LD L,(IX+4)
 	LD H,(IX+5)
-	LD (BLIT_STRUCT+4),HL
+	LD (TMP_STRUCT+4),HL
 	; tile rows
 	LD L,(IX+6)
 	LD H,(IX+7)
-	LD (BLIT_STRUCT+2),HL
+	LD (TMP_STRUCT+2),HL
 	; destination begin column
 	LD A,(IX+8)
 	LD (BLIT_TMP+2),A
@@ -291,11 +284,11 @@ TILEVRM_DEFUSR:
 	; number of tiles horizontally
 	LD L,(IX+12)
 	LD H,(IX+13)
-	LD (BLIT_STRUCT+10),HL
+	LD (TMP_STRUCT+10),HL
 	; number of tiles vertically
 	LD L,(IX+14)
 	LD H,(IX+15)
-	LD (BLIT_STRUCT+12),HL
+	LD (TMP_STRUCT+12),HL
  IF (BASIC_EXTENSION == 1) ; otherwise we just continue with code below
 	JP TILEVRM.COMMON
  ENDIF
@@ -321,21 +314,21 @@ TILEVRM:
 	; get tile data pointer coordinate
 	LD IX, FRMQNT
 	CALL CALBAS
-	LD (BLIT_STRUCT+0), DE
+	LD (TMP_STRUCT+0), DE
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; get tile columns
 	LD IX, FRMQNT
 	CALL CALBAS
-	LD (BLIT_STRUCT+4), DE
+	LD (TMP_STRUCT+4), DE
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; get tile columns
 	LD IX, FRMQNT
 	CALL CALBAS
-	LD (BLIT_STRUCT+2), DE
+	LD (TMP_STRUCT+2), DE
 	; comma
 	CALL CHKCHAR
 	DB ','
@@ -358,14 +351,14 @@ TILEVRM:
 	; get number of tiles horizontally
 	LD IX, FRMQNT
 	CALL CALBAS
-	LD (BLIT_STRUCT+10), DE
+	LD (TMP_STRUCT+10), DE
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; get number of tiles vertically
 	LD IX, FRMQNT
 	CALL CALBAS
-	LD (BLIT_STRUCT+12), DE
+	LD (TMP_STRUCT+12), DE
 	; ending )
 	CALL CHKCHAR
 	DB ')'
@@ -376,7 +369,7 @@ TILEVRM:
 
 	; calculate destination add to value
 	LD HL, 256
-	LD (BLIT_STRUCT+8), HL
+	LD (TMP_STRUCT+8), HL
 	; calculate pointer to background location
 	LD A,(BLIT_TMP+3)
 	LD H,A
@@ -389,7 +382,7 @@ TILEVRM:
 	ADD HL,DE
 	LD DE,(GRPCGP)
 	ADD HL,DE
-	LD (BLIT_STRUCT+6),HL
+	LD (TMP_STRUCT+6),HL
 	LD IY, .RET
 	JP ENABLE_PAGE0
 .RET:
@@ -399,16 +392,9 @@ TILEVRM:
 	LD (TILE.CALL2+1), HL
 	LD HL, .SETDESTROW
 	LD (TILE.CALL1+1), HL
-	LD IX,BLIT_STRUCT
+	LD IX,TMP_STRUCT
 	CALL TILE
-
-    POP DE
-    POP BC
-    CALL RESTORE_PAGE_INFO
-
-	POP HL
-	XOR A ; success
-	RET
+	JP COMMON_EXIT_CODE
 .TILECOPY:
 	LD BC, #0898
 	JP BBYTECOPY_NO_C	

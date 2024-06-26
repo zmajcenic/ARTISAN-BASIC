@@ -140,7 +140,7 @@ DLOAD_OPENFILE:
 ; input none
 ; output node
 DLOAD_SEEK:
-    LD HL,(BLIT_STRUCT)
+    LD HL,(TMP_STRUCT)
     LD IX,(FCB0)
     LD (IX+33),L
     LD (IX+34),H
@@ -186,10 +186,10 @@ DLOAD_TRANSFERBLOCK:
 .RET:
 	EI
     EXX
-    LD DE,(BLIT_STRUCT+2)
+    LD DE,(TMP_STRUCT+2)
     LD HL,(NULBUF)
 	LDIR
-    LD (BLIT_STRUCT+2),DE
+    LD (TMP_STRUCT+2),DE
     POP DE
     POP BC
     JP RESTORE_PAGE_INFO
@@ -205,7 +205,7 @@ DLOAD_LOADFILE:
     CALL DLOAD_OPENFILE
     RET NZ
     CALL DLOAD_SEEK
-    LD BC,(BLIT_STRUCT+4)
+    LD BC,(TMP_STRUCT+4)
 .L1:
     LD A,B
     OR A
@@ -263,21 +263,21 @@ DLOAD:
 	; get offset
 	LD IX, FRMQNT
 	CALL CALBAS
-	LD (BLIT_STRUCT), DE
+	LD (TMP_STRUCT), DE
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; get destination
 	LD IX, FRMQNT
 	CALL CALBAS
-	LD (BLIT_STRUCT+2), DE
+	LD (TMP_STRUCT+2), DE
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; get size
 	LD IX, FRMQNT
 	CALL CALBAS
-	LD (BLIT_STRUCT+4), DE
+	LD (TMP_STRUCT+4), DE
 	; ending )
 	CALL CHKCHAR
 	DB ')'
@@ -314,13 +314,13 @@ DLOAD_DEFUSR:
     JR C,.ERR ; exit on error
     LD L,(IX+4)
     LD H,(IX+5)
-    LD (BLIT_STRUCT),HL ; offset
+    LD (TMP_STRUCT),HL ; offset
     LD L,(IX+6)
     LD H,(IX+7)
-    LD (BLIT_STRUCT+2),HL ; destination
+    LD (TMP_STRUCT+2),HL ; destination
     LD L,(IX+8)
     LD H,(IX+9)
-    LD (BLIT_STRUCT+4),HL ; size
+    LD (TMP_STRUCT+4),HL ; size
     CALL DLOAD_LOADFILE
     JR NZ,.ERR
     XOR A

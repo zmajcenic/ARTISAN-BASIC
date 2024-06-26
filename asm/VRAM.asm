@@ -170,12 +170,7 @@ MEMVRM:
 	EI
 	EXX
 	CALL VRAM_LDIRVM
-    POP DE
-    POP BC
-    CALL RESTORE_PAGE_INFO
-	PUSH IX
-	POP HL
-	RET
+	JP COMMON_EXIT_CODE_IX
 ; *******************************************************************************************************
  ENDIF
 
@@ -215,12 +210,7 @@ MEMVRM_DEFUSR:
 	LD C,(IX+6)
 	LD B,(IX+7)
 	CALL VRAM_LDIRVM
-.COMMON:
-    POP DE
-    POP BC
-    CALL RESTORE_PAGE_INFO
-	XOR A ; success
-	RET
+    JP COMMON_EXIT_CODE
 ; *******************************************************************************************************
  ENDIF
 
@@ -309,12 +299,7 @@ VRMMEM:
 	EI
 	EXX
 	CALL VRAM_LDIRMV
-    POP DE
-    POP BC
-    CALL RESTORE_PAGE_INFO
-	PUSH IX
-	POP HL
-	RET
+	JP COMMON_EXIT_CODE_IX
 ; *******************************************************************************************************
  ENDIF
 
@@ -338,7 +323,7 @@ VRMMEM_DEFUSR:
 	LD C,(IX+6)
 	LD B,(IX+7)
 	CALL VRAM_LDIRMV
-	JR MEMVRM_DEFUSR.COMMON
+	JP COMMON_EXIT_CODE
 ; *******************************************************************************************************
  ENDIF
 

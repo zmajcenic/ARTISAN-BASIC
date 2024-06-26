@@ -464,32 +464,32 @@ SPRGRPMOV:
 	; get x
 	LD IX, FRMQNT
 	CALL CALBAS
-	LD (BLIT_STRUCT),DE
+	LD (TMP_STRUCT),DE
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; get y
 	LD IX, FRMQNT
 	CALL CALBAS
-	LD (BLIT_STRUCT+2),DE
+	LD (TMP_STRUCT+2),DE
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; get count
 	LD IX, GETBYT
 	CALL CALBAS
-	LD (BLIT_STRUCT+4),A
+	LD (TMP_STRUCT+4),A
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; get sprite group definition array data pointer
-	LD A,(BLIT_STRUCT+4)
+	LD A,(TMP_STRUCT+4)
 	LD E,A
 	LD D,3
 	LD A,2
 	LD B,A
 	CALL GET_BASIC_ARRAY_DATA_POINTER
-	LD (BLIT_STRUCT+5),BC
+	LD (TMP_STRUCT+5),BC
 	; ending )
 	CALL CHKCHAR
 	DB ')'
@@ -497,11 +497,11 @@ SPRGRPMOV:
 	PUSH HL
 
     EXX
-    LD DE,(BLIT_STRUCT) ; initial x
-    LD BC,(BLIT_STRUCT+2) ; initial y
+    LD DE,(TMP_STRUCT) ; initial x
+    LD BC,(TMP_STRUCT+2) ; initial y
     EXX
-    LD HL,(BLIT_STRUCT+5) ; pointer to data
-    LD A,(BLIT_STRUCT+4) ; number of entries
+    LD HL,(TMP_STRUCT+5) ; pointer to data
+    LD A,(TMP_STRUCT+4) ; number of entries
     LD B,A
 	CALL SPR_UPDATE_LOC
 

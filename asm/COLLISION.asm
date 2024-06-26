@@ -50,7 +50,7 @@ GENERIC_INNER_CHECK:
 ;  +12 height
 ; where IY is used to read +2 and +4, and IX to read +6, +8, +10 and +12
 ; this is a hack to allow location being taken from sprite attributes table
-; input BLIT_STRUCT data
+; input TMP_STRUCT data
 ;  +00 x coordinate
 ;  +02 y coordinate
 ;  +04 width
@@ -60,7 +60,7 @@ RECTANGLE_OVERLAP_CHECK:
     ; first check which rectangle is higher
     LD L,(IX+12)
     LD H,(IX+13)
-    LD DE,(BLIT_STRUCT+6)
+    LD DE,(TMP_STRUCT+6)
     AND A
     SBC HL,DE
     LD L,(IY+4)
@@ -71,14 +71,14 @@ RECTANGLE_OVERLAP_CHECK:
     ; equally high or IX defined one higher
     ; check upper boundary
     ADD HL,DE
-    LD DE,(BLIT_STRUCT+2)
+    LD DE,(TMP_STRUCT+2)
     LD C,(IX+12)
     LD B,(IX+13)
     CALL GENERIC_INNER_CHECK
     JR NC,.INSIDE
     ; check lower boundary
     PUSH HL
-    LD HL,(BLIT_STRUCT+6)
+    LD HL,(TMP_STRUCT+6)
     ADD HL,DE
     EX DE,HL
     POP HL
@@ -86,11 +86,11 @@ RECTANGLE_OVERLAP_CHECK:
     JR NC,.INSIDE
     RET ; not overlapping
 .L1:
-    ; rectangle defined in BLIT_STRUCT is higher
+    ; rectangle defined in TMP_STRUCT is higher
     ADD HL,DE
     EX DE,HL
-    LD HL,(BLIT_STRUCT+2)
-    LD BC,(BLIT_STRUCT+6)
+    LD HL,(TMP_STRUCT+2)
+    LD BC,(TMP_STRUCT+6)
     CALL GENERIC_INNER_CHECK
     JR NC,.INSIDE
     PUSH HL
@@ -106,7 +106,7 @@ RECTANGLE_OVERLAP_CHECK:
     ; first check which rectangle is wider
     LD L,(IX+10)
     LD H,(IX+11)
-    LD DE,(BLIT_STRUCT+4)
+    LD DE,(TMP_STRUCT+4)
     AND A
     SBC HL,DE
     LD L,(IY+2)
@@ -117,24 +117,24 @@ RECTANGLE_OVERLAP_CHECK:
     ; equally wide or IX defined one wider
     ; check left boundary
     ADD HL,DE
-    LD DE,(BLIT_STRUCT+0)
+    LD DE,(TMP_STRUCT+0)
     LD C,(IX+10)
     LD B,(IX+11)
     CALL GENERIC_INNER_CHECK
     RET NC ; overlap
     ; check right boundary
     PUSH HL
-    LD HL,(BLIT_STRUCT+4)
+    LD HL,(TMP_STRUCT+4)
     ADD HL,DE
     EX DE,HL
     POP HL
     JP GENERIC_INNER_CHECK ; CF and result set by fn call
 .L2:
-    ; rectangle defined in BLIT_STRUCT is higher
+    ; rectangle defined in TMP_STRUCT is higher
     ADD HL,DE
     EX DE,HL
-    LD HL,(BLIT_STRUCT+0)
-    LD BC,(BLIT_STRUCT+4)
+    LD HL,(TMP_STRUCT+0)
+    LD BC,(TMP_STRUCT+4)
     CALL GENERIC_INNER_CHECK
     RET NC ; overlap
     PUSH HL
@@ -148,7 +148,7 @@ RECTANGLE_OVERLAP_CHECK:
 
 ; ************************************************************************************************
 ; function tries to find rectangle overlap and returns an index if found
-; input BLIT_STRUCT data
+; input TMP_STRUCT data
 ;  +00 x coordinate
 ;  +02 y coordinate
 ;  +04 width
@@ -159,9 +159,9 @@ RECTANGLE_OVERLAP_CHECK:
 ; returns CF=1 if not overlapping
 ; returns A=list index and CF=0 if overlapping
 FIND_OVERLAP:
-    LD A,(BLIT_STRUCT+8)
+    LD A,(TMP_STRUCT+8)
     LD B,A
-    LD IX,(BLIT_STRUCT+9)
+    LD IX,(TMP_STRUCT+9)
 .L1:
     PUSH BC
     ; check active flag
@@ -179,7 +179,7 @@ FIND_OVERLAP:
     JR C,.NEXT
     ; found
     POP BC
-    LD A,(BLIT_STRUCT+8)
+    LD A,(TMP_STRUCT+8)
     SUB B
     AND A
     RET
@@ -192,10 +192,10 @@ FIND_OVERLAP:
     RET 
 .L2:
     ; sprite, need to build a temporary data struct since x and y values are inversed
-    ; at BLIT_STRUCT+13
+    ; at TMP_STRUCT+13
     LD A,(IX+2) ; sprite ID
     CALL GETnthSPRATTR
-    LD IY,BLIT_STRUCT+11
+    LD IY,TMP_STRUCT+11
     LD A,(HL)
     LD (IY+4),A
     INC HL
@@ -230,60 +230,60 @@ COLL:
 	; get address of result variable
 	LD IX, PTRGET
 	CALL CALBAS
-	LD (BLIT_STRUCT+11),DE
+	LD (TMP_STRUCT+11),DE
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; get x
 	LD IX, FRMQNT
 	CALL CALBAS
-	LD (BLIT_STRUCT+0),DE
+	LD (TMP_STRUCT+0),DE
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; get y
 	LD IX, FRMQNT
 	CALL CALBAS
-	LD (BLIT_STRUCT+2),DE
+	LD (TMP_STRUCT+2),DE
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; get width
 	LD IX, FRMQNT
 	CALL CALBAS
-	LD (BLIT_STRUCT+4),DE
+	LD (TMP_STRUCT+4),DE
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; get height
 	LD IX, FRMQNT
 	CALL CALBAS
-	LD (BLIT_STRUCT+6),DE
+	LD (TMP_STRUCT+6),DE
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; get number of items in a list
 	LD IX, GETBYT
 	CALL CALBAS
-	LD (BLIT_STRUCT+8),A
+	LD (TMP_STRUCT+8),A
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; get address of rectangle structure array DIM R%(7,n)
-	LD A,(BLIT_STRUCT+8)
+	LD A,(TMP_STRUCT+8)
     LD E,A
     LD A,2
 	LD B,A
 	LD D,7
 	CALL GET_BASIC_ARRAY_DATA_POINTER
-	LD (BLIT_STRUCT+9),BC
+	LD (TMP_STRUCT+9),BC
 	; ending )
 	CALL CHKCHAR
 	DB ')'
 
     PUSH HL
     CALL FIND_OVERLAP
-    LD HL,(BLIT_STRUCT+11)
+    LD HL,(TMP_STRUCT+11)
     JR C,.NOTFOUND
     LD (HL),A
     INC HL
@@ -314,17 +314,17 @@ COLL_DEFUSR:
     PUSH IX
     POP HL
     .4 INC HL ; skip over to player x
-    LD DE,BLIT_STRUCT
+    LD DE,TMP_STRUCT
     LD BC,9
     LDIR ; copy over x,y,w,h,list item number
     LD A,(IX+14)
-    LD (BLIT_STRUCT+9),A
+    LD (TMP_STRUCT+9),A
     LD A,(IX+15)
-    LD (BLIT_STRUCT+10),A ; address to collidable objects array
+    LD (TMP_STRUCT+10),A ; address to collidable objects array
     LD A,(IX+2)
-    LD (BLIT_STRUCT+11),A
+    LD (TMP_STRUCT+11),A
     LD A,(IX+3)
-    LD (BLIT_STRUCT+12),A ; address to results variable
+    LD (TMP_STRUCT+12),A ; address to results variable
     PUSH IX
     CALL FIND_OVERLAP
     POP IX

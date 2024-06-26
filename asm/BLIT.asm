@@ -355,50 +355,50 @@ BLIT_DEFUSR:
 	LD D,(IX+3)
 	LD A,E
 	AND 7
-	LD (BLIT_STRUCT+0),A
+	LD (TMP_STRUCT+0),A
 	CALL DEdiv8
 	LD (BLIT_TMP+0),A
 	LD E,(IX+4)
 	LD D,(IX+5)
 	LD A,E
 	AND 7
-	LD (BLIT_STRUCT+2),A
+	LD (TMP_STRUCT+2),A
 	CALL DEdiv8
 	LD (BLIT_TMP+1),A
 	LD L,(IX+6)
 	LD H,(IX+7)
-	LD (BLIT_STRUCT+10),HL
+	LD (TMP_STRUCT+10),HL
 	LD L,(IX+8)
 	LD H,(IX+9)
-	LD (BLIT_STRUCT+8),HL
+	LD (TMP_STRUCT+8),HL
 	LD A,(IX+10)
-	LD (BLIT_STRUCT+14),A
+	LD (TMP_STRUCT+14),A
 	LD A,(IX+12)
-	LD (BLIT_STRUCT+16),A
+	LD (TMP_STRUCT+16),A
 	LD L,(IX+14)
 	LD H,(IX+15)
-	LD (BLIT_STRUCT+4),HL
+	LD (TMP_STRUCT+4),HL
 	;LD A,(IX+16)
 	;LD (BLIT_TMP+2),A
 
 	; calculate char&mask add to value
 	LD H,0
-	LD A,(BLIT_STRUCT+14)
+	LD A,(TMP_STRUCT+14)
 	LD L,A
 	CALL HLx8
-	LD (BLIT_STRUCT+12),HL
+	LD (TMP_STRUCT+12),HL
 	; calculate background add to value
 	LD H,0
 	LD L,(IX+16)
 	CALL HLx8
-	LD (BLIT_STRUCT+6),HL
+	LD (TMP_STRUCT+6),HL
 	; calculate pointer to background location
 	LD HL,0
 	LD A,(BLIT_TMP+1)
 	OR A
 	JR Z, .L1
 	LD B,A
-	LD DE,(BLIT_STRUCT+6)
+	LD DE,(TMP_STRUCT+6)
 .L0:
 	ADD HL, DE
 	DJNZ .L0
@@ -409,22 +409,17 @@ BLIT_DEFUSR:
 	LD L,A
 	CALL HLx8
 	ADD HL,DE
-	LD DE,(BLIT_STRUCT+4)
+	LD DE,(TMP_STRUCT+4)
 	ADD HL,DE
-	LD (BLIT_STRUCT+4),HL
+	LD (TMP_STRUCT+4),HL
 
 	LD IY, .RET
 	JP ENABLE_PAGE0
 .RET:
 	EI
-	LD IX, BLIT_STRUCT
+	LD IX, TMP_STRUCT
 	CALL SHIFT_MERGE_CHARACTER
-
-    POP DE
-    POP BC
-    CALL RESTORE_PAGE_INFO
-	XOR A ; success
-	RET
+    JP COMMON_EXIT_CODE
 ; *******************************************************************************************************
  ENDIF
 
@@ -452,7 +447,7 @@ BLIT:
 	CALL CALBAS
 	LD A, E
 	AND 7
-	LD (BLIT_STRUCT+0), A
+	LD (TMP_STRUCT+0), A
 	CALL DEdiv8
 	LD (BLIT_TMP+0),A
 	; comma
@@ -463,7 +458,7 @@ BLIT:
 	CALL CALBAS
 	LD A, E
 	AND 7
-	LD (BLIT_STRUCT+2), A
+	LD (TMP_STRUCT+2), A
 	CALL DEdiv8
 	LD (BLIT_TMP+1),A
 	; comma
@@ -472,14 +467,14 @@ BLIT:
 	; get char data pointer
 	LD IX, FRMQNT
 	CALL CALBAS
-	LD (BLIT_STRUCT+10), DE
+	LD (TMP_STRUCT+10), DE
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; get mask data pointer
 	LD IX, FRMQNT
 	CALL CALBAS
-	LD (BLIT_STRUCT+8), DE
+	LD (TMP_STRUCT+8), DE
 	; comma
 	CALL CHKCHAR
 	DB ','
@@ -487,7 +482,7 @@ BLIT:
 	LD IX, FRMQNT
 	CALL CALBAS
 	LD A, E
-	LD (BLIT_STRUCT+14), A
+	LD (TMP_STRUCT+14), A
 	; comma
 	CALL CHKCHAR
 	DB ','
@@ -495,14 +490,14 @@ BLIT:
 	LD IX, FRMQNT
 	CALL CALBAS
 	LD A, E
-	LD (BLIT_STRUCT+16), A
+	LD (TMP_STRUCT+16), A
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; get background pointer
 	LD IX, FRMQNT
 	CALL CALBAS
-	LD (BLIT_STRUCT+4), DE
+	LD (TMP_STRUCT+4), DE
 	; comma
 	CALL CHKCHAR
 	DB ','
@@ -519,23 +514,23 @@ BLIT:
 
 	; calculate char&mask add to value
 	LD H, 0
-	LD A, (BLIT_STRUCT+14)
+	LD A, (TMP_STRUCT+14)
 	LD L, A
 	CALL HLx8
-	LD (BLIT_STRUCT+12), HL
+	LD (TMP_STRUCT+12), HL
 	; calculate background add to value
 	LD H, 0
 	LD A, (BLIT_TMP+2)
 	LD L, A
 	CALL HLx8
-	LD (BLIT_STRUCT+6), HL
+	LD (TMP_STRUCT+6), HL
 	; calculate pointer to background location
 	LD HL, 0
 	LD A,(BLIT_TMP+1)
 	OR A
 	JR Z, .L1
 	LD B,A
-	LD DE,(BLIT_STRUCT+6)
+	LD DE,(TMP_STRUCT+6)
 .L0:
 	ADD HL, DE
 	DJNZ .L0
@@ -546,21 +541,21 @@ BLIT:
 	LD L,A
 	CALL HLx8
 	ADD HL,DE
-	LD DE,(BLIT_STRUCT+4)
+	LD DE,(TMP_STRUCT+4)
 	ADD HL,DE
-	LD (BLIT_STRUCT+4),HL
+	LD (TMP_STRUCT+4),HL
 
 	LD IY, .RET
 	JP ENABLE_PAGE0
 .RET:
 	EI
-	LD IX, BLIT_STRUCT
+	LD IX, TMP_STRUCT
 	CALL SHIFT_MERGE_CHARACTER
 
     POP DE
     POP BC
     CALL RESTORE_PAGE_INFO
-
+	XOR A
 	POP HL
 	RET
 ; *******************************************************************************************************

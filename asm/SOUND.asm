@@ -67,7 +67,7 @@ SNDPLYINIT:
     POP DE
     POP BC
     CALL RESTORE_PAGE_INFO
-
+	XOR A
 	POP HL
 	RET
 ; *******************************************************************************************************
@@ -104,11 +104,7 @@ SNDPLYINI_DEFUSR:
 	LD A, 1
 	LD (SFX_INIT_STATUS), A
 .L1:
-    POP DE
-    POP BC
-    CALL RESTORE_PAGE_INFO
-	XOR A ; success
-	RET
+	JP COMMON_EXIT_CODE
 ; *******************************************************************************************************
  ENDIF
 
@@ -239,7 +235,7 @@ SNDSFX:
     POP DE
     POP BC
     CALL RESTORE_PAGE_INFO
-
+	XOR A
 	POP HL
 	RET
 ; *******************************************************************************************************
@@ -267,10 +263,6 @@ SNDSFX_DEFUSR:
 	LD C,(IX+4) ; channel
 	LD B,(IX+6) ; volume
 	CALL PLY_AKG_PLAYSOUNDEFFECT
-    POP DE
-    POP BC
-    CALL RESTORE_PAGE_INFO
-	XOR A ; success
-	RET
+	JP COMMON_EXIT_CODE
 ; *******************************************************************************************************
  ENDIF

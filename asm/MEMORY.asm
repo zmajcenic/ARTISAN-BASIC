@@ -46,12 +46,7 @@ MEMCPY:
 	EI
 	EXX
 	LDIR
-    POP DE
-    POP BC
-    CALL RESTORE_PAGE_INFO
-	PUSH IX
-	POP HL
-	RET
+	JP COMMON_EXIT_CODE_IX
 ; *******************************************************************************************************
  ENDIF
 
@@ -75,11 +70,7 @@ MEMCPY_DEFUSR:
 	LD C,(IX+6)
 	LD B,(IX+7)
 	LDIR
-    POP DE
-    POP BC
-    CALL RESTORE_PAGE_INFO
-	XOR A ; success
-	RET
+    JP COMMON_EXIT_CODE
 ; *******************************************************************************************************
  ENDIF
 
@@ -123,9 +114,6 @@ FILRAM:
 	POP DE ; actually AF
 	POP BC ; count
 	POP HL ; start address
-	LD A, B
-	OR C
-	JR Z, .EXIT ; 0 bytes to fill, skip
 	EXX
 	; enable page 0
 	LD IY, .RET
@@ -134,13 +122,7 @@ FILRAM:
 	EI
 	EXX
 	CALL FILVRM_FILLVALUE
-    POP DE
-    POP BC
-    CALL RESTORE_PAGE_INFO
-.EXIT:
-	PUSH IX
-	POP HL
-	RET
+	JP COMMON_EXIT_CODE_IX
 ; *******************************************************************************************************
  ENDIF
 
@@ -161,23 +143,18 @@ FILRAM_DEFUSR:
 	LD H,(IX+3)
 	LD C,(IX+4)
 	LD B,(IX+5)
-	LD A,B
-	OR C
-	JR Z,.EXIT
 	LD D,(IX+6)
 	CALL FILVRM_FILLVALUE
-.EXIT:
-    POP DE
-    POP BC
-    CALL RESTORE_PAGE_INFO
-	XOR A ; success
-	RET
+    JP COMMON_EXIT_CODE
 ; *******************************************************************************************************
  ENDIF	
 
 ; *******************************************************************************************************
 ; common function to fill RAM
 FILVRM_FILLVALUE:
+	LD A,B
+	OR C
+	RET Z ; zero size
     LD (HL), D
     LD D, H
     LD E, L

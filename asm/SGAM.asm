@@ -44,14 +44,14 @@ SGAM:
 	; get x
 	LD IX, FRMQNT
 	CALL CALBAS
-	LD (BLIT_STRUCT),DE
+	LD (TMP_STRUCT),DE
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; get y
 	LD IX, FRMQNT
 	CALL CALBAS
-	LD (BLIT_STRUCT+2),DE
+	LD (TMP_STRUCT+2),DE
 	; comma
 	CALL CHKCHAR
 	DB ','
@@ -60,37 +60,37 @@ SGAM:
 	CALL CALBAS
     OR A
     JP Z,SUBSCRIPT_OUT_OF_RANGE
-	LD (BLIT_STRUCT+4),A
+	LD (TMP_STRUCT+4),A
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; get sprite group definition array data pointer
-    LD A,(BLIT_STRUCT+4)
+    LD A,(TMP_STRUCT+4)
 	LD E,A
 	LD D,3
 	LD A,2
 	LD B,A
 	CALL GET_BASIC_ARRAY_DATA_POINTER
-	LD (BLIT_STRUCT+5),BC
+	LD (TMP_STRUCT+5),BC
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; get sprite animation array size
 	LD IX,GETBYT
 	CALL CALBAS  
-    LD (BLIT_STRUCT+7),A
+    LD (TMP_STRUCT+7),A
     OR A
     JP Z,SUBSCRIPT_OUT_OF_RANGE
 	; comma
 	CALL CHKCHAR
 	DB ','
     ; get array pointer
-    LD A,(BLIT_STRUCT+7)
+    LD A,(TMP_STRUCT+7)
     LD D,A
     LD A,2
     LD B,1
     CALL GET_BASIC_ARRAY_DATA_POINTER
-    LD (BLIT_STRUCT+8),BC
+    LD (TMP_STRUCT+8),BC
 	; ending )
 	CALL CHKCHAR
 	DB ')'
@@ -102,25 +102,24 @@ SGAM:
 	JP ENABLE_PAGE0
 .RET:
     EXX
-    LD DE,(BLIT_STRUCT) ; initial x
-    LD BC,(BLIT_STRUCT+2) ; initial y
+    LD DE,(TMP_STRUCT) ; initial x
+    LD BC,(TMP_STRUCT+2) ; initial y
     EXX
-    LD HL,(BLIT_STRUCT+5) ; pointer to data
-    LD A,(BLIT_STRUCT+4) ; number of entries
+    LD HL,(TMP_STRUCT+5) ; pointer to data
+    LD A,(TMP_STRUCT+4) ; number of entries
     LD B,A
     CALL SPR_UPDATE_LOC
 
-    LD A,(BLIT_STRUCT+7) ; anim number
+    LD A,(TMP_STRUCT+7) ; anim number
     LD B,A
-    LD DE,(BLIT_STRUCT+8) ; anim list
+    LD DE,(TMP_STRUCT+8) ; anim list
 	CALL SGAM_PROCESS_ANIM_LIST
-
     POP DE
     POP BC
     CALL RESTORE_PAGE_INFO
-    EI
-    POP HL
-    RET
+	XOR A
+	POP HL
+	RET
 ; *******************************************************************************************************
  ENDIF
 
@@ -156,12 +155,7 @@ SGAM_DEFUSR:
 	LD E,(IX+12)
 	LD D,(IX+13)
 	CALL SGAM_PROCESS_ANIM_LIST
-
-    POP DE
-    POP BC
-    CALL RESTORE_PAGE_INFO
-	XOR A ; success
-	RET
+	JP COMMON_EXIT_CODE
 ; *******************************************************************************************************
  ENDIF
 

@@ -1212,32 +1212,32 @@
  467+ 4F03              	; get x
  468+ 4F03 DD 21 2F 54  	LD IX, FRMQNT
  469+ 4F07 CD 59 01     	CALL CALBAS
- 470+ 4F0A ED 53 35 62  	LD (BLIT_STRUCT),DE
+ 470+ 4F0A ED 53 35 62  	LD (TMP_STRUCT),DE
  471+ 4F0E              	; comma
  472+ 4F0E CD 45 65     	CALL CHKCHAR
  473+ 4F11 2C           	DB ','
  474+ 4F12              	; get y
  475+ 4F12 DD 21 2F 54  	LD IX, FRMQNT
  476+ 4F16 CD 59 01     	CALL CALBAS
- 477+ 4F19 ED 53 37 62  	LD (BLIT_STRUCT+2),DE
+ 477+ 4F19 ED 53 37 62  	LD (TMP_STRUCT+2),DE
  478+ 4F1D              	; comma
  479+ 4F1D CD 45 65     	CALL CHKCHAR
  480+ 4F20 2C           	DB ','
  481+ 4F21              	; get count
  482+ 4F21 DD 21 1C 52  	LD IX, GETBYT
  483+ 4F25 CD 59 01     	CALL CALBAS
- 484+ 4F28 32 39 62     	LD (BLIT_STRUCT+4),A
+ 484+ 4F28 32 39 62     	LD (TMP_STRUCT+4),A
  485+ 4F2B              	; comma
  486+ 4F2B CD 45 65     	CALL CHKCHAR
  487+ 4F2E 2C           	DB ','
  488+ 4F2F              	; get sprite group definition array data pointer
- 489+ 4F2F 3A 39 62     	LD A,(BLIT_STRUCT+4)
+ 489+ 4F2F 3A 39 62     	LD A,(TMP_STRUCT+4)
  490+ 4F32 5F           	LD E,A
  491+ 4F33 16 03        	LD D,3
  492+ 4F35 3E 02        	LD A,2
  493+ 4F37 47           	LD B,A
  494+ 4F38 CD 72 65     	CALL GET_BASIC_ARRAY_DATA_POINTER
- 495+ 4F3B ED 43 3A 62  	LD (BLIT_STRUCT+5),BC
+ 495+ 4F3B ED 43 3A 62  	LD (TMP_STRUCT+5),BC
  496+ 4F3F              	; ending )
  497+ 4F3F CD 45 65     	CALL CHKCHAR
  498+ 4F42 29           	DB ')'
@@ -1245,11 +1245,11 @@
  500+ 4F43 E5           	PUSH HL
  501+ 4F44
  502+ 4F44 D9               EXX
- 503+ 4F45 ED 5B 35 62      LD DE,(BLIT_STRUCT) ; initial x
- 504+ 4F49 ED 4B 37 62      LD BC,(BLIT_STRUCT+2) ; initial y
+ 503+ 4F45 ED 5B 35 62      LD DE,(TMP_STRUCT) ; initial x
+ 504+ 4F49 ED 4B 37 62      LD BC,(TMP_STRUCT+2) ; initial y
  505+ 4F4D D9               EXX
- 506+ 4F4E 2A 3A 62         LD HL,(BLIT_STRUCT+5) ; pointer to data
- 507+ 4F51 3A 39 62         LD A,(BLIT_STRUCT+4) ; number of entries
+ 506+ 4F4E 2A 3A 62         LD HL,(TMP_STRUCT+5) ; pointer to data
+ 507+ 4F51 3A 39 62         LD A,(TMP_STRUCT+4) ; number of entries
  508+ 4F54 47               LD B,A
  509+ 4F55 CD DD 4E     	CALL SPR_UPDATE_LOC
  510+ 4F58
@@ -3165,14 +3165,14 @@
   44+ 56A9              	; get x
   45+ 56A9 DD 21 2F 54  	LD IX, FRMQNT
   46+ 56AD CD 59 01     	CALL CALBAS
-  47+ 56B0 ED 53 35 62  	LD (BLIT_STRUCT),DE
+  47+ 56B0 ED 53 35 62  	LD (TMP_STRUCT),DE
   48+ 56B4              	; comma
   49+ 56B4 CD 45 65     	CALL CHKCHAR
   50+ 56B7 2C           	DB ','
   51+ 56B8              	; get y
   52+ 56B8 DD 21 2F 54  	LD IX, FRMQNT
   53+ 56BC CD 59 01     	CALL CALBAS
-  54+ 56BF ED 53 37 62  	LD (BLIT_STRUCT+2),DE
+  54+ 56BF ED 53 37 62  	LD (TMP_STRUCT+2),DE
   55+ 56C3              	; comma
   56+ 56C3 CD 45 65     	CALL CHKCHAR
   57+ 56C6 2C           	DB ','
@@ -3181,37 +3181,37 @@
   60+ 56CB CD 59 01     	CALL CALBAS
   61+ 56CE B7               OR A
   62+ 56CF CA 5D 65         JP Z,SUBSCRIPT_OUT_OF_RANGE
-  63+ 56D2 32 39 62     	LD (BLIT_STRUCT+4),A
+  63+ 56D2 32 39 62     	LD (TMP_STRUCT+4),A
   64+ 56D5              	; comma
   65+ 56D5 CD 45 65     	CALL CHKCHAR
   66+ 56D8 2C           	DB ','
   67+ 56D9              	; get sprite group definition array data pointer
-  68+ 56D9 3A 39 62         LD A,(BLIT_STRUCT+4)
+  68+ 56D9 3A 39 62         LD A,(TMP_STRUCT+4)
   69+ 56DC 5F           	LD E,A
   70+ 56DD 16 03        	LD D,3
   71+ 56DF 3E 02        	LD A,2
   72+ 56E1 47           	LD B,A
   73+ 56E2 CD 72 65     	CALL GET_BASIC_ARRAY_DATA_POINTER
-  74+ 56E5 ED 43 3A 62  	LD (BLIT_STRUCT+5),BC
+  74+ 56E5 ED 43 3A 62  	LD (TMP_STRUCT+5),BC
   75+ 56E9              	; comma
   76+ 56E9 CD 45 65     	CALL CHKCHAR
   77+ 56EC 2C           	DB ','
   78+ 56ED              	; get sprite animation array size
   79+ 56ED DD 21 1C 52  	LD IX,GETBYT
   80+ 56F1 CD 59 01     	CALL CALBAS
-  81+ 56F4 32 3C 62         LD (BLIT_STRUCT+7),A
+  81+ 56F4 32 3C 62         LD (TMP_STRUCT+7),A
   82+ 56F7 B7               OR A
   83+ 56F8 CA 5D 65         JP Z,SUBSCRIPT_OUT_OF_RANGE
   84+ 56FB              	; comma
   85+ 56FB CD 45 65     	CALL CHKCHAR
   86+ 56FE 2C           	DB ','
   87+ 56FF                  ; get array pointer
-  88+ 56FF 3A 3C 62         LD A,(BLIT_STRUCT+7)
+  88+ 56FF 3A 3C 62         LD A,(TMP_STRUCT+7)
   89+ 5702 57               LD D,A
   90+ 5703 3E 02            LD A,2
   91+ 5705 06 01            LD B,1
   92+ 5707 CD 72 65         CALL GET_BASIC_ARRAY_DATA_POINTER
-  93+ 570A ED 43 3D 62      LD (BLIT_STRUCT+8),BC
+  93+ 570A ED 43 3D 62      LD (TMP_STRUCT+8),BC
   94+ 570E              	; ending )
   95+ 570E CD 45 65     	CALL CHKCHAR
   96+ 5711 29           	DB ')'
@@ -3223,17 +3223,17 @@
  102+ 5717 C3 F6 64     	JP ENABLE_PAGE0
  103+ 571A              .RET:
  104+ 571A D9               EXX
- 105+ 571B ED 5B 35 62      LD DE,(BLIT_STRUCT) ; initial x
- 106+ 571F ED 4B 37 62      LD BC,(BLIT_STRUCT+2) ; initial y
+ 105+ 571B ED 5B 35 62      LD DE,(TMP_STRUCT) ; initial x
+ 106+ 571F ED 4B 37 62      LD BC,(TMP_STRUCT+2) ; initial y
  107+ 5723 D9               EXX
- 108+ 5724 2A 3A 62         LD HL,(BLIT_STRUCT+5) ; pointer to data
- 109+ 5727 3A 39 62         LD A,(BLIT_STRUCT+4) ; number of entries
+ 108+ 5724 2A 3A 62         LD HL,(TMP_STRUCT+5) ; pointer to data
+ 109+ 5727 3A 39 62         LD A,(TMP_STRUCT+4) ; number of entries
  110+ 572A 47               LD B,A
  111+ 572B CD DD 4E         CALL SPR_UPDATE_LOC
  112+ 572E
- 113+ 572E 3A 3C 62         LD A,(BLIT_STRUCT+7) ; anim number
+ 113+ 572E 3A 3C 62         LD A,(TMP_STRUCT+7) ; anim number
  114+ 5731 47               LD B,A
- 115+ 5732 ED 5B 3D 62      LD DE,(BLIT_STRUCT+8) ; anim list
+ 115+ 5732 ED 5B 3D 62      LD DE,(TMP_STRUCT+8) ; anim list
  116+ 5736 CD 86 56     	CALL SGAM_PROCESS_ANIM_LIST
  117+ 5739
  118+ 5739 D1               POP DE
@@ -4308,7 +4308,7 @@
   51+ 5AF7
   52+ 5AF7 E1               POP HL ; get pointer to register values
   53+ 5AF8 F3           	DI
-  54+ 5AF9 ED 73 35 62      LD (BLIT_STRUCT), SP
+  54+ 5AF9 ED 73 35 62      LD (TMP_STRUCT), SP
   55+ 5AFD F9               LD SP, HL
   56+ 5AFE F1               POP AF
   57+ 5AFF C1               POP BC
@@ -4317,22 +4317,22 @@
   60+ 5B02 DD E1            POP IX
   61+ 5B04 FD E1            POP IY
   62+ 5B06 D9               EXX
-  63+ 5B07 ED 73 37 62      LD (BLIT_STRUCT+2), SP
-  64+ 5B0B ED 7B 35 62      LD SP, (BLIT_STRUCT)
+  63+ 5B07 ED 73 37 62      LD (TMP_STRUCT+2), SP
+  64+ 5B0B ED 7B 35 62      LD SP, (TMP_STRUCT)
   65+ 5B0F FB               EI
   66+ 5B10 D1               POP DE ; get function to call
   67+ 5B11 E5               PUSH HL
   68+ 5B12 CD 2D 5B         CALL .EXXDECALL
   69+ 5B15 F3               DI
-  70+ 5B16 ED 73 35 62      LD (BLIT_STRUCT), SP
-  71+ 5B1A ED 7B 37 62      LD SP, (BLIT_STRUCT+2)
+  70+ 5B16 ED 73 35 62      LD (TMP_STRUCT), SP
+  71+ 5B1A ED 7B 37 62      LD SP, (TMP_STRUCT+2)
   72+ 5B1E FD E5            PUSH IY
   73+ 5B20 DD E5            PUSH IX
   74+ 5B22 E5               PUSH HL
   75+ 5B23 D5               PUSH DE
   76+ 5B24 C5               PUSH BC
   77+ 5B25 F5               PUSH AF
-  78+ 5B26 ED 7B 35 62      LD SP, (BLIT_STRUCT)
+  78+ 5B26 ED 7B 35 62      LD SP, (TMP_STRUCT)
   79+ 5B2A FB               EI
   80+ 5B2B E1               POP HL
   81+ 5B2C C9           	RET
@@ -4446,46 +4446,46 @@
   96+ 5B84              	; get source data pointer
   97+ 5B84 DD 21 2F 54  	LD IX, FRMQNT
   98+ 5B88 CD 59 01     	CALL CALBAS
-  99+ 5B8B ED 53 35 62  	LD (BLIT_STRUCT+0), DE
+  99+ 5B8B ED 53 35 62  	LD (TMP_STRUCT+0), DE
  100+ 5B8F              	; comma
  101+ 5B8F CD 45 65     	CALL CHKCHAR
  102+ 5B92 2C           	DB ','
  103+ 5B93              	; source number of bytes in a row
  104+ 5B93 DD 21 2F 54  	LD IX, FRMQNT
  105+ 5B97 CD 59 01     	CALL CALBAS
- 106+ 5B9A ED 53 37 62  	LD (BLIT_STRUCT+2), DE
+ 106+ 5B9A ED 53 37 62  	LD (TMP_STRUCT+2), DE
  107+ 5B9E              	; comma
  108+ 5B9E CD 45 65     	CALL CHKCHAR
  109+ 5BA1 2C           	DB ','
  110+ 5BA2              	; number of rows
  111+ 5BA2 DD 21 2F 54  	LD IX, FRMQNT
  112+ 5BA6 CD 59 01     	CALL CALBAS
- 113+ 5BA9 ED 53 39 62  	LD (BLIT_STRUCT+4), DE
+ 113+ 5BA9 ED 53 39 62  	LD (TMP_STRUCT+4), DE
  114+ 5BAD              	; comma
  115+ 5BAD CD 45 65     	CALL CHKCHAR
  116+ 5BB0 2C           	DB ','
  117+ 5BB1              	; source add-to value till next row
  118+ 5BB1 DD 21 2F 54  	LD IX, FRMQNT
  119+ 5BB5 CD 59 01     	CALL CALBAS
- 120+ 5BB8 ED 53 3B 62  	LD (BLIT_STRUCT+6), DE
+ 120+ 5BB8 ED 53 3B 62  	LD (TMP_STRUCT+6), DE
  121+ 5BBC              	; comma
  122+ 5BBC CD 45 65     	CALL CHKCHAR
  123+ 5BBF 2C           	DB ','
  124+ 5BC0              	; destination pointer
  125+ 5BC0 DD 21 2F 54  	LD IX, FRMQNT
  126+ 5BC4 CD 59 01     	CALL CALBAS
- 127+ 5BC7 ED 53 3D 62  	LD (BLIT_STRUCT+8), DE
+ 127+ 5BC7 ED 53 3D 62  	LD (TMP_STRUCT+8), DE
  128+ 5BCB              	; comma
  129+ 5BCB CD 45 65     	CALL CHKCHAR
  130+ 5BCE 2C           	DB ','
  131+ 5BCF              	; destination add-to value till next row
  132+ 5BCF DD 21 2F 54  	LD IX, FRMQNT
  133+ 5BD3 CD 59 01     	CALL CALBAS
- 134+ 5BD6 ED 53 3F 62  	LD (BLIT_STRUCT+10), DE
+ 134+ 5BD6 ED 53 3F 62  	LD (TMP_STRUCT+10), DE
  135+ 5BDA              	; ending )
  136+ 5BDA CD 45 65     	CALL CHKCHAR
  137+ 5BDD 29           	DB ')'
- 138+ 5BDE DD 21 35 62  	LD IX,BLIT_STRUCT
+ 138+ 5BDE DD 21 35 62  	LD IX,TMP_STRUCT
  139+ 5BE2               ENDIF
  140+ 5BE2              BOXCOMMON_DEFUSR:
  141+ 5BE2 E5           	PUSH HL ; save position in BASIC buffer
@@ -4928,50 +4928,50 @@
  355+ 5DB4 ~            	LD D,(IX+3)
  356+ 5DB4 ~            	LD A,E
  357+ 5DB4 ~            	AND 7
- 358+ 5DB4 ~            	LD (BLIT_STRUCT+0),A
+ 358+ 5DB4 ~            	LD (TMP_STRUCT+0),A
  359+ 5DB4 ~            	CALL DEdiv8
  360+ 5DB4 ~            	LD (BLIT_TMP+0),A
  361+ 5DB4 ~            	LD E,(IX+4)
  362+ 5DB4 ~            	LD D,(IX+5)
  363+ 5DB4 ~            	LD A,E
  364+ 5DB4 ~            	AND 7
- 365+ 5DB4 ~            	LD (BLIT_STRUCT+2),A
+ 365+ 5DB4 ~            	LD (TMP_STRUCT+2),A
  366+ 5DB4 ~            	CALL DEdiv8
  367+ 5DB4 ~            	LD (BLIT_TMP+1),A
  368+ 5DB4 ~            	LD L,(IX+6)
  369+ 5DB4 ~            	LD H,(IX+7)
- 370+ 5DB4 ~            	LD (BLIT_STRUCT+10),HL
+ 370+ 5DB4 ~            	LD (TMP_STRUCT+10),HL
  371+ 5DB4 ~            	LD L,(IX+8)
  372+ 5DB4 ~            	LD H,(IX+9)
- 373+ 5DB4 ~            	LD (BLIT_STRUCT+8),HL
+ 373+ 5DB4 ~            	LD (TMP_STRUCT+8),HL
  374+ 5DB4 ~            	LD A,(IX+10)
- 375+ 5DB4 ~            	LD (BLIT_STRUCT+14),A
+ 375+ 5DB4 ~            	LD (TMP_STRUCT+14),A
  376+ 5DB4 ~            	LD A,(IX+12)
- 377+ 5DB4 ~            	LD (BLIT_STRUCT+16),A
+ 377+ 5DB4 ~            	LD (TMP_STRUCT+16),A
  378+ 5DB4 ~            	LD L,(IX+14)
  379+ 5DB4 ~            	LD H,(IX+15)
- 380+ 5DB4 ~            	LD (BLIT_STRUCT+4),HL
+ 380+ 5DB4 ~            	LD (TMP_STRUCT+4),HL
  381+ 5DB4 ~            	;LD A,(IX+16)
  382+ 5DB4 ~            	;LD (BLIT_TMP+2),A
  383+ 5DB4 ~
  384+ 5DB4 ~            	; calculate char&mask add to value
  385+ 5DB4 ~            	LD H,0
- 386+ 5DB4 ~            	LD A,(BLIT_STRUCT+14)
+ 386+ 5DB4 ~            	LD A,(TMP_STRUCT+14)
  387+ 5DB4 ~            	LD L,A
  388+ 5DB4 ~            	CALL HLx8
- 389+ 5DB4 ~            	LD (BLIT_STRUCT+12),HL
+ 389+ 5DB4 ~            	LD (TMP_STRUCT+12),HL
  390+ 5DB4 ~            	; calculate background add to value
  391+ 5DB4 ~            	LD H,0
  392+ 5DB4 ~            	LD L,(IX+16)
  393+ 5DB4 ~            	CALL HLx8
- 394+ 5DB4 ~            	LD (BLIT_STRUCT+6),HL
+ 394+ 5DB4 ~            	LD (TMP_STRUCT+6),HL
  395+ 5DB4 ~            	; calculate pointer to background location
  396+ 5DB4 ~            	LD HL,0
  397+ 5DB4 ~            	LD A,(BLIT_TMP+1)
  398+ 5DB4 ~            	OR A
  399+ 5DB4 ~            	JR Z, .L1
  400+ 5DB4 ~            	LD B,A
- 401+ 5DB4 ~            	LD DE,(BLIT_STRUCT+6)
+ 401+ 5DB4 ~            	LD DE,(TMP_STRUCT+6)
  402+ 5DB4 ~            .L0:
  403+ 5DB4 ~            	ADD HL, DE
  404+ 5DB4 ~            	DJNZ .L0
@@ -4982,15 +4982,15 @@
  409+ 5DB4 ~            	LD L,A
  410+ 5DB4 ~            	CALL HLx8
  411+ 5DB4 ~            	ADD HL,DE
- 412+ 5DB4 ~            	LD DE,(BLIT_STRUCT+4)
+ 412+ 5DB4 ~            	LD DE,(TMP_STRUCT+4)
  413+ 5DB4 ~            	ADD HL,DE
- 414+ 5DB4 ~            	LD (BLIT_STRUCT+4),HL
+ 414+ 5DB4 ~            	LD (TMP_STRUCT+4),HL
  415+ 5DB4 ~
  416+ 5DB4 ~            	LD IY, .RET
  417+ 5DB4 ~            	JP ENABLE_PAGE0
  418+ 5DB4 ~            .RET:
  419+ 5DB4 ~            	EI
- 420+ 5DB4 ~            	LD IX, BLIT_STRUCT
+ 420+ 5DB4 ~            	LD IX, TMP_STRUCT
  421+ 5DB4 ~            	CALL SHIFT_MERGE_CHARACTER
  422+ 5DB4 ~
  423+ 5DB4 ~                POP DE
@@ -5023,7 +5023,7 @@
  450+ 5DBC CD 59 01     	CALL CALBAS
  451+ 5DBF 7B           	LD A, E
  452+ 5DC0 E6 07        	AND 7
- 453+ 5DC2 32 35 62     	LD (BLIT_STRUCT+0), A
+ 453+ 5DC2 32 35 62     	LD (TMP_STRUCT+0), A
  454+ 5DC5 CD A6 5D     	CALL DEdiv8
  455+ 5DC8 32 31 62     	LD (BLIT_TMP+0),A
  456+ 5DCB              	; comma
@@ -5034,7 +5034,7 @@
  461+ 5DD3 CD 59 01     	CALL CALBAS
  462+ 5DD6 7B           	LD A, E
  463+ 5DD7 E6 07        	AND 7
- 464+ 5DD9 32 37 62     	LD (BLIT_STRUCT+2), A
+ 464+ 5DD9 32 37 62     	LD (TMP_STRUCT+2), A
  465+ 5DDC CD A6 5D     	CALL DEdiv8
  466+ 5DDF 32 32 62     	LD (BLIT_TMP+1),A
  467+ 5DE2              	; comma
@@ -5043,14 +5043,14 @@
  470+ 5DE6              	; get char data pointer
  471+ 5DE6 DD 21 2F 54  	LD IX, FRMQNT
  472+ 5DEA CD 59 01     	CALL CALBAS
- 473+ 5DED ED 53 3F 62  	LD (BLIT_STRUCT+10), DE
+ 473+ 5DED ED 53 3F 62  	LD (TMP_STRUCT+10), DE
  474+ 5DF1              	; comma
  475+ 5DF1 CD 45 65     	CALL CHKCHAR
  476+ 5DF4 2C           	DB ','
  477+ 5DF5              	; get mask data pointer
  478+ 5DF5 DD 21 2F 54  	LD IX, FRMQNT
  479+ 5DF9 CD 59 01     	CALL CALBAS
- 480+ 5DFC ED 53 3D 62  	LD (BLIT_STRUCT+8), DE
+ 480+ 5DFC ED 53 3D 62  	LD (TMP_STRUCT+8), DE
  481+ 5E00              	; comma
  482+ 5E00 CD 45 65     	CALL CHKCHAR
  483+ 5E03 2C           	DB ','
@@ -5058,7 +5058,7 @@
  485+ 5E04 DD 21 2F 54  	LD IX, FRMQNT
  486+ 5E08 CD 59 01     	CALL CALBAS
  487+ 5E0B 7B           	LD A, E
- 488+ 5E0C 32 43 62     	LD (BLIT_STRUCT+14), A
+ 488+ 5E0C 32 43 62     	LD (TMP_STRUCT+14), A
  489+ 5E0F              	; comma
  490+ 5E0F CD 45 65     	CALL CHKCHAR
  491+ 5E12 2C           	DB ','
@@ -5066,14 +5066,14 @@
  493+ 5E13 DD 21 2F 54  	LD IX, FRMQNT
  494+ 5E17 CD 59 01     	CALL CALBAS
  495+ 5E1A 7B           	LD A, E
- 496+ 5E1B 32 45 62     	LD (BLIT_STRUCT+16), A
+ 496+ 5E1B 32 45 62     	LD (TMP_STRUCT+16), A
  497+ 5E1E              	; comma
  498+ 5E1E CD 45 65     	CALL CHKCHAR
  499+ 5E21 2C           	DB ','
  500+ 5E22              	; get background pointer
  501+ 5E22 DD 21 2F 54  	LD IX, FRMQNT
  502+ 5E26 CD 59 01     	CALL CALBAS
- 503+ 5E29 ED 53 39 62  	LD (BLIT_STRUCT+4), DE
+ 503+ 5E29 ED 53 39 62  	LD (TMP_STRUCT+4), DE
  504+ 5E2D              	; comma
  505+ 5E2D CD 45 65     	CALL CHKCHAR
  506+ 5E30 2C           	DB ','
@@ -5090,23 +5090,23 @@
  517+ 5E41
  518+ 5E41              	; calculate char&mask add to value
  519+ 5E41 26 00        	LD H, 0
- 520+ 5E43 3A 43 62     	LD A, (BLIT_STRUCT+14)
+ 520+ 5E43 3A 43 62     	LD A, (TMP_STRUCT+14)
  521+ 5E46 6F           	LD L, A
  522+ 5E47 CD 32 64     	CALL HLx8
- 523+ 5E4A 22 41 62     	LD (BLIT_STRUCT+12), HL
+ 523+ 5E4A 22 41 62     	LD (TMP_STRUCT+12), HL
  524+ 5E4D              	; calculate background add to value
  525+ 5E4D 26 00        	LD H, 0
  526+ 5E4F 3A 33 62     	LD A, (BLIT_TMP+2)
  527+ 5E52 6F           	LD L, A
  528+ 5E53 CD 32 64     	CALL HLx8
- 529+ 5E56 22 3B 62     	LD (BLIT_STRUCT+6), HL
+ 529+ 5E56 22 3B 62     	LD (TMP_STRUCT+6), HL
  530+ 5E59              	; calculate pointer to background location
  531+ 5E59 21 00 00     	LD HL, 0
  532+ 5E5C 3A 32 62     	LD A,(BLIT_TMP+1)
  533+ 5E5F B7           	OR A
  534+ 5E60 28 08        	JR Z, .L1
  535+ 5E62 47           	LD B,A
- 536+ 5E63 ED 5B 3B 62  	LD DE,(BLIT_STRUCT+6)
+ 536+ 5E63 ED 5B 3B 62  	LD DE,(TMP_STRUCT+6)
  537+ 5E67              .L0:
  538+ 5E67 19           	ADD HL, DE
  539+ 5E68 10 FD        	DJNZ .L0
@@ -5117,15 +5117,15 @@
  544+ 5E70 6F           	LD L,A
  545+ 5E71 CD 32 64     	CALL HLx8
  546+ 5E74 19           	ADD HL,DE
- 547+ 5E75 ED 5B 39 62  	LD DE,(BLIT_STRUCT+4)
+ 547+ 5E75 ED 5B 39 62  	LD DE,(TMP_STRUCT+4)
  548+ 5E79 19           	ADD HL,DE
- 549+ 5E7A 22 39 62     	LD (BLIT_STRUCT+4),HL
+ 549+ 5E7A 22 39 62     	LD (TMP_STRUCT+4),HL
  550+ 5E7D
  551+ 5E7D FD 21 84 5E  	LD IY, .RET
  552+ 5E81 C3 F6 64     	JP ENABLE_PAGE0
  553+ 5E84              .RET:
  554+ 5E84 FB           	EI
- 555+ 5E85 DD 21 35 62  	LD IX, BLIT_STRUCT
+ 555+ 5E85 DD 21 35 62  	LD IX, TMP_STRUCT
  556+ 5E89 CD 12 5D     	CALL SHIFT_MERGE_CHARACTER
  557+ 5E8C
  558+ 5E8C D1               POP DE
@@ -5213,19 +5213,19 @@
   69+ 5EDB ~            	; tile data pointer
   70+ 5EDB ~            	LD L,(IX+2)
   71+ 5EDB ~            	LD H,(IX+3)
-  72+ 5EDB ~            	LD (BLIT_STRUCT+0),HL
+  72+ 5EDB ~            	LD (TMP_STRUCT+0),HL
   73+ 5EDB ~            	; tile columns
   74+ 5EDB ~            	LD L,(IX+4)
   75+ 5EDB ~            	LD H,(IX+5)
-  76+ 5EDB ~            	LD (BLIT_STRUCT+4),HL
+  76+ 5EDB ~            	LD (TMP_STRUCT+4),HL
   77+ 5EDB ~            	; tile rows
   78+ 5EDB ~            	LD L,(IX+6)
   79+ 5EDB ~            	LD H,(IX+7)
-  80+ 5EDB ~            	LD (BLIT_STRUCT+2),HL
+  80+ 5EDB ~            	LD (TMP_STRUCT+2),HL
   81+ 5EDB ~            	; destintion pointer
   82+ 5EDB ~            	LD L,(IX+8)
   83+ 5EDB ~            	LD H,(IX+9)
-  84+ 5EDB ~            	LD (BLIT_STRUCT+6),HL
+  84+ 5EDB ~            	LD (TMP_STRUCT+6),HL
   85+ 5EDB ~            	; destination columns
   86+ 5EDB ~            	LD A,(IX+10)
   87+ 5EDB ~            	LD (BLIT_TMP+0),A
@@ -5241,11 +5241,11 @@
   97+ 5EDB ~            	; number of tiles horizontally
   98+ 5EDB ~            	LD L,(IX+18)
   99+ 5EDB ~            	LD H,(IX+19)
- 100+ 5EDB ~            	LD (BLIT_STRUCT+10),HL
+ 100+ 5EDB ~            	LD (TMP_STRUCT+10),HL
  101+ 5EDB ~            	; number of tiles vertically
  102+ 5EDB ~            	LD L,(IX+20)
  103+ 5EDB ~            	LD H,(IX+21)
- 104+ 5EDB ~            	LD (BLIT_STRUCT+12),HL
+ 104+ 5EDB ~            	LD (TMP_STRUCT+12),HL
  105+ 5EDB ~             IF (BASIC_EXTENSION == 1) ; otherwise we just continue with code below
  106+ 5EDB ~            	JP TILERAM.COMMON
  107+ 5EDB ~             ENDIF
@@ -5273,28 +5273,28 @@
  129+ 5EDF              	; get tile data pointer coordinate
  130+ 5EDF DD 21 2F 54  	LD IX, FRMQNT
  131+ 5EE3 CD 59 01     	CALL CALBAS
- 132+ 5EE6 ED 53 35 62  	LD (BLIT_STRUCT+0), DE
+ 132+ 5EE6 ED 53 35 62  	LD (TMP_STRUCT+0), DE
  133+ 5EEA              	; comma
  134+ 5EEA CD 45 65     	CALL CHKCHAR
  135+ 5EED 2C           	DB ','
  136+ 5EEE              	; get tile columns
  137+ 5EEE DD 21 2F 54  	LD IX, FRMQNT
  138+ 5EF2 CD 59 01     	CALL CALBAS
- 139+ 5EF5 ED 53 39 62  	LD (BLIT_STRUCT+4), DE
+ 139+ 5EF5 ED 53 39 62  	LD (TMP_STRUCT+4), DE
  140+ 5EF9              	; comma
  141+ 5EF9 CD 45 65     	CALL CHKCHAR
  142+ 5EFC 2C           	DB ','
  143+ 5EFD              	; get tile columns
  144+ 5EFD DD 21 2F 54  	LD IX, FRMQNT
  145+ 5F01 CD 59 01     	CALL CALBAS
- 146+ 5F04 ED 53 37 62  	LD (BLIT_STRUCT+2), DE
+ 146+ 5F04 ED 53 37 62  	LD (TMP_STRUCT+2), DE
  147+ 5F08              	; comma
  148+ 5F08 CD 45 65     	CALL CHKCHAR
  149+ 5F0B 2C           	DB ','
  150+ 5F0C              	; get destintion pointer
  151+ 5F0C DD 21 2F 54  	LD IX, FRMQNT
  152+ 5F10 CD 59 01     	CALL CALBAS
- 153+ 5F13 ED 53 3B 62  	LD (BLIT_STRUCT+6), DE
+ 153+ 5F13 ED 53 3B 62  	LD (TMP_STRUCT+6), DE
  154+ 5F17              	; comma
  155+ 5F17 CD 45 65     	CALL CHKCHAR
  156+ 5F1A 2C           	DB ','
@@ -5333,14 +5333,14 @@
  189+ 5F57              	; get number of tiles horizontally
  190+ 5F57 DD 21 2F 54  	LD IX, FRMQNT
  191+ 5F5B CD 59 01     	CALL CALBAS
- 192+ 5F5E ED 53 3F 62  	LD (BLIT_STRUCT+10), DE
+ 192+ 5F5E ED 53 3F 62  	LD (TMP_STRUCT+10), DE
  193+ 5F62              	; comma
  194+ 5F62 CD 45 65     	CALL CHKCHAR
  195+ 5F65 2C           	DB ','
  196+ 5F66              	; get number of tiles vertically
  197+ 5F66 DD 21 2F 54  	LD IX, FRMQNT
  198+ 5F6A CD 59 01     	CALL CALBAS
- 199+ 5F6D ED 53 41 62  	LD (BLIT_STRUCT+12), DE
+ 199+ 5F6D ED 53 41 62  	LD (TMP_STRUCT+12), DE
  200+ 5F71              	; ending )
  201+ 5F71 CD 45 65     	CALL CHKCHAR
  202+ 5F74 29           	DB ')'
@@ -5353,14 +5353,14 @@
  209+ 5F78 3A 31 62     	LD A, (BLIT_TMP+0)
  210+ 5F7B 6F           	LD L, A
  211+ 5F7C CD 32 64     	CALL HLx8
- 212+ 5F7F 22 3D 62     	LD (BLIT_STRUCT+8), HL
+ 212+ 5F7F 22 3D 62     	LD (TMP_STRUCT+8), HL
  213+ 5F82              	; calculate pointer to background location
  214+ 5F82 21 00 00     	LD HL, 0
  215+ 5F85 3A 34 62     	LD A,(BLIT_TMP+3)
  216+ 5F88 B7           	OR A
  217+ 5F89 28 08        	JR Z, .L1
  218+ 5F8B 47           	LD B,A
- 219+ 5F8C ED 5B 3D 62  	LD DE,(BLIT_STRUCT+8)
+ 219+ 5F8C ED 5B 3D 62  	LD DE,(TMP_STRUCT+8)
  220+ 5F90              .L0:
  221+ 5F90 19           	ADD HL, DE
  222+ 5F91 10 FD        	DJNZ .L0
@@ -5371,9 +5371,9 @@
  227+ 5F99 6F           	LD L,A
  228+ 5F9A CD 32 64     	CALL HLx8
  229+ 5F9D 19           	ADD HL,DE
- 230+ 5F9E ED 5B 3B 62  	LD DE,(BLIT_STRUCT+6)
+ 230+ 5F9E ED 5B 3B 62  	LD DE,(TMP_STRUCT+6)
  231+ 5FA2 19           	ADD HL,DE
- 232+ 5FA3 22 3B 62     	LD (BLIT_STRUCT+6),HL
+ 232+ 5FA3 22 3B 62     	LD (TMP_STRUCT+6),HL
  233+ 5FA6 FD 21 AD 5F  	LD IY, .RET
  234+ 5FAA C3 F6 64     	JP ENABLE_PAGE0
  235+ 5FAD              .RET:
@@ -5383,7 +5383,7 @@
  239+ 5FB1 22 BC 5E     	LD (TILE.CALL2+1), HL
  240+ 5FB4 21 D9 5F     	LD HL, .SETDESTROW
  241+ 5FB7 22 AE 5E     	LD (TILE.CALL1+1), HL
- 242+ 5FBA DD 21 35 62  	LD IX,BLIT_STRUCT
+ 242+ 5FBA DD 21 35 62  	LD IX,TMP_STRUCT
  243+ 5FBE CD 93 5E     	CALL TILE
  244+ 5FC1
  245+ 5FC1 D1               POP DE
@@ -5423,15 +5423,15 @@
  272+ 5FDE ~            	; tile data pointer
  273+ 5FDE ~            	LD L,(IX+2)
  274+ 5FDE ~            	LD H,(IX+3)
- 275+ 5FDE ~            	LD (BLIT_STRUCT+0),HL
+ 275+ 5FDE ~            	LD (TMP_STRUCT+0),HL
  276+ 5FDE ~            	; tile columns
  277+ 5FDE ~            	LD L,(IX+4)
  278+ 5FDE ~            	LD H,(IX+5)
- 279+ 5FDE ~            	LD (BLIT_STRUCT+4),HL
+ 279+ 5FDE ~            	LD (TMP_STRUCT+4),HL
  280+ 5FDE ~            	; tile rows
  281+ 5FDE ~            	LD L,(IX+6)
  282+ 5FDE ~            	LD H,(IX+7)
- 283+ 5FDE ~            	LD (BLIT_STRUCT+2),HL
+ 283+ 5FDE ~            	LD (TMP_STRUCT+2),HL
  284+ 5FDE ~            	; destination begin column
  285+ 5FDE ~            	LD A,(IX+8)
  286+ 5FDE ~            	LD (BLIT_TMP+2),A
@@ -5441,11 +5441,11 @@
  290+ 5FDE ~            	; number of tiles horizontally
  291+ 5FDE ~            	LD L,(IX+12)
  292+ 5FDE ~            	LD H,(IX+13)
- 293+ 5FDE ~            	LD (BLIT_STRUCT+10),HL
+ 293+ 5FDE ~            	LD (TMP_STRUCT+10),HL
  294+ 5FDE ~            	; number of tiles vertically
  295+ 5FDE ~            	LD L,(IX+14)
  296+ 5FDE ~            	LD H,(IX+15)
- 297+ 5FDE ~            	LD (BLIT_STRUCT+12),HL
+ 297+ 5FDE ~            	LD (TMP_STRUCT+12),HL
  298+ 5FDE ~             IF (BASIC_EXTENSION == 1) ; otherwise we just continue with code below
  299+ 5FDE ~            	JP TILEVRM.COMMON
  300+ 5FDE ~             ENDIF
@@ -5471,21 +5471,21 @@
  320+ 5FE2              	; get tile data pointer coordinate
  321+ 5FE2 DD 21 2F 54  	LD IX, FRMQNT
  322+ 5FE6 CD 59 01     	CALL CALBAS
- 323+ 5FE9 ED 53 35 62  	LD (BLIT_STRUCT+0), DE
+ 323+ 5FE9 ED 53 35 62  	LD (TMP_STRUCT+0), DE
  324+ 5FED              	; comma
  325+ 5FED CD 45 65     	CALL CHKCHAR
  326+ 5FF0 2C           	DB ','
  327+ 5FF1              	; get tile columns
  328+ 5FF1 DD 21 2F 54  	LD IX, FRMQNT
  329+ 5FF5 CD 59 01     	CALL CALBAS
- 330+ 5FF8 ED 53 39 62  	LD (BLIT_STRUCT+4), DE
+ 330+ 5FF8 ED 53 39 62  	LD (TMP_STRUCT+4), DE
  331+ 5FFC              	; comma
  332+ 5FFC CD 45 65     	CALL CHKCHAR
  333+ 5FFF 2C           	DB ','
  334+ 6000              	; get tile columns
  335+ 6000 DD 21 2F 54  	LD IX, FRMQNT
  336+ 6004 CD 59 01     	CALL CALBAS
- 337+ 6007 ED 53 37 62  	LD (BLIT_STRUCT+2), DE
+ 337+ 6007 ED 53 37 62  	LD (TMP_STRUCT+2), DE
  338+ 600B              	; comma
  339+ 600B CD 45 65     	CALL CHKCHAR
  340+ 600E 2C           	DB ','
@@ -5508,14 +5508,14 @@
  357+ 602D              	; get number of tiles horizontally
  358+ 602D DD 21 2F 54  	LD IX, FRMQNT
  359+ 6031 CD 59 01     	CALL CALBAS
- 360+ 6034 ED 53 3F 62  	LD (BLIT_STRUCT+10), DE
+ 360+ 6034 ED 53 3F 62  	LD (TMP_STRUCT+10), DE
  361+ 6038              	; comma
  362+ 6038 CD 45 65     	CALL CHKCHAR
  363+ 603B 2C           	DB ','
  364+ 603C              	; get number of tiles vertically
  365+ 603C DD 21 2F 54  	LD IX, FRMQNT
  366+ 6040 CD 59 01     	CALL CALBAS
- 367+ 6043 ED 53 41 62  	LD (BLIT_STRUCT+12), DE
+ 367+ 6043 ED 53 41 62  	LD (TMP_STRUCT+12), DE
  368+ 6047              	; ending )
  369+ 6047 CD 45 65     	CALL CHKCHAR
  370+ 604A 29           	DB ')'
@@ -5526,7 +5526,7 @@
  375+ 604C
  376+ 604C              	; calculate destination add to value
  377+ 604C 21 00 01     	LD HL, 256
- 378+ 604F 22 3D 62     	LD (BLIT_STRUCT+8), HL
+ 378+ 604F 22 3D 62     	LD (TMP_STRUCT+8), HL
  379+ 6052              	; calculate pointer to background location
  380+ 6052 3A 34 62     	LD A,(BLIT_TMP+3)
  381+ 6055 67           	LD H,A
@@ -5539,7 +5539,7 @@
  388+ 6062 19           	ADD HL,DE
  389+ 6063 ED 5B CB F3  	LD DE,(GRPCGP)
  390+ 6067 19           	ADD HL,DE
- 391+ 6068 22 3B 62     	LD (BLIT_STRUCT+6),HL
+ 391+ 6068 22 3B 62     	LD (TMP_STRUCT+6),HL
  392+ 606B FD 21 72 60  	LD IY, .RET
  393+ 606F C3 F6 64     	JP ENABLE_PAGE0
  394+ 6072              .RET:
@@ -5549,7 +5549,7 @@
  398+ 6076 22 BC 5E     	LD (TILE.CALL2+1), HL
  399+ 6079 21 93 60     	LD HL, .SETDESTROW
  400+ 607C 22 AE 5E     	LD (TILE.CALL1+1), HL
- 401+ 607F DD 21 35 62  	LD IX,BLIT_STRUCT
+ 401+ 607F DD 21 35 62  	LD IX,TMP_STRUCT
  402+ 6083 CD 93 5E     	CALL TILE
  403+ 6086
  404+ 6086 D1               POP DE
@@ -5627,7 +5627,7 @@
   50+ 60B4              ;  +12 height
   51+ 60B4              ; where IY is used to read +2 and +4, and IX to read +6, +8, +10 and +12
   52+ 60B4              ; this is a hack to allow location being taken from sprite attributes table
-  53+ 60B4              ; input BLIT_STRUCT data
+  53+ 60B4              ; input TMP_STRUCT data
   54+ 60B4              ;  +00 x coordinate
   55+ 60B4              ;  +02 y coordinate
   56+ 60B4              ;  +04 width
@@ -5637,7 +5637,7 @@
   60+ 60B4                  ; first check which rectangle is higher
   61+ 60B4 DD 6E 0C         LD L,(IX+12)
   62+ 60B7 DD 66 0D         LD H,(IX+13)
-  63+ 60BA ED 5B 3B 62      LD DE,(BLIT_STRUCT+6)
+  63+ 60BA ED 5B 3B 62      LD DE,(TMP_STRUCT+6)
   64+ 60BE A7               AND A
   65+ 60BF ED 52            SBC HL,DE
   66+ 60C1 FD 6E 04         LD L,(IY+4)
@@ -5648,14 +5648,14 @@
   71+ 60D0                  ; equally high or IX defined one higher
   72+ 60D0                  ; check upper boundary
   73+ 60D0 19               ADD HL,DE
-  74+ 60D1 ED 5B 37 62      LD DE,(BLIT_STRUCT+2)
+  74+ 60D1 ED 5B 37 62      LD DE,(TMP_STRUCT+2)
   75+ 60D5 DD 4E 0C         LD C,(IX+12)
   76+ 60D8 DD 46 0D         LD B,(IX+13)
   77+ 60DB CD 9C 60         CALL GENERIC_INNER_CHECK
   78+ 60DE 30 29            JR NC,.INSIDE
   79+ 60E0                  ; check lower boundary
   80+ 60E0 E5               PUSH HL
-  81+ 60E1 2A 3B 62         LD HL,(BLIT_STRUCT+6)
+  81+ 60E1 2A 3B 62         LD HL,(TMP_STRUCT+6)
   82+ 60E4 19               ADD HL,DE
   83+ 60E5 EB               EX DE,HL
   84+ 60E6 E1               POP HL
@@ -5663,11 +5663,11 @@
   86+ 60EA 30 1D            JR NC,.INSIDE
   87+ 60EC C9               RET ; not overlapping
   88+ 60ED              .L1:
-  89+ 60ED                  ; rectangle defined in BLIT_STRUCT is higher
+  89+ 60ED                  ; rectangle defined in TMP_STRUCT is higher
   90+ 60ED 19               ADD HL,DE
   91+ 60EE EB               EX DE,HL
-  92+ 60EF 2A 37 62         LD HL,(BLIT_STRUCT+2)
-  93+ 60F2 ED 4B 3B 62      LD BC,(BLIT_STRUCT+6)
+  92+ 60EF 2A 37 62         LD HL,(TMP_STRUCT+2)
+  93+ 60F2 ED 4B 3B 62      LD BC,(TMP_STRUCT+6)
   94+ 60F6 CD 9C 60         CALL GENERIC_INNER_CHECK
   95+ 60F9 30 0E            JR NC,.INSIDE
   96+ 60FB E5               PUSH HL
@@ -5683,7 +5683,7 @@
  106+ 6109                  ; first check which rectangle is wider
  107+ 6109 DD 6E 0A         LD L,(IX+10)
  108+ 610C DD 66 0B         LD H,(IX+11)
- 109+ 610F ED 5B 39 62      LD DE,(BLIT_STRUCT+4)
+ 109+ 610F ED 5B 39 62      LD DE,(TMP_STRUCT+4)
  110+ 6113 A7               AND A
  111+ 6114 ED 52            SBC HL,DE
  112+ 6116 FD 6E 02         LD L,(IY+2)
@@ -5694,24 +5694,24 @@
  117+ 6125                  ; equally wide or IX defined one wider
  118+ 6125                  ; check left boundary
  119+ 6125 19               ADD HL,DE
- 120+ 6126 ED 5B 35 62      LD DE,(BLIT_STRUCT+0)
+ 120+ 6126 ED 5B 35 62      LD DE,(TMP_STRUCT+0)
  121+ 612A DD 4E 0A         LD C,(IX+10)
  122+ 612D DD 46 0B         LD B,(IX+11)
  123+ 6130 CD 9C 60         CALL GENERIC_INNER_CHECK
  124+ 6133 D0               RET NC ; overlap
  125+ 6134                  ; check right boundary
  126+ 6134 E5               PUSH HL
- 127+ 6135 2A 39 62         LD HL,(BLIT_STRUCT+4)
+ 127+ 6135 2A 39 62         LD HL,(TMP_STRUCT+4)
  128+ 6138 19               ADD HL,DE
  129+ 6139 EB               EX DE,HL
  130+ 613A E1               POP HL
  131+ 613B C3 9C 60         JP GENERIC_INNER_CHECK ; CF and result set by fn call
  132+ 613E              .L2:
- 133+ 613E                  ; rectangle defined in BLIT_STRUCT is higher
+ 133+ 613E                  ; rectangle defined in TMP_STRUCT is higher
  134+ 613E 19               ADD HL,DE
  135+ 613F EB               EX DE,HL
- 136+ 6140 2A 35 62         LD HL,(BLIT_STRUCT+0)
- 137+ 6143 ED 4B 39 62      LD BC,(BLIT_STRUCT+4)
+ 136+ 6140 2A 35 62         LD HL,(TMP_STRUCT+0)
+ 137+ 6143 ED 4B 39 62      LD BC,(TMP_STRUCT+4)
  138+ 6147 CD 9C 60         CALL GENERIC_INNER_CHECK
  139+ 614A D0               RET NC ; overlap
  140+ 614B E5               PUSH HL
@@ -5725,7 +5725,7 @@
  148+ 6158
  149+ 6158              ; ************************************************************************************************
  150+ 6158              ; function tries to find rectangle overlap and returns an index if found
- 151+ 6158              ; input BLIT_STRUCT data
+ 151+ 6158              ; input TMP_STRUCT data
  152+ 6158              ;  +00 x coordinate
  153+ 6158              ;  +02 y coordinate
  154+ 6158              ;  +04 width
@@ -5736,9 +5736,9 @@
  159+ 6158              ; returns CF=1 if not overlapping
  160+ 6158              ; returns A=list index and CF=0 if overlapping
  161+ 6158              FIND_OVERLAP:
- 162+ 6158 3A 3D 62         LD A,(BLIT_STRUCT+8)
+ 162+ 6158 3A 3D 62         LD A,(TMP_STRUCT+8)
  163+ 615B 47               LD B,A
- 164+ 615C DD 2A 3E 62      LD IX,(BLIT_STRUCT+9)
+ 164+ 615C DD 2A 3E 62      LD IX,(TMP_STRUCT+9)
  165+ 6160              .L1:
  166+ 6160 C5               PUSH BC
  167+ 6161                  ; check active flag
@@ -5756,7 +5756,7 @@
  179+ 6178 38 07            JR C,.NEXT
  180+ 617A                  ; found
  181+ 617A C1               POP BC
- 182+ 617B 3A 3D 62         LD A,(BLIT_STRUCT+8)
+ 182+ 617B 3A 3D 62         LD A,(TMP_STRUCT+8)
  183+ 617E 90               SUB B
  184+ 617F A7               AND A
  185+ 6180 C9               RET
@@ -5769,10 +5769,10 @@
  192+ 618A C9               RET
  193+ 618B              .L2:
  194+ 618B                  ; sprite, need to build a temporary data struct since x and y values are inversed
- 195+ 618B                  ; at BLIT_STRUCT+13
+ 195+ 618B                  ; at TMP_STRUCT+13
  196+ 618B DD 7E 02         LD A,(IX+2) ; sprite ID
  197+ 618E CD 89 4D         CALL GETnthSPRATTR
- 198+ 6191 FD 21 40 62      LD IY,BLIT_STRUCT+11
+ 198+ 6191 FD 21 40 62      LD IY,TMP_STRUCT+11
  199+ 6195 7E               LD A,(HL)
  200+ 6196 FD 77 04         LD (IY+4),A
  201+ 6199 23               INC HL
@@ -5807,60 +5807,60 @@
  230+ 61AE              	; get address of result variable
  231+ 61AE DD 21 A4 5E  	LD IX, PTRGET
  232+ 61B2 CD 59 01     	CALL CALBAS
- 233+ 61B5 ED 53 40 62  	LD (BLIT_STRUCT+11),DE
+ 233+ 61B5 ED 53 40 62  	LD (TMP_STRUCT+11),DE
  234+ 61B9              	; comma
  235+ 61B9 CD 45 65     	CALL CHKCHAR
  236+ 61BC 2C           	DB ','
  237+ 61BD              	; get x
  238+ 61BD DD 21 2F 54  	LD IX, FRMQNT
  239+ 61C1 CD 59 01     	CALL CALBAS
- 240+ 61C4 ED 53 35 62  	LD (BLIT_STRUCT+0),DE
+ 240+ 61C4 ED 53 35 62  	LD (TMP_STRUCT+0),DE
  241+ 61C8              	; comma
  242+ 61C8 CD 45 65     	CALL CHKCHAR
  243+ 61CB 2C           	DB ','
  244+ 61CC              	; get y
  245+ 61CC DD 21 2F 54  	LD IX, FRMQNT
  246+ 61D0 CD 59 01     	CALL CALBAS
- 247+ 61D3 ED 53 37 62  	LD (BLIT_STRUCT+2),DE
+ 247+ 61D3 ED 53 37 62  	LD (TMP_STRUCT+2),DE
  248+ 61D7              	; comma
  249+ 61D7 CD 45 65     	CALL CHKCHAR
  250+ 61DA 2C           	DB ','
  251+ 61DB              	; get width
  252+ 61DB DD 21 2F 54  	LD IX, FRMQNT
  253+ 61DF CD 59 01     	CALL CALBAS
- 254+ 61E2 ED 53 39 62  	LD (BLIT_STRUCT+4),DE
+ 254+ 61E2 ED 53 39 62  	LD (TMP_STRUCT+4),DE
  255+ 61E6              	; comma
  256+ 61E6 CD 45 65     	CALL CHKCHAR
  257+ 61E9 2C           	DB ','
  258+ 61EA              	; get height
  259+ 61EA DD 21 2F 54  	LD IX, FRMQNT
  260+ 61EE CD 59 01     	CALL CALBAS
- 261+ 61F1 ED 53 3B 62  	LD (BLIT_STRUCT+6),DE
+ 261+ 61F1 ED 53 3B 62  	LD (TMP_STRUCT+6),DE
  262+ 61F5              	; comma
  263+ 61F5 CD 45 65     	CALL CHKCHAR
  264+ 61F8 2C           	DB ','
  265+ 61F9              	; get number of items in a list
  266+ 61F9 DD 21 1C 52  	LD IX, GETBYT
  267+ 61FD CD 59 01     	CALL CALBAS
- 268+ 6200 32 3D 62     	LD (BLIT_STRUCT+8),A
+ 268+ 6200 32 3D 62     	LD (TMP_STRUCT+8),A
  269+ 6203              	; comma
  270+ 6203 CD 45 65     	CALL CHKCHAR
  271+ 6206 2C           	DB ','
  272+ 6207              	; get address of rectangle structure array DIM R%(7,n)
- 273+ 6207 3A 3D 62     	LD A,(BLIT_STRUCT+8)
+ 273+ 6207 3A 3D 62     	LD A,(TMP_STRUCT+8)
  274+ 620A 5F               LD E,A
  275+ 620B 3E 02            LD A,2
  276+ 620D 47           	LD B,A
  277+ 620E 16 07        	LD D,7
  278+ 6210 CD 72 65     	CALL GET_BASIC_ARRAY_DATA_POINTER
- 279+ 6213 ED 43 3E 62  	LD (BLIT_STRUCT+9),BC
+ 279+ 6213 ED 43 3E 62  	LD (TMP_STRUCT+9),BC
  280+ 6217              	; ending )
  281+ 6217 CD 45 65     	CALL CHKCHAR
  282+ 621A 29           	DB ')'
  283+ 621B
  284+ 621B E5               PUSH HL
  285+ 621C CD 58 61         CALL FIND_OVERLAP
- 286+ 621F 2A 40 62         LD HL,(BLIT_STRUCT+11)
+ 286+ 621F 2A 40 62         LD HL,(TMP_STRUCT+11)
  287+ 6222 38 06            JR C,.NOTFOUND
  288+ 6224 77               LD (HL),A
  289+ 6225 23               INC HL
@@ -5891,17 +5891,17 @@
  314+ 6231 ~                PUSH IX
  315+ 6231 ~                POP HL
  316+ 6231 ~                .4 INC HL ; skip over to player x
- 317+ 6231 ~                LD DE,BLIT_STRUCT
+ 317+ 6231 ~                LD DE,TMP_STRUCT
  318+ 6231 ~                LD BC,9
  319+ 6231 ~                LDIR ; copy over x,y,w,h,list item number
  320+ 6231 ~                LD A,(IX+14)
- 321+ 6231 ~                LD (BLIT_STRUCT+9),A
+ 321+ 6231 ~                LD (TMP_STRUCT+9),A
  322+ 6231 ~                LD A,(IX+15)
- 323+ 6231 ~                LD (BLIT_STRUCT+10),A ; address to collidable objects array
+ 323+ 6231 ~                LD (TMP_STRUCT+10),A ; address to collidable objects array
  324+ 6231 ~                LD A,(IX+2)
- 325+ 6231 ~                LD (BLIT_STRUCT+11),A
+ 325+ 6231 ~                LD (TMP_STRUCT+11),A
  326+ 6231 ~                LD A,(IX+3)
- 327+ 6231 ~                LD (BLIT_STRUCT+12),A ; address to results variable
+ 327+ 6231 ~                LD (TMP_STRUCT+12),A ; address to results variable
  328+ 6231 ~                PUSH IX
  329+ 6231 ~                CALL FIND_OVERLAP
  330+ 6231 ~                POP IX
@@ -5936,7 +5936,7 @@
  177  6233              TILETMP2:
  178  6233              BLIT_TMP2:
  179  6233 00 00         DW 0
- 180  6235              BLIT_STRUCT:
+ 180  6235              TMP_STRUCT:
  181  6235 00 00 00...   DS 17
  182  6239               ENDIF
  183  6246

@@ -183,8 +183,8 @@ VERSION:
  INCLUDE "DEFUSR.asm"
  ENDIF
 
-; temp variables for BLIT, TILE functions
- IF (BLIT_CMDS + TILE_CMDS + BOX_CMDS + SPRITE_CMDS + ANIM_CMDS + COLL_CMD + DLOAD_CMD > 0)
+; temp variables for various fuctions
+; name historically from usage by BLIT, but since then
 BLIT_TMP:
 TILETMP1:
 BLIT_TMP1:
@@ -192,9 +192,8 @@ BLIT_TMP1:
 TILETMP2:
 BLIT_TMP2:
  DW 0
-BLIT_STRUCT:
+TMP_STRUCT:
  DS 17
- ENDIF
 
  IF (VRAM_CMDS + TILE_CMDS + BOX_CMDS + SPRITE_CMDS + ANIM_CMDS > 0)
 VRAM_UPDATE_IN_PROGRESS:
@@ -436,6 +435,21 @@ CMDS_A:
    DW ARTINFO
 	DB 0
  ENDIF
+
+; ****************************************************************************************************
+; some common exit code
+; returns ROM in page 0
+; sets exit status to 0 in A
+COMMON_EXIT_CODE_IX:
+   PUSH IX
+   POP HL
+COMMON_EXIT_CODE:
+   POP DE
+   POP BC
+   CALL RESTORE_PAGE_INFO
+	XOR A ; success
+	RET   
+; ****************************************************************************************************
 
  IF (VRAM_CMDS + TILE_CMDS + SPRITE_CMDS > 0)
 ; ****************************************************************************************************

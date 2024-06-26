@@ -51,7 +51,7 @@ GENCAL:
 
     POP HL ; get pointer to register values
 	DI
-    LD (BLIT_STRUCT), SP
+    LD (TMP_STRUCT), SP
     LD SP, HL
     POP AF
     POP BC
@@ -60,22 +60,22 @@ GENCAL:
     POP IX
     POP IY
     EXX
-    LD (BLIT_STRUCT+2), SP
-    LD SP, (BLIT_STRUCT)
+    LD (TMP_STRUCT+2), SP
+    LD SP, (TMP_STRUCT)
     EI
     POP DE ; get function to call
     PUSH HL
     CALL .EXXDECALL
     DI
-    LD (BLIT_STRUCT), SP
-    LD SP, (BLIT_STRUCT+2)
+    LD (TMP_STRUCT), SP
+    LD SP, (TMP_STRUCT+2)
     PUSH IY
     PUSH IX
     PUSH HL
     PUSH DE
     PUSH BC
     PUSH AF
-    LD SP, (BLIT_STRUCT)
+    LD SP, (TMP_STRUCT)
     EI
     POP HL
     XOR A ; success

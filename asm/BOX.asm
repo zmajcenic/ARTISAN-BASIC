@@ -96,46 +96,46 @@ BOX_EXTENSION_PARAMS_COMMON:
 	; get source data pointer
 	LD IX, FRMQNT
 	CALL CALBAS
-	LD (BLIT_STRUCT+0), DE
+	LD (TMP_STRUCT+0), DE
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; source number of bytes in a row
 	LD IX, FRMQNT
 	CALL CALBAS
-	LD (BLIT_STRUCT+2), DE
+	LD (TMP_STRUCT+2), DE
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; number of rows
 	LD IX, FRMQNT
 	CALL CALBAS
-	LD (BLIT_STRUCT+4), DE
+	LD (TMP_STRUCT+4), DE
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; source add-to value till next row
 	LD IX, FRMQNT
 	CALL CALBAS
-	LD (BLIT_STRUCT+6), DE
+	LD (TMP_STRUCT+6), DE
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; destination pointer
 	LD IX, FRMQNT
 	CALL CALBAS
-	LD (BLIT_STRUCT+8), DE
+	LD (TMP_STRUCT+8), DE
 	; comma
 	CALL CHKCHAR
 	DB ','
 	; destination add-to value till next row
 	LD IX, FRMQNT
 	CALL CALBAS
-	LD (BLIT_STRUCT+10), DE
+	LD (TMP_STRUCT+10), DE
 	; ending )
 	CALL CHKCHAR
 	DB ')'
-	LD IX,BLIT_STRUCT
+	LD IX,TMP_STRUCT
  ENDIF
 BOXCOMMON_DEFUSR:
 	PUSH HL ; save position in BASIC buffer
@@ -146,14 +146,7 @@ BOXCOMMON_DEFUSR:
 	CALL RECTANGLE_COPY
 	XOR A
 	LD (VRAM_UPDATE_IN_PROGRESS),A
-
-    POP DE
-    POP BC
-    CALL RESTORE_PAGE_INFO
-
-	POP HL
-	XOR A ; success
-	RET
+    JP COMMON_EXIT_CODE
 ; *******************************************************************************************************
 
  IF (BASIC_EXTENSION == 1)

@@ -180,12 +180,7 @@ UNPACK_COMMON:
 	EI
 	EXX
 	CALL dzx0_standard
-        POP DE
-        POP BC
-        CALL RESTORE_PAGE_INFO
-	PUSH IX
-	POP HL
-	RET
+        JP COMMON_EXIT_CODE_IX
 ; *******************************************************************************************************
  ENDIF
 
@@ -217,20 +212,16 @@ UNPACK_DEFUSR:
     LD (dzx0_ldir_1 + 2), A
     LD (dzx0_ldir_2 + 2), A
 UNPACK_DEFUSR_COMMON:
-	; enable page 0
-	LD IY, .RET
-	JP ENABLE_PAGE0
+    ; enable page 0
+    LD IY, .RET
+    JP ENABLE_PAGE0
 .RET:
-	EI
-	LD L,(IX+2)
-	LD H,(IX+3)
-	LD E,(IX+4)
-	LD D,(IX+5)
-	CALL dzx0_standard
-    POP DE
-    POP BC
-    CALL RESTORE_PAGE_INFO
-    XOR A ; success
-    RET
+    EI
+    LD L,(IX+2)
+    LD H,(IX+3)
+    LD E,(IX+4)
+    LD D,(IX+5)
+    CALL dzx0_standard
+    JP COMMON_EXIT_CODE
 ; *******************************************************************************************************
  ENDIF
