@@ -144,9 +144,13 @@ BOXCOMMON_DEFUSR:
 	JP ENABLE_PAGE0
 .CALL:
 	CALL RECTANGLE_COPY
-	XOR A
+	POP DE
+	POP BC
+	CALL RESTORE_PAGE_INFO
+	POP HL
+	XOR A ; success
 	LD (VRAM_UPDATE_IN_PROGRESS),A
-    JP COMMON_EXIT_CODE
+	RET   
 ; *******************************************************************************************************
 
  IF (BASIC_EXTENSION == 1)
