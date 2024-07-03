@@ -295,11 +295,12 @@ DLOAD:
 ; *******************************************************************************************************
 ; same as DLOAD but for DEFUSR approach
 ; input IX=pointer to input array, real data from +2
-; +2 = string pointer
+; +2 = string pointer as provided by MSX-BASIC: length, followed by a pointer to ASCII data
 ; +4 = offset
 ; +6 = destination
 ; +8 = size
 ; output A=0 on success
+; NOTE: this call will fail if called under X-BASIC as strings are handled differently in memory: length followed by ASCII data
 ; *******************************************************************************************************
 DLOAD_DEFUSR:
     LD L,(IX+2)
