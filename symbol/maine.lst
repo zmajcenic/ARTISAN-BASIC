@@ -6468,43 +6468,49 @@
  295+ 6451 ~            ; *******************************************************************************************************
  296+ 6451 ~            ; same as DLOAD but for DEFUSR approach
  297+ 6451 ~            ; input IX=pointer to input array, real data from +2
- 298+ 6451 ~            ; +2 = string pointer
- 299+ 6451 ~            ; +4 = offset
- 300+ 6451 ~            ; +6 = destination
- 301+ 6451 ~            ; +8 = size
- 302+ 6451 ~            ; output A=0 on success
- 303+ 6451 ~            ; *******************************************************************************************************
- 304+ 6451 ~            DLOAD_DEFUSR:
- 305+ 6451 ~                LD L,(IX+2)
- 306+ 6451 ~                LD H,(IX+3)
- 307+ 6451 ~                LD B,(HL) ; string length
- 308+ 6451 ~                INC HL
- 309+ 6451 ~                LD E,(HL)
+ 298+ 6451 ~            ; +02 = string pointer as provided by MSX-BASIC: length, followed by a pointer to ASCII data
+ 299+ 6451 ~            ; +04 = offset
+ 300+ 6451 ~            ; +06 = destination
+ 301+ 6451 ~            ; +08 = size
+ 302+ 6451 ~            ; +10 = string type, 0=MSX-BASIC: length+pointer to ASCII data, !=0 X-BASIC: length+ASCII data
+ 303+ 6451 ~            ; output A=0 on success
+ 304+ 6451 ~            ; NOTE: this call will fail if called under X-BASIC as strings are handled differently in memory: length followed by ASCII data
+ 305+ 6451 ~            ; *******************************************************************************************************
+ 306+ 6451 ~            DLOAD_DEFUSR:
+ 307+ 6451 ~                LD L,(IX+2)
+ 308+ 6451 ~                LD H,(IX+3)
+ 309+ 6451 ~                LD B,(HL) ; string length
  310+ 6451 ~                INC HL
- 311+ 6451 ~                LD D,(HL)
- 312+ 6451 ~                EX DE,HL ; pointer to ASCIIZ text
- 313+ 6451 ~                CALL DLOAD_PROCESS_FILENAME
- 314+ 6451 ~                JR C,.ERR ; exit on error
- 315+ 6451 ~                LD L,(IX+4)
- 316+ 6451 ~                LD H,(IX+5)
- 317+ 6451 ~                LD (TMP_STRUCT),HL ; offset
- 318+ 6451 ~                LD L,(IX+6)
- 319+ 6451 ~                LD H,(IX+7)
- 320+ 6451 ~                LD (TMP_STRUCT+2),HL ; destination
- 321+ 6451 ~                LD L,(IX+8)
- 322+ 6451 ~                LD H,(IX+9)
- 323+ 6451 ~                LD (TMP_STRUCT+4),HL ; size
- 324+ 6451 ~                CALL DLOAD_LOADFILE
- 325+ 6451 ~                JR NZ,.ERR
- 326+ 6451 ~                XOR A
- 327+ 6451 ~                RET
- 328+ 6451 ~            .ERR:
- 329+ 6451 ~                LD A,1
- 330+ 6451 ~                RET
- 331+ 6451 ~            ; *******************************************************************************************************
- 332+ 6451 ~
- 333+ 6451               ENDIF
- 334+ 6451
+ 311+ 6451 ~                LD A,(IX+10)
+ 312+ 6451 ~                OR A
+ 313+ 6451 ~                JR NZ,.XBASIC
+ 314+ 6451 ~                LD E,(HL)
+ 315+ 6451 ~                INC HL
+ 316+ 6451 ~                LD D,(HL)
+ 317+ 6451 ~                EX DE,HL ; pointer to ASCIIZ text
+ 318+ 6451 ~            .XBASIC:
+ 319+ 6451 ~                CALL DLOAD_PROCESS_FILENAME
+ 320+ 6451 ~                JR C,.ERR ; exit on error
+ 321+ 6451 ~                LD L,(IX+4)
+ 322+ 6451 ~                LD H,(IX+5)
+ 323+ 6451 ~                LD (TMP_STRUCT),HL ; offset
+ 324+ 6451 ~                LD L,(IX+6)
+ 325+ 6451 ~                LD H,(IX+7)
+ 326+ 6451 ~                LD (TMP_STRUCT+2),HL ; destination
+ 327+ 6451 ~                LD L,(IX+8)
+ 328+ 6451 ~                LD H,(IX+9)
+ 329+ 6451 ~                LD (TMP_STRUCT+4),HL ; size
+ 330+ 6451 ~                CALL DLOAD_LOADFILE
+ 331+ 6451 ~                JR NZ,.ERR
+ 332+ 6451 ~                XOR A
+ 333+ 6451 ~                RET
+ 334+ 6451 ~            .ERR:
+ 335+ 6451 ~                LD A,1
+ 336+ 6451 ~                RET
+ 337+ 6451 ~            ; *******************************************************************************************************
+ 338+ 6451 ~
+ 339+ 6451               ENDIF
+ 340+ 6451
 # file closed: asm\DLOAD.asm
  180  6451               ENDIF
  181  6451

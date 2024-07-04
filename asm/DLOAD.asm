@@ -295,10 +295,11 @@ DLOAD:
 ; *******************************************************************************************************
 ; same as DLOAD but for DEFUSR approach
 ; input IX=pointer to input array, real data from +2
-; +2 = string pointer as provided by MSX-BASIC: length, followed by a pointer to ASCII data
-; +4 = offset
-; +6 = destination
-; +8 = size
+; +02 = string pointer as provided by MSX-BASIC: length, followed by a pointer to ASCII data
+; +04 = offset
+; +06 = destination
+; +08 = size
+; +10 = string type, 0=MSX-BASIC: length+pointer to ASCII data, !=0 X-BASIC: length+ASCII data
 ; output A=0 on success
 ; NOTE: this call will fail if called under X-BASIC as strings are handled differently in memory: length followed by ASCII data
 ; *******************************************************************************************************
@@ -307,10 +308,14 @@ DLOAD_DEFUSR:
     LD H,(IX+3)
     LD B,(HL) ; string length
     INC HL
+    LD A,(IX+10)
+    OR A
+    JR NZ,.XBASIC
     LD E,(HL)
     INC HL
     LD D,(HL)
     EX DE,HL ; pointer to ASCIIZ text
+.XBASIC:
     CALL DLOAD_PROCESS_FILENAME
     JR C,.ERR ; exit on error
     LD L,(IX+4)
