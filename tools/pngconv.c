@@ -5,7 +5,11 @@
 #include <libpng16/png.h>
 #include <stdbool.h>
 
-static int binary=0, verbose=0, check=0;
+static int binary=0, verbose=0, check=0, msx1_color_sprites=0;
+
+static int msx1_palette_r[15]={0,62,116,89,128,185,101,219,255,204,222,58,183,204,255};
+static int msx1_palette_g[15]={0,184,208,85,118,94,219,101,137,195,208,162,102,204,255};
+static int msx1_palette_b[15]={0,73,125,224,241,81,239,89,125,94,135,65,181,204,255};
 
 int width, height;
 png_byte color_type;
@@ -16,7 +20,7 @@ int mr,mb,mg,zr,zg,zb;
 unsigned char *mask;
 unsigned char *data;
 int sprite_color_num, sprite_num;
-int sr[14],sg[14],sb[14];
+int sr[15],sg[15],sb[15];
 static unsigned char *sprite_data;
 static int sprite_x_offset[256], sprite_y_offset[256];
 
@@ -277,6 +281,7 @@ int main (int argc, char **argv)
           {"binary", no_argument, &binary, 1},
           {"verbose", no_argument, &verbose, 1},
           {"check", no_argument, &check, 1},
+          {"msx1_color_sprites", no_argument, &msx1_color_sprites, 1},
           /* These options don’t set a flag.
              We distinguish them by their indices. */
           {"input", required_argument, 0, 'i'},
@@ -332,16 +337,16 @@ int main (int argc, char **argv)
 
         case 's':
           //printf ("option -s with value `%s'\n", optarg);
+          if (sprite_color_num >= 15) {
+            printf ("Too many sprite colors specified - 15 maximum\n");
+            exit (1);
+          }
           // check if colors correctly passed as 6 char hex string
           if ((strlen(optarg) != 6) || (sscanf(optarg,"%2x%2x%2x",&sr[sprite_color_num],&sg[sprite_color_num],&sb[sprite_color_num]) <3)) {
             printf("Invalid color format for mask - %s\n", optarg);
             exit(1);
           }
 		      sprite_color_num++;
-          if (sprite_color_num > 14) {
-            printf ("Too many sprite colors specified - 14 maximum\n");
-            exit (1);
-          }
           break;
 
         case 'a':
@@ -375,6 +380,7 @@ int main (int argc, char **argv)
     printf ("-s | --sprite_color <hex RGB> generate sprite data for a specific color [optional][multiple]\n");
     printf ("-a | --algorithm <1|2> select sprite search algorithm, can provide different results\n");
     printf ("-l | --line <n> starting line of BASIC DATA statements [optional, default 10]\n");
+    printf ("--msx1_color_sprites add MSX1 palette to sprite color list\n");
     printf ("--binary write .BIN header [optional]\n");
     printf ("--verbose print data and mask as ASCII [optional]\n");
     printf ("--check detect pixels of color other than mask, zero bit and sprites [optional]\n");
@@ -389,6 +395,16 @@ int main (int argc, char **argv)
   if ((strlen(zerobit_color_str) != 6) || (sscanf(zerobit_color_str,"%2x%2x%2x",&zr,&zg,&zb) <3)) {
     printf("Invalid color format for zero bit - %s\n", zerobit_color_str);
     exit(1);
+  }
+
+  // overwrite sprite colors if palette specified
+  if (msx1_color_sprites) {
+    for (int i=0; i<15; i++) {
+      sr[i]=msx1_palette_r[i];
+      sg[i]=msx1_palette_g[i];
+      sb[i]=msx1_palette_b[i];
+    }
+    sprite_color_num=15;
   }
 
   read_png_file(input_file);
@@ -453,9 +469,9 @@ int main (int argc, char **argv)
       j=locate_and_grab_sprites1(sr[i],sg[i],sb[i]);
     else
       j=locate_and_grab_sprites2(sr[i],sg[i],sb[i]);
-    printf ("Sprite color %02d = [%02X,%02X,%02X] - %d sprites found\n", i+1, sr[i], sg[i], sb[i], j);
+    printf ("%d REM Sprite color %02d = [%02X,%02X,%02X] - %d sprites found\n", basic_start_line, i+1, sr[i], sg[i], sb[i], j);
 
-    printf("%d DATA %d\n",basic_start_line++,j);
+    printf("%d DATA %d,%d\n",basic_start_line++,i+1,j);
     for (int k=sprite_num-j; k<sprite_num; k++) {
       printf ("%d DATA %d,%d,",basic_start_line++,sprite_x_offset[k],sprite_y_offset[k]);
       for (int l=0; l<32; l++) {
