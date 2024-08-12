@@ -6685,7 +6685,7 @@
  327  651A
  328  651A               IF (SOUND_CMDS + SPRITE_CMDS + ANIM_CMDS > 0)
  329  651A              CMDS_S:
- 330  651A               IF (SPRITE_CMDS + ANIM_CMDS > 0)
+ 330  651A               IF (ANIM_CMDS > 0)
  331  651A 53 47 41 4D      DB "SGAM",0
  331  651E 00
  332  651F A5 56            DW SGAM
